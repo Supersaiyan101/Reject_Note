@@ -49,3 +49,23 @@ export interface InquisitorProfile {
   stats?: InquisitorStats;
   voicePhrase?: string;
 }
+
+// STAGE 3: CALIBRATION & HARDWARE TYPES
+export type OpticalMode = 'BROWSER_OPTICAL' | 'PRESAGE_SDK';
+export type CameraState = 'INIT' | 'REQUESTING' | 'ACTIVE' | 'ERROR' | 'DENIED';
+
+export interface BaselineCalibration {
+  restingBPM: number;
+  restingBreathingRate: number;
+  calibratedAt: string;
+  opticalMode: OpticalMode;
+  isReady: boolean;
+}
+
+export interface LiveVitals {
+  currentBPM: number;
+  currentBreathingRate: number;
+  stressDeltaBPM: number;
+  waveform: number[];
+  signalQuality: 'OPTIMAL' | 'FAIR' | 'SEARCHING';
+}
