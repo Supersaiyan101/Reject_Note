@@ -215,3 +215,4 @@ export const ResumeUploader: React.FC<ResumeUploaderProps> = ({
     </div>
   );
 };
+

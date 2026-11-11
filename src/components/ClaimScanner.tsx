@@ -101,3 +101,4 @@ export const ClaimScanner: React.FC<ClaimScannerProps> = ({
     </div>
   );
 };
+

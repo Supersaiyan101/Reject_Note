@@ -4,21 +4,19 @@ import { Hero } from './components/Hero';
 import { ResumeUploader } from './components/ResumeUploader';
 import { ClaimScanner } from './components/ClaimScanner';
 import { DossierCard } from './components/DossierCard';
-import type { CandidateDossier, AppStage } from './types';
+import { InquisitorRoster } from './components/InquisitorRoster';
+import { LShowcase } from './components/LShowcase';
+import type { CandidateDossier, AppStage, InquisitorProfile } from './types';
 import { LIGHT_YAGAMI_DOSSIER, parseCustomResume } from './data/sampleResumes';
-import { Sparkles, CheckCircle2 } from 'lucide-react';
+import { INQUISITORS } from './data/inquisitors';
+import { CheckCircle2, ShieldCheck, ArrowRight } from 'lucide-react';
 import { soundFX } from './utils/sfx';
 
 export function App() {
   const [stage, setStage] = useState<AppStage>('STAGE_1_LOBBY');
   const [selectedDossier, setSelectedDossier] = useState<CandidateDossier | null>(null);
   const [isScanning, setIsScanning] = useState(false);
-  const [showStage2LockedNotice, setShowStage2LockedNotice] = useState(false);
-
-  // Log active stage for routing
-  if (stage === 'STAGE_2_ROSTER') {
-    // stage indicator active
-  }
+  const [selectedInquisitor, setSelectedInquisitor] = useState<InquisitorProfile>(INQUISITORS[0]);
 
   // Load Light Yagami preset
   const handleLoadLightYagami = () => {
@@ -42,19 +40,29 @@ export function App() {
   const handleReset = () => {
     setSelectedDossier(null);
     setIsScanning(false);
-    setShowStage2LockedNotice(false);
+    setStage('STAGE_1_LOBBY');
   };
 
-  // Proceed to Stage 2
+  // Stage 1 -> Stage 2
   const handleProceedToStage2 = () => {
     soundFX.playDramaticSting();
-    setShowStage2LockedNotice(true);
     setStage('STAGE_2_ROSTER');
+  };
+
+  // Stage 2 -> Stage 1
+  const handleBackToDossier = () => {
+    setStage('STAGE_1_LOBBY');
+  };
+
+  // Stage 2 -> Stage 3
+  const handleConfirmInquisitor = () => {
+    soundFX.playDramaticSting();
+    setStage('STAGE_3_CALIBRATION');
   };
 
   return (
     <div className="min-h-screen bg-[#0a0a0c] text-white flex flex-col font-['Space_Grotesk'] selection:bg-rose-600 selection:text-white">
-      {/* Anime Grain & Scanline Overlay */}
+      {/* Anime Grain Overlay */}
       <div className="fixed inset-0 pointer-events-none opacity-[0.03] bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] z-40" />
 
       {/* Header */}
@@ -64,32 +72,54 @@ export function App() {
       <main className="flex-1 pb-16">
         <Hero />
 
-        {/* Dynamic Stage 1 Views */}
-        {!selectedDossier && (
-          <ResumeUploader
-            onLoadLightYagami={handleLoadLightYagami}
-            onCustomResume={handleCustomResume}
-            disabled={isScanning}
-          />
+        {/* ----------------- STAGE 1: THE LOBBY & APPLICATION ----------------- */}
+        {stage === 'STAGE_1_LOBBY' && (
+          <>
+            {!selectedDossier && (
+              <ResumeUploader
+                onLoadLightYagami={handleLoadLightYagami}
+                onCustomResume={handleCustomResume}
+                disabled={isScanning}
+              />
+            )}
+
+            {isScanning && selectedDossier && (
+              <ClaimScanner
+                candidateName={selectedDossier.name}
+                onScanComplete={handleScanComplete}
+              />
+            )}
+
+            {!isScanning && selectedDossier && (
+              <DossierCard
+                dossier={selectedDossier}
+                onProceed={handleProceedToStage2}
+                onReset={handleReset}
+              />
+            )}
+          </>
         )}
 
-        {isScanning && selectedDossier && (
-          <ClaimScanner
-            candidateName={selectedDossier.name}
-            onScanComplete={handleScanComplete}
-          />
+        {/* ----------------- STAGE 2: INQUISITOR ROSTER ----------------- */}
+        {stage === 'STAGE_2_ROSTER' && selectedDossier && (
+          <div className="space-y-4">
+            <InquisitorRoster
+              candidateName={selectedDossier.name}
+              selectedId={selectedInquisitor.id}
+              onSelectInquisitor={(inq) => setSelectedInquisitor(inq)}
+            />
+
+            <LShowcase
+              inquisitor={selectedInquisitor}
+              candidateName={selectedDossier.name}
+              onConfirm={handleConfirmInquisitor}
+              onBack={handleBackToDossier}
+            />
+          </div>
         )}
 
-        {!isScanning && selectedDossier && !showStage2LockedNotice && (
-          <DossierCard
-            dossier={selectedDossier}
-            onProceed={handleProceedToStage2}
-            onReset={handleReset}
-          />
-        )}
-
-        {/* Hand-off Notice to Stage 2 */}
-        {showStage2LockedNotice && selectedDossier && (
+        {/* ----------------- STAGE 3: CALIBRATION PREVIEW / HAND-OFF ----------------- */}
+        {stage === 'STAGE_3_CALIBRATION' && selectedDossier && (
           <div className="w-full max-w-3xl mx-auto px-4 py-8">
             <div className="rounded-2xl bg-gradient-to-b from-neutral-900 via-neutral-950 to-black border-2 border-emerald-500/70 p-8 text-center shadow-[0_0_50px_rgba(16,185,129,0.3)]">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-950 border border-emerald-500/60 flex items-center justify-center text-emerald-400">
@@ -97,29 +127,28 @@ export function App() {
               </div>
 
               <span className="font-mono text-xs text-emerald-400 font-bold tracking-widest uppercase">
-                STAGE 1 DELIVERABLE COMPLETE
+                STAGE 2 COMPLETE: INQUISITOR LOCKED
               </span>
 
-              <h2 className="font-['Bangers'] text-3xl md:text-4xl text-white tracking-wider my-2">
-                DOSSIER LOCKED FOR: <span className="text-rose-500">{selectedDossier.name}</span>
+              <h2 className="font-['Cinzel_Decorative'] text-3xl md:text-4xl text-white tracking-wider my-2">
+                EXAMINER: <span className="text-rose-500">{selectedInquisitor.name} ({selectedInquisitor.title})</span>
               </h2>
 
               <p className="text-sm font-mono text-neutral-300 max-w-lg mx-auto mb-6">
-                All <strong className="text-amber-400">{selectedDossier.buzzwordCount} buzzwords</strong> and{' '}
-                <strong className="text-rose-400">{selectedDossier.flaggedLandmines.length} high-suspicion claims</strong>{' '}
-                are packaged and ready for <strong className="text-white">L (Lawliet)</strong> in Stage 2!
+                Target Candidate: <strong className="text-white">{selectedDossier.name}</strong>.
+                L has summoned the court. Next up: <strong>Stage 3: Security Clearance & Optical Calibration</strong>.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <button
-                  onClick={() => setShowStage2LockedNotice(false)}
+                  onClick={() => setStage('STAGE_2_ROSTER')}
                   className="px-6 py-2.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-mono text-xs cursor-pointer transition-colors"
                 >
-                  ← Back to Dossier Review
+                  ← Back to Inquisitor Select
                 </button>
                 <div className="px-6 py-2.5 rounded-lg bg-emerald-950/80 border border-emerald-500/60 text-emerald-300 font-mono text-xs flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-emerald-400" />
-                  <span>Awaiting Stage 2 Inquisitor Engine</span>
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  <span>Awaiting Stage 3 Camera Setup</span>
                 </div>
               </div>
             </div>
@@ -133,9 +162,10 @@ export function App() {
           <p>
             RejectNote © 2026 // Presage SmartSpectra Challenge Submission
           </p>
-          <p className="text-neutral-400">
-            &ldquo;His buzzword count is over 9000!&rdquo;
-          </p>
+          <div className="flex items-center gap-2 text-rose-500 font-bold">
+            <span>&ldquo;His buzzword count is over 9000!&rdquo;</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </div>
         </div>
       </footer>
     </div>
