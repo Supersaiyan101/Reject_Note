@@ -85,10 +85,12 @@ export const InquisitorRoster: React.FC<InquisitorRosterProps> = ({
 
                 <div>
                   {/* Avatar Icon */}
-                  <div className="w-20 h-20 mx-auto my-3 rounded-2xl bg-neutral-950 border-2 border-rose-500/50 group-hover:border-rose-400 flex items-center justify-center shadow-[0_0_20px_rgba(225,29,72,0.3)] transition-all transform group-hover:scale-105">
-                    <span className="font-['Cinzel_Decorative'] text-rose-400 text-5xl font-black drop-shadow-[0_2px_15px_rgba(225,29,72,0.7)]">
-                      L
-                    </span>
+                  <div className="w-24 h-24 mx-auto my-2 rounded-2xl bg-neutral-950 border-2 border-rose-500/50 group-hover:border-rose-400 overflow-hidden shadow-[0_0_20px_rgba(225,29,72,0.3)] transition-all transform group-hover:scale-105">
+                    <img
+                      src="/l-character.png"
+                      alt="L"
+                      className="w-full h-full object-cover object-top"
+                    />
                   </div>
 
                   {/* Character Info */}
@@ -183,3 +185,4 @@ export const InquisitorRoster: React.FC<InquisitorRosterProps> = ({
     </div>
   );
 };
+

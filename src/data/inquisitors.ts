@@ -40,3 +40,4 @@ export const INQUISITORS: InquisitorProfile[] = [
     hoverSecret: 'STATUS: Backpacking across Shibuya on a self-discovery gap year.',
   },
 ];
+

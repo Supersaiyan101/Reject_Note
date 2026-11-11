@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { InquisitorProfile } from '../types';
-import { Volume2, VolumeX, ArrowRight, Brain, Zap, Cake, ChevronLeft } from 'lucide-react';
+import { Volume2, VolumeX, ArrowRight, Brain, Zap, Music, ChevronLeft, Sparkles } from 'lucide-react';
 import { soundFX } from '../utils/sfx';
-import { lSpeechEngine } from '../utils/speech';
+import { realAudio } from '../utils/realAudio';
 
 interface LShowcaseProps {
   inquisitor: InquisitorProfile;
@@ -18,23 +18,32 @@ export const LShowcase: React.FC<LShowcaseProps> = ({
   onBack,
 }) => {
   const [isPlayingVoice, setIsPlayingVoice] = useState(false);
+  const [isThemePlaying, setIsThemePlaying] = useState(false);
 
-  const handlePlayVoice = () => {
+  useEffect(() => {
+    return () => {
+      realAudio.stopAll();
+    };
+  }, []);
+
+  const handlePlayRealVoice = () => {
     if (isPlayingVoice) {
-      lSpeechEngine.stop();
+      realAudio.stopLVoice();
       setIsPlayingVoice(false);
       return;
     }
 
     soundFX.playClick();
-    const phrase = inquisitor.voicePhrase || `${candidateName}-kun... there is a 99.7% probability your resume is a complete bluff. Let us test your vitals.`;
-
     setIsPlayingVoice(true);
-    lSpeechEngine.speakAsL(
-      phrase,
-      () => setIsPlayingVoice(true),
-      () => setIsPlayingVoice(false)
-    );
+    realAudio.playLVoice(() => {
+      setIsPlayingVoice(false);
+    });
+  };
+
+  const handleToggleTheme = () => {
+    soundFX.playClick();
+    const active = realAudio.toggleLTheme();
+    setIsThemePlaying(active);
   };
 
   return (
@@ -60,7 +69,7 @@ export const LShowcase: React.FC<LShowcaseProps> = ({
               <div>
                 <h3 className="font-['Cinzel_Decorative'] text-2xl font-black text-white flex items-center gap-2">
                   <span>{inquisitor.name}</span>
-                  <span className="font-mono text-xs px-2 py-0.5 rounded bg-rose-950 text-rose-400 border border-rose-800/80 font-bold">
+                  <span className="font-mono text-xs px-2.5 py-0.5 rounded bg-rose-950 text-rose-400 border border-rose-800/80 font-bold">
                     {inquisitor.title}
                   </span>
                 </h3>
@@ -74,7 +83,7 @@ export const LShowcase: React.FC<LShowcaseProps> = ({
             <button
               onClick={() => {
                 soundFX.playClick();
-                lSpeechEngine.stop();
+                realAudio.stopAll();
                 onBack();
               }}
               className="px-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-700 hover:border-neutral-500 text-neutral-400 hover:text-white font-mono text-xs flex items-center gap-1.5 cursor-pointer transition-colors"
@@ -86,58 +95,67 @@ export const LShowcase: React.FC<LShowcaseProps> = ({
 
           {/* Main Grid: Avatar vs Combat Stats */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 my-8 items-center">
-            {/* Left Column: Visual Avatar & Voice Preview */}
+            {/* Left Column: Visual Key Art & Audio Controls */}
             <div className="lg:col-span-5 flex flex-col items-center text-center">
-              {/* L's Stylized Silhouette & Couching Pose */}
-              <div className="relative w-52 h-52 sm:w-60 sm:h-60 rounded-3xl bg-neutral-950 border-2 border-rose-500/50 p-6 flex flex-col items-center justify-center shadow-[0_0_35px_rgba(225,29,72,0.3)] group">
-                {/* Crouch Silhouette */}
-                <div className="relative flex flex-col items-center">
-                  <div className="w-14 h-14 rounded-full bg-neutral-800 border-2 border-rose-400/80 flex items-center justify-center shadow-[0_0_15px_rgba(225,29,72,0.4)] mb-1">
-                    {/* Dark eye circles */}
-                    <div className="flex gap-2">
-                      <div className="w-2.5 h-1.5 rounded-full bg-neutral-950 border border-rose-500/60" />
-                      <div className="w-2.5 h-1.5 rounded-full bg-neutral-950 border border-rose-500/60" />
-                    </div>
-                  </div>
-                  {/* Crouched body shape */}
-                  <div className="w-24 h-16 rounded-2xl bg-neutral-900 border border-neutral-700 flex items-center justify-center text-rose-400 font-mono text-[10px] tracking-widest font-bold">
-                    [CROUCH POSE]
-                  </div>
-                  {/* Bare feet on chair */}
-                  <div className="flex gap-4 mt-1 text-[9px] font-mono text-neutral-500">
-                    <span>(foot)</span>
-                    <span>(foot)</span>
-                  </div>
-                </div>
+              {/* REAL L ARTWORK CONTAINER */}
+              <div className="relative w-64 h-64 sm:w-72 sm:h-72 rounded-3xl bg-neutral-950 border-2 border-rose-500/70 p-2 shadow-[0_0_40px_rgba(225,29,72,0.4)] overflow-hidden group">
+                <img
+                  src="/l-character.png"
+                  alt="L (Lawliet) Death Note"
+                  className="w-full h-full object-cover object-top rounded-2xl transform group-hover:scale-105 transition-transform duration-500"
+                />
 
-                {/* Sweet tooth snack badge */}
-                <div className="absolute bottom-3 flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-950/90 border border-rose-500/60 text-[10px] font-mono text-rose-300">
-                  <Cake className="w-3 h-3 text-pink-400" />
-                  <span>Sugar Cubes: 9,000+</span>
+                {/* Subtle vignette over image */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none rounded-2xl" />
+
+                {/* Badge on artwork */}
+                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-[11px] font-mono text-white bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-lg border border-neutral-700/80">
+                  <span className="text-rose-400 font-bold flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-rose-400 animate-spin" />
+                    L Lawliet
+                  </span>
+                  <span className="text-neutral-400">Death Note</span>
                 </div>
               </div>
 
-              {/* Voice Sample Player */}
-              <button
-                onClick={handlePlayVoice}
-                className={`mt-5 px-4 py-2.5 rounded-xl border flex items-center gap-2 font-mono text-xs transition-all cursor-pointer ${
-                  isPlayingVoice
-                    ? 'bg-rose-950 border-rose-500 text-rose-300 shadow-[0_0_20px_rgba(225,29,72,0.5)] animate-pulse'
-                    : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-300 hover:text-white'
-                }`}
-              >
-                {isPlayingVoice ? (
-                  <>
-                    <VolumeX className="w-4 h-4 text-rose-400" />
-                    <span>L is Speaking... [Click to Stop]</span>
-                  </>
-                ) : (
-                  <>
-                    <Volume2 className="w-4 h-4 text-rose-400" />
-                    <span>▶ Play L&apos;s Voice Sample</span>
-                  </>
-                )}
-              </button>
+              {/* Dual Audio Controls: Real Voice & L's Theme */}
+              <div className="mt-5 flex flex-col sm:flex-row items-center gap-3 w-full max-w-xs">
+                {/* Real Voice Button */}
+                <button
+                  onClick={handlePlayRealVoice}
+                  className={`flex-1 w-full py-2.5 px-3 rounded-xl border flex items-center justify-center gap-1.5 font-mono text-xs transition-all cursor-pointer ${
+                    isPlayingVoice
+                      ? 'bg-rose-950 border-rose-500 text-rose-300 shadow-[0_0_20px_rgba(225,29,72,0.5)] animate-pulse'
+                      : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-200 hover:text-white'
+                  }`}
+                >
+                  {isPlayingVoice ? (
+                    <>
+                      <VolumeX className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Speaking...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Volume2 className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Real Voice Clip</span>
+                    </>
+                  )}
+                </button>
+
+                {/* L's Theme OST Button */}
+                <button
+                  onClick={handleToggleTheme}
+                  title="Toggle L's Theme Piano OST"
+                  className={`py-2.5 px-3 rounded-xl border flex items-center justify-center gap-1.5 font-mono text-xs transition-all cursor-pointer ${
+                    isThemePlaying
+                      ? 'bg-emerald-950 border-emerald-500 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.4)]'
+                      : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-300 hover:text-white'
+                  }`}
+                >
+                  <Music className={`w-3.5 h-3.5 ${isThemePlaying ? 'text-emerald-400 animate-bounce' : 'text-neutral-400'}`} />
+                  <span>{isThemePlaying ? 'OST Playing' : "L's Theme"}</span>
+                </button>
+              </div>
             </div>
 
             {/* Right Column: Inquisitor Protocol & Radar Stats */}
@@ -223,7 +241,7 @@ export const LShowcase: React.FC<LShowcaseProps> = ({
             <button
               onClick={() => {
                 soundFX.playDramaticSting();
-                lSpeechEngine.stop();
+                realAudio.stopAll();
                 onConfirm();
               }}
               className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-500 hover:to-red-500 text-white font-['Orbitron'] font-black text-sm tracking-widest flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(225,29,72,0.5)] hover:shadow-[0_0_45px_rgba(225,29,72,0.8)] transform hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer animate-pulse-glow"
