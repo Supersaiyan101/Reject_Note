@@ -12,7 +12,7 @@ export const INQUISITORS: InquisitorProfile[] = [
     stats: {
       deduction: 100,
       mercy: 0,
-      sweetTooth: 9001,
+      sweetTooth: '500 Sugar Cubes / Day',
       opticalSensitivity: 'MAX',
     },
     voicePhrase: 'Light-kun... do you truly believe your heart rate will not betray you? Let us begin the trial.',

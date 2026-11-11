@@ -32,7 +32,7 @@ export type InquisitorId = 'L' | 'MYSTERY_HR' | 'MYSTERY_GHOST';
 export interface InquisitorStats {
   deduction: number; // 0 - 100
   mercy: number; // 0 - 100
-  sweetTooth: number; // e.g. 9000
+  sweetTooth: string; // e.g. "500 Cubes / Day"
   opticalSensitivity: string; // e.g. "MAX"
 }
 

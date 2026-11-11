@@ -86,13 +86,13 @@ export const DossierCard: React.FC<DossierCardProps> = ({
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-mono text-emerald-400 font-bold uppercase tracking-wider">
-                  Scouter Power Level
+                  Threat Classification
                 </span>
                 <Flame className="w-4 h-4 text-amber-400 animate-bounce" />
               </div>
 
-              <div className="font-['Orbitron'] text-3xl font-black text-amber-400 tracking-tight my-1">
-                {dossier.powerLevel}
+              <div className="font-['Orbitron'] text-2xl font-black text-amber-400 tracking-tight my-1">
+                CLASS-S (CRITICAL)
               </div>
 
               <p className="text-[11px] font-mono text-neutral-400">

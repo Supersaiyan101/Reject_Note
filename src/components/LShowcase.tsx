@@ -201,12 +201,12 @@ export const LShowcase: React.FC<LShowcaseProps> = ({
                   <div className="flex justify-between mb-1">
                     <span className="text-neutral-300 flex items-center gap-1.5">
                       <Zap className="w-3.5 h-3.5 text-amber-400" />
-                      Sweet Tooth / Sugar Rush:
+                      Sugar Consumption Rate:
                     </span>
-                    <span className="text-amber-400 font-bold">OVER 9000!</span>
+                    <span className="text-amber-400 font-bold">500 Cubes / Day (Addicted)</span>
                   </div>
                   <div className="w-full bg-neutral-900 h-2 rounded-full overflow-hidden border border-neutral-800">
-                    <div className="bg-gradient-to-r from-amber-500 to-rose-500 h-full w-full animate-pulse" />
+                    <div className="bg-gradient-to-r from-amber-500 to-rose-500 h-full w-[95%]" />
                   </div>
                 </div>
 
