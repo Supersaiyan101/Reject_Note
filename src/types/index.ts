@@ -26,3 +26,26 @@ export interface CandidateDossier {
   rawText: string;
   isPreset: boolean;
 }
+
+export type InquisitorId = 'L' | 'MYSTERY_HR' | 'MYSTERY_GHOST';
+
+export interface InquisitorStats {
+  deduction: number; // 0 - 100
+  mercy: number; // 0 - 100
+  sweetTooth: number; // e.g. 9000
+  opticalSensitivity: string; // e.g. "MAX"
+}
+
+export interface InquisitorProfile {
+  id: InquisitorId;
+  name: string;
+  title: string;
+  origin: string;
+  quote: string;
+  difficulty: 'EASY' | 'MEDIUM' | 'HARD' | 'NIGHTMARE' | 'UNKNOWN';
+  isUnlocked: boolean;
+  mysteryNote?: string;
+  hoverSecret?: string;
+  stats?: InquisitorStats;
+  voicePhrase?: string;
+}
