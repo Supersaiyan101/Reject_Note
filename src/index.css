@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+@theme {
+  --font-gothic: "Cinzel Decorative", "MedievalSharp", serif;
+  --font-anime: "Bangers", cursive, sans-serif;
+  --font-scouter: "Orbitron", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-sans: "Space Grotesk", sans-serif;
+
+  --color-obsidian-950: #050507;
+  --color-obsidian-900: #0a0a0c;
+  --color-obsidian-850: #101015;
+  --color-obsidian-800: #171720;
+  --color-obsidian-700: #242433;
+
+  --color-crimson-600: #e11d48;
+  --color-crimson-500: #f43f5e;
+  --color-scouter-green: #22c55e;
+  --color-scouter-cyan: #06b6d4;
+  --color-scouter-amber: #f59e0b;
+}
+
+@keyframes laserSweep {
+  0% {
+    top: 0%;
+    opacity: 0.8;
+  }
+  50% {
+    top: 96%;
+    opacity: 1;
+  }
+  100% {
+    top: 0%;
+    opacity: 0.8;
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(225, 29, 72, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(225, 29, 72, 0.7);
+  }
+}
+
+@keyframes scouterFlicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 0.95; }
+  94% { opacity: 0.4; }
+  96% { opacity: 1; }
+  98% { opacity: 0.7; }
+}
+
+@keyframes menacingFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(3deg);
+  }
+}
+
+.animate-laser {
+  animation: laserSweep 2s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+.animate-scouter {
+  animation: scouterFlicker 4s infinite;
+}
+
+.animate-menacing {
+  animation: menacingFloat 3s ease-in-out infinite;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0c;
+}
+::-webkit-scrollbar-thumb {
+  background: #242433;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #e11d48;
+}
