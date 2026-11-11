@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { InquisitorProfile } from '../types';
-import { Volume2, VolumeX, ArrowRight, Brain, Zap, Music, ChevronLeft, Sparkles } from 'lucide-react';
+import { ArrowRight, Brain, Zap, Music, ChevronLeft, Sparkles, Disc } from 'lucide-react';
 import { soundFX } from '../utils/sfx';
 import { realAudio } from '../utils/realAudio';
 
@@ -17,7 +17,6 @@ export const LShowcase: React.FC<LShowcaseProps> = ({
   onConfirm,
   onBack,
 }) => {
-  const [isPlayingVoice, setIsPlayingVoice] = useState(false);
   const [isThemePlaying, setIsThemePlaying] = useState(false);
 
   useEffect(() => {
@@ -25,20 +24,6 @@ export const LShowcase: React.FC<LShowcaseProps> = ({
       realAudio.stopAll();
     };
   }, []);
-
-  const handlePlayRealVoice = () => {
-    if (isPlayingVoice) {
-      realAudio.stopLVoice();
-      setIsPlayingVoice(false);
-      return;
-    }
-
-    soundFX.playClick();
-    setIsPlayingVoice(true);
-    realAudio.playLVoice(() => {
-      setIsPlayingVoice(false);
-    });
-  };
 
   const handleToggleTheme = () => {
     soundFX.playClick();
@@ -95,9 +80,9 @@ export const LShowcase: React.FC<LShowcaseProps> = ({
 
           {/* Main Grid: Avatar vs Combat Stats */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 my-8 items-center">
-            {/* Left Column: Visual Key Art & Audio Controls */}
+            {/* Left Column: Visual Key Art & Theme Music Controller */}
             <div className="lg:col-span-5 flex flex-col items-center text-center">
-              {/* REAL L ARTWORK CONTAINER */}
+              {/* L ARTWORK CONTAINER */}
               <div className="relative w-64 h-64 sm:w-72 sm:h-72 rounded-3xl bg-neutral-950 border-2 border-rose-500/70 p-2 shadow-[0_0_40px_rgba(225,29,72,0.4)] overflow-hidden group">
                 <img
                   src="/l-character.png"
@@ -118,42 +103,20 @@ export const LShowcase: React.FC<LShowcaseProps> = ({
                 </div>
               </div>
 
-              {/* Dual Audio Controls: Real Voice & L's Theme */}
-              <div className="mt-5 flex flex-col sm:flex-row items-center gap-3 w-full max-w-xs">
-                {/* Real Voice Button */}
-                <button
-                  onClick={handlePlayRealVoice}
-                  className={`flex-1 w-full py-2.5 px-3 rounded-xl border flex items-center justify-center gap-1.5 font-mono text-xs transition-all cursor-pointer ${
-                    isPlayingVoice
-                      ? 'bg-rose-950 border-rose-500 text-rose-300 shadow-[0_0_20px_rgba(225,29,72,0.5)] animate-pulse'
-                      : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-200 hover:text-white'
-                  }`}
-                >
-                  {isPlayingVoice ? (
-                    <>
-                      <VolumeX className="w-3.5 h-3.5 text-rose-400" />
-                      <span>Speaking...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Volume2 className="w-3.5 h-3.5 text-rose-400" />
-                      <span>Real Voice Clip</span>
-                    </>
-                  )}
-                </button>
-
-                {/* L's Theme OST Button */}
+              {/* L's Theme OST Player Button */}
+              <div className="mt-5 w-full max-w-xs">
                 <button
                   onClick={handleToggleTheme}
                   title="Toggle L's Theme Piano OST"
-                  className={`py-2.5 px-3 rounded-xl border flex items-center justify-center gap-1.5 font-mono text-xs transition-all cursor-pointer ${
+                  className={`w-full py-3 px-4 rounded-xl border flex items-center justify-center gap-2.5 font-mono text-xs tracking-wider transition-all cursor-pointer ${
                     isThemePlaying
-                      ? 'bg-emerald-950 border-emerald-500 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.4)]'
+                      ? 'bg-emerald-950/80 border-emerald-500 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.4)] animate-pulse'
                       : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-neutral-300 hover:text-white'
                   }`}
                 >
-                  <Music className={`w-3.5 h-3.5 ${isThemePlaying ? 'text-emerald-400 animate-bounce' : 'text-neutral-400'}`} />
-                  <span>{isThemePlaying ? 'OST Playing' : "L's Theme"}</span>
+                  <Disc className={`w-4 h-4 ${isThemePlaying ? 'text-emerald-400 animate-spin' : 'text-neutral-400'}`} />
+                  <Music className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="font-semibold">{isThemePlaying ? "L's Theme: Playing (OST)" : "Play L's Theme (OST)"}</span>
                 </button>
               </div>
             </div>
