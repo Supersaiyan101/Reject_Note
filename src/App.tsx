@@ -6,7 +6,8 @@ import { ClaimScanner } from './components/ClaimScanner';
 import { DossierCard } from './components/DossierCard';
 import { InquisitorRoster } from './components/InquisitorRoster';
 import { LShowcase } from './components/LShowcase';
-import type { CandidateDossier, AppStage, InquisitorProfile } from './types';
+import { CalibrationStage } from './components/CalibrationStage';
+import type { CandidateDossier, AppStage, InquisitorProfile, BaselineCalibration } from './types';
 import { LIGHT_YAGAMI_DOSSIER, parseCustomResume } from './data/sampleResumes';
 import { INQUISITORS } from './data/inquisitors';
 import { CheckCircle2, ShieldCheck, ArrowRight } from 'lucide-react';
@@ -17,6 +18,7 @@ export function App() {
   const [selectedDossier, setSelectedDossier] = useState<CandidateDossier | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [selectedInquisitor, setSelectedInquisitor] = useState<InquisitorProfile>(INQUISITORS[0]);
+  const [baselineCalibration, setBaselineCalibration] = useState<BaselineCalibration | null>(null);
 
   // Load Light Yagami preset
   const handleLoadLightYagami = () => {
@@ -40,24 +42,33 @@ export function App() {
   const handleReset = () => {
     setSelectedDossier(null);
     setIsScanning(false);
+    setBaselineCalibration(null);
     setStage('STAGE_1_LOBBY');
   };
 
-  // Stage 1 -> Stage 2
+  // Navigation handlers
   const handleProceedToStage2 = () => {
     soundFX.playDramaticSting();
     setStage('STAGE_2_ROSTER');
   };
 
-  // Stage 2 -> Stage 1
   const handleBackToDossier = () => {
     setStage('STAGE_1_LOBBY');
   };
 
-  // Stage 2 -> Stage 3
   const handleConfirmInquisitor = () => {
     soundFX.playDramaticSting();
     setStage('STAGE_3_CALIBRATION');
+  };
+
+  const handleBackToInquisitor = () => {
+    setStage('STAGE_2_ROSTER');
+  };
+
+  const handleCalibrationComplete = (calibration: BaselineCalibration) => {
+    soundFX.playDramaticSting();
+    setBaselineCalibration(calibration);
+    setStage('STAGE_4_INTERROGATION');
   };
 
   return (
@@ -118,8 +129,18 @@ export function App() {
           </div>
         )}
 
-        {/* ----------------- STAGE 3: CALIBRATION PREVIEW / HAND-OFF ----------------- */}
+        {/* ----------------- STAGE 3: SECURITY CLEARANCE & CALIBRATION ----------------- */}
         {stage === 'STAGE_3_CALIBRATION' && selectedDossier && (
+          <CalibrationStage
+            dossier={selectedDossier}
+            inquisitor={selectedInquisitor}
+            onCalibrationComplete={handleCalibrationComplete}
+            onBack={handleBackToInquisitor}
+          />
+        )}
+
+        {/* ----------------- STAGE 4: INTERROGATION HAND-OFF PREVIEW ----------------- */}
+        {stage === 'STAGE_4_INTERROGATION' && selectedDossier && baselineCalibration && (
           <div className="w-full max-w-3xl mx-auto px-4 py-8">
             <div className="rounded-2xl bg-gradient-to-b from-neutral-900 via-neutral-950 to-black border-2 border-emerald-500/70 p-8 text-center shadow-[0_0_50px_rgba(16,185,129,0.3)]">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-950 border border-emerald-500/60 flex items-center justify-center text-emerald-400">
@@ -127,28 +148,29 @@ export function App() {
               </div>
 
               <span className="font-mono text-xs text-emerald-400 font-bold tracking-widest uppercase">
-                STAGE 2 COMPLETE: INQUISITOR LOCKED
+                STAGE 3 COMPLETE // BASELINE VITALS LOCKED
               </span>
 
               <h2 className="font-['Cinzel_Decorative'] text-3xl md:text-4xl text-white tracking-wider my-2">
-                EXAMINER: <span className="text-rose-500">{selectedInquisitor.name} ({selectedInquisitor.title})</span>
+                ENTERING L&apos;S COURT
               </h2>
 
               <p className="text-sm font-mono text-neutral-300 max-w-lg mx-auto mb-6">
-                Target Candidate: <strong className="text-white">{selectedDossier.name}</strong>.
-                L has summoned the court. Next up: <strong>Stage 3: Security Clearance & Optical Calibration</strong>.
+                Resting Pulse: <strong className="text-rose-400">{baselineCalibration.restingBPM} BPM</strong> |{' '}
+                Resting Respiration: <strong className="text-cyan-400">{baselineCalibration.restingBreathingRate} RPM</strong>.
+                L is opening the <strong className="text-white">REJECT NOTE</strong>. Prepared for Stage 4!
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <button
-                  onClick={() => setStage('STAGE_2_ROSTER')}
+                  onClick={() => setStage('STAGE_3_CALIBRATION')}
                   className="px-6 py-2.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-mono text-xs cursor-pointer transition-colors"
                 >
-                  ← Back to Inquisitor Select
+                  ← Recalibrate Sensors
                 </button>
                 <div className="px-6 py-2.5 rounded-lg bg-emerald-950/80 border border-emerald-500/60 text-emerald-300 font-mono text-xs flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  <span>Awaiting Stage 3 Camera Setup</span>
+                  <span>Awaiting Stage 4 Interrogation Room</span>
                 </div>
               </div>
             </div>
