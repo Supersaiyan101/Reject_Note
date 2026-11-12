@@ -18,11 +18,24 @@ export const DossierCard: React.FC<DossierCardProps> = ({
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
-    // Alternate: 4.2 seconds bliss, 1.4 seconds panic
-    const interval = setInterval(() => {
-      setPsycheMode((prev) => (prev === 'bliss' ? 'panic' : 'bliss'));
-    }, 3800);
-    return () => clearInterval(interval);
+    let timeoutId: number;
+
+    const triggerPanic = () => {
+      // Short panic spike: 900ms
+      setPsycheMode('panic');
+      timeoutId = window.setTimeout(() => {
+        // Long Gojo bliss: 6000ms (6s full loop)
+        setPsycheMode('bliss');
+        timeoutId = window.setTimeout(triggerPanic, 6000);
+      }, 900);
+    };
+
+    // Initial Gojo bliss for 6 seconds
+    timeoutId = window.setTimeout(triggerPanic, 6000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
   }, []);
 
   const activeMode = isHovered ? 'panic' : psycheMode;
@@ -125,31 +138,36 @@ export const DossierCard: React.FC<DossierCardProps> = ({
                 </span>
               </div>
 
-              {/* Dynamic GIF Viewport */}
-              <div className="relative w-full h-36 rounded-lg overflow-hidden border border-neutral-800 bg-neutral-900 group">
+              {/* Dynamic GIF Viewport - Full view, zero cropping */}
+              <div className="relative w-full h-52 sm:h-56 rounded-lg overflow-hidden border border-neutral-800 bg-neutral-950 flex items-center justify-center group">
                 <img
                   src={activeMode === 'panic' ? '/candidate-audit-despair.gif' : '/candidate-ego-bliss.gif'}
                   alt={activeMode === 'panic' ? 'Audit Despair' : 'Ego Bliss'}
-                  className="w-full h-full object-cover object-center transition-all duration-200"
+                  className="w-full h-full object-contain object-center transition-all duration-150"
                 />
 
                 {/* Subtle CRT Scanline Overlay */}
-                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.35)_50%)] bg-[length:100%_4px] opacity-40" />
+                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] opacity-35" />
 
-                {/* Top Corner Label */}
-                <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-black/75 backdrop-blur-xs border border-white/10 text-[9px] font-mono text-neutral-300 uppercase">
+                {/* Top Corner Minimal Badge */}
+                <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-black/80 backdrop-blur-xs border border-white/10 text-[9px] font-mono text-neutral-300 uppercase">
                   {activeMode === 'panic' ? '⚠️ Pulse Surge' : '🌸 Baseline Ego'}
                 </div>
+              </div>
 
-                {/* Bottom Overlay Label */}
-                <div className="absolute bottom-2 inset-x-2 px-2 py-1 rounded bg-black/80 backdrop-blur-xs border border-white/10 flex items-center justify-between text-[10px] font-mono">
-                  <span className={activeMode === 'panic' ? 'text-rose-400 font-bold' : 'text-pink-300 font-medium'}>
-                    {activeMode === 'panic' ? '188 BPM // Heart Rate Breach' : '62 BPM // Untouchable Calm'}
-                  </span>
-                  <span className="text-[9px] text-neutral-400 hidden sm:inline">
-                    {activeMode === 'panic' ? 'CRITICAL' : 'SPECIAL GRADE'}
-                  </span>
-                </div>
+              {/* Telemetry Strip below Viewport */}
+              <div className={`mt-2 px-2.5 py-1.5 rounded flex items-center justify-between text-[11px] font-mono border transition-colors ${
+                activeMode === 'panic'
+                  ? 'bg-rose-950/40 border-rose-800/60 text-rose-300'
+                  : 'bg-pink-950/30 border-pink-800/40 text-pink-300'
+              }`}>
+                <span className="flex items-center gap-1.5 font-bold">
+                  <Activity className={`w-3.5 h-3.5 ${activeMode === 'panic' ? 'text-rose-400 animate-pulse' : 'text-pink-400'}`} />
+                  {activeMode === 'panic' ? '188 BPM // Critical Pulse Spike' : '62 BPM // Untouchable Calm'}
+                </span>
+                <span className="text-[10px] text-neutral-400 font-bold">
+                  {activeMode === 'panic' ? 'COLLAPSED' : 'SPECIAL GRADE'}
+                </span>
               </div>
 
               <p className="text-[11px] font-mono text-neutral-400 mt-2">
