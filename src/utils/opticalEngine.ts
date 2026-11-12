@@ -52,6 +52,19 @@ class OpticalBiometricEngine {
 
   // Request & attach real webcam MediaStream
   public async startCamera(videoEl: HTMLVideoElement): Promise<MediaStream> {
+    // If stream is already active with live tracks on this video element, keep it
+    if (this.mediaStream && this.mediaStream.active && this.videoElement === videoEl) {
+      const tracks = this.mediaStream.getVideoTracks();
+      if (tracks.length > 0 && tracks[0].readyState === 'live') {
+        try {
+          await this.videoElement.play();
+        } catch {
+          // ignore
+        }
+        return this.mediaStream;
+      }
+    }
+
     this.stopCamera();
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {

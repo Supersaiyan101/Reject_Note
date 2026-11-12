@@ -58,10 +58,15 @@ export const CalibrationStage: React.FC<CalibrationStageProps> = ({
 
   const calibrationProgress = Math.max(0, Math.min(1, (10 - countdown) / 10));
 
+  const lastVitalsUpdateRef = React.useRef<number>(0);
   const handleVitalsUpdate = (vitals: LiveVitals) => {
-    if (isCalibrating) {
-      setMeasuredBPM(vitals.currentBPM);
-      setMeasuredRPM(vitals.currentBreathingRate);
+    const now = Date.now();
+    if (now - lastVitalsUpdateRef.current > 350) {
+      lastVitalsUpdateRef.current = now;
+      if (isCalibrating) {
+        setMeasuredBPM(vitals.currentBPM);
+        setMeasuredRPM(vitals.currentBreathingRate);
+      }
     }
   };
 

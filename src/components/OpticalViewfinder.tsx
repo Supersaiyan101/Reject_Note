@@ -34,6 +34,13 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
 
   const animLoopRef = useRef<number | null>(null);
 
+  // Keep callback references stable to prevent effect re-runs
+  const onVitalsUpdateRef = useRef(onVitalsUpdate);
+  onVitalsUpdateRef.current = onVitalsUpdate;
+
+  const onCameraStateChangeRef = useRef(onCameraStateChange);
+  onCameraStateChangeRef.current = onCameraStateChange;
+
   const drawWaveform = useCallback((waveform: number[]) => {
     const canvas = waveformCanvasRef.current;
     if (!canvas) return;
@@ -60,30 +67,56 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
   const startVideo = useCallback(async () => {
     if (!videoRef.current) return;
     setCameraState('REQUESTING');
-    onCameraStateChange?.('REQUESTING');
+    onCameraStateChangeRef.current?.('REQUESTING');
     setErrorMessage(null);
 
     try {
       await opticalEngine.startCamera(videoRef.current);
       setCameraState('ACTIVE');
-      onCameraStateChange?.('ACTIVE');
+      onCameraStateChangeRef.current?.('ACTIVE');
     } catch (err: unknown) {
       console.warn('Camera request failed:', err);
       setCameraState('ERROR');
-      onCameraStateChange?.('ERROR');
+      onCameraStateChangeRef.current?.('ERROR');
       const msg = err instanceof Error ? err.message : 'Webcam permission denied or camera not found.';
       setErrorMessage(msg);
     }
-  }, [onCameraStateChange]);
+  }, []);
 
   useEffect(() => {
-    startVideo();
+    let isCancelled = false;
+
+    const init = async () => {
+      if (!videoRef.current) return;
+      setCameraState('REQUESTING');
+      onCameraStateChangeRef.current?.('REQUESTING');
+      setErrorMessage(null);
+
+      try {
+        await opticalEngine.startCamera(videoRef.current);
+        if (!isCancelled) {
+          setCameraState('ACTIVE');
+          onCameraStateChangeRef.current?.('ACTIVE');
+        }
+      } catch (err: unknown) {
+        console.warn('Camera request failed:', err);
+        if (!isCancelled) {
+          setCameraState('ERROR');
+          onCameraStateChangeRef.current?.('ERROR');
+          const msg = err instanceof Error ? err.message : 'Webcam permission denied or camera not found.';
+          setErrorMessage(msg);
+        }
+      }
+    };
+
+    init();
 
     // Frame sampling animation loop
     const loop = () => {
+      if (isCancelled) return;
       const current = opticalEngine.sampleFrame(72);
       setVitals(current);
-      onVitalsUpdate?.(current);
+      onVitalsUpdateRef.current?.(current);
       drawWaveform(current.waveform);
       animLoopRef.current = requestAnimationFrame(loop);
     };
@@ -91,11 +124,11 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
     animLoopRef.current = requestAnimationFrame(loop);
 
     return () => {
+      isCancelled = true;
       if (animLoopRef.current) cancelAnimationFrame(animLoopRef.current);
       opticalEngine.stopCamera();
-      onCameraStateChange?.('INIT');
     };
-  }, [drawWaveform, onVitalsUpdate, startVideo, onCameraStateChange]);
+  }, [drawWaveform]);
 
   return (
     <div className="relative rounded-2xl bg-black border-2 border-rose-500/80 p-3 shadow-[0_0_35px_rgba(225,29,72,0.3)] overflow-hidden flex flex-col justify-between">
@@ -122,13 +155,24 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
             <p className="text-[11px] font-mono text-neutral-400 max-w-xs mb-3">
               {errorMessage || 'Running in Optical Simulation Mode.'}
             </p>
-            <button
-              onClick={startVideo}
-              className="px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-xs font-mono text-white flex items-center gap-1.5 cursor-pointer"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>Retry Camera</span>
-            </button>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <button
+                onClick={startVideo}
+                className="px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-xs font-mono text-white flex items-center gap-1.5 cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Retry Camera</span>
+              </button>
+              <button
+                onClick={() => {
+                  setCameraState('ACTIVE');
+                  onCameraStateChangeRef.current?.('ACTIVE');
+                }}
+                className="px-3 py-1.5 rounded-lg bg-emerald-950 hover:bg-emerald-900 border border-emerald-600/70 text-xs font-mono text-emerald-300 flex items-center gap-1.5 cursor-pointer transition-colors"
+              >
+                <span>Bypass with Simulation</span>
+              </button>
+            </div>
           </div>
         )}
 
