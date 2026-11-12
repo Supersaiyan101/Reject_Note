@@ -69,3 +69,37 @@ export interface LiveVitals {
   waveform: number[];
   signalQuality: 'OPTIMAL' | 'FAIR' | 'SEARCHING';
 }
+
+// STAGE 4: INTERROGATION & FORENSIC TYPES
+export interface InterrogationQuestion {
+  id: string;
+  claimTitle: string;
+  category: string;
+  lQuestion: string;
+  lSubtext: string;
+  badge: string;
+  expectedKeywords?: string[];
+}
+
+export interface BiometricEvidence {
+  questionId: string;
+  claimTitle: string;
+  candidateTestimony: string;
+  baselineBPM: number;
+  peakBPM: number;
+  deltaBPM: number;
+  avgBPM: number;
+  gazeDeviations: number;
+  fidgetIndex: number;
+  durationSec: number;
+  deductionVerdict: string;
+  suspicionAdded: number;
+}
+
+export interface InterrogationSummary {
+  candidateName: string;
+  inquisitorId: InquisitorId;
+  totalSuspicionPercent: number;
+  evidenceLog: BiometricEvidence[];
+  finalVerdict: 'GUILTY_REJECTED' | 'PROBATION_HIRED';
+}

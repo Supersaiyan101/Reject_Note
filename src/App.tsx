@@ -7,10 +7,11 @@ import { DossierCard } from './components/DossierCard';
 import { InquisitorRoster } from './components/InquisitorRoster';
 import { LShowcase } from './components/LShowcase';
 import { CalibrationStage } from './components/CalibrationStage';
-import type { CandidateDossier, AppStage, InquisitorProfile, BaselineCalibration } from './types';
+import { InterrogationStage } from './components/InterrogationStage';
+import type { CandidateDossier, AppStage, InquisitorProfile, BaselineCalibration, InterrogationSummary } from './types';
 import { LIGHT_YAGAMI_DOSSIER, parseCustomResume } from './data/sampleResumes';
 import { INQUISITORS } from './data/inquisitors';
-import { CheckCircle2, ShieldCheck, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { soundFX } from './utils/sfx';
 
 export function App() {
@@ -19,6 +20,7 @@ export function App() {
   const [isScanning, setIsScanning] = useState(false);
   const [selectedInquisitor, setSelectedInquisitor] = useState<InquisitorProfile>(INQUISITORS[0]);
   const [baselineCalibration, setBaselineCalibration] = useState<BaselineCalibration | null>(null);
+  const [interrogationSummary, setInterrogationSummary] = useState<InterrogationSummary | null>(null);
 
   // Load Light Yagami preset
   const handleLoadLightYagami = () => {
@@ -139,39 +141,67 @@ export function App() {
           />
         )}
 
-        {/* ----------------- STAGE 4: INTERROGATION HAND-OFF PREVIEW ----------------- */}
+        {/* ----------------- STAGE 4: LIVE INTERROGATION CHAMBER ----------------- */}
         {stage === 'STAGE_4_INTERROGATION' && selectedDossier && baselineCalibration && (
-          <div className="w-full max-w-3xl mx-auto px-4 py-8">
-            <div className="rounded-2xl bg-gradient-to-b from-neutral-900 via-neutral-950 to-black border-2 border-emerald-500/70 p-8 text-center shadow-[0_0_50px_rgba(16,185,129,0.3)]">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-950 border border-emerald-500/60 flex items-center justify-center text-emerald-400">
-                <CheckCircle2 className="w-8 h-8" />
+          <InterrogationStage
+            dossier={selectedDossier}
+            inquisitor={selectedInquisitor}
+            baseline={baselineCalibration}
+            onCompleteVerdict={(summary) => {
+              setInterrogationSummary(summary);
+              setStage('STAGE_5_VERDICT');
+            }}
+            onBack={() => setStage('STAGE_3_CALIBRATION')}
+          />
+        )}
+
+        {/* ----------------- STAGE 5: THE FINAL REJECT NOTE VERDICT ----------------- */}
+        {stage === 'STAGE_5_VERDICT' && selectedDossier && interrogationSummary && (
+          <div className="w-full max-w-4xl mx-auto px-4 py-8">
+            <div className="rounded-2xl bg-gradient-to-b from-neutral-900 via-neutral-950 to-black border-2 border-rose-600 p-8 text-center shadow-[0_0_60px_rgba(225,29,72,0.4)] space-y-6">
+              <div className="w-20 h-20 mx-auto rounded-2xl bg-black border-2 border-rose-500 flex items-center justify-center text-rose-500 font-serif text-4xl font-black shadow-[0_0_25px_rgba(225,29,72,0.5)]">
+                死
               </div>
 
-              <span className="font-mono text-xs text-emerald-400 font-bold tracking-widest uppercase">
-                STAGE 3 COMPLETE // BASELINE VITALS LOCKED
-              </span>
+              <div>
+                <span className="font-mono text-xs text-rose-400 font-bold tracking-widest uppercase block mb-1">
+                  STAGE 5 // FINAL BIOFEEDBACK VERDICT
+                </span>
+                <h2 className="font-['Cinzel_Decorative'] text-3xl md:text-5xl text-white tracking-wider">
+                  {interrogationSummary.finalVerdict === 'GUILTY_REJECTED'
+                    ? 'NAME INSCRIBED IN REJECT NOTE'
+                    : 'PROBATIONARY CLEARANCE GRANTED'}
+                </h2>
+              </div>
 
-              <h2 className="font-['Cinzel_Decorative'] text-3xl md:text-4xl text-white tracking-wider my-2">
-                ENTERING L&apos;S COURT
-              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto text-left">
+                <div className="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
+                  <span className="text-[10px] font-mono text-neutral-400 block uppercase">Candidate</span>
+                  <strong className="text-white font-mono text-base">{interrogationSummary.candidateName}</strong>
+                </div>
+                <div className="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
+                  <span className="text-[10px] font-mono text-neutral-400 block uppercase">Chief Inquisitor</span>
+                  <strong className="text-rose-400 font-mono text-base">L Lawliet</strong>
+                </div>
+                <div className="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
+                  <span className="text-[10px] font-mono text-neutral-400 block uppercase">Final Bluff Probability</span>
+                  <strong className="text-rose-500 font-mono text-base">{interrogationSummary.totalSuspicionPercent}%</strong>
+                </div>
+              </div>
 
-              <p className="text-sm font-mono text-neutral-300 max-w-lg mx-auto mb-6">
-                Resting Pulse: <strong className="text-rose-400">{baselineCalibration.restingBPM} BPM</strong> |{' '}
-                Resting Respiration: <strong className="text-cyan-400">{baselineCalibration.restingBreathingRate} RPM</strong>.
-                L is opening the <strong className="text-white">REJECT NOTE</strong>. Prepared for Stage 4!
+              <p className="text-sm font-mono text-neutral-300 max-w-lg mx-auto">
+                {interrogationSummary.finalVerdict === 'GUILTY_REJECTED'
+                  ? 'Cause of Rejection: Unrecoverable Cardiovascular Bluff. Terminated from Pipeline within 40 seconds.'
+                  : 'Candidate vitals remained resilient under clinical cross-examination.'}
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <div className="pt-4 flex items-center justify-center gap-4">
                 <button
-                  onClick={() => setStage('STAGE_3_CALIBRATION')}
-                  className="px-6 py-2.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-mono text-xs cursor-pointer transition-colors"
+                  onClick={handleReset}
+                  className="px-6 py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-mono text-xs cursor-pointer transition-colors"
                 >
-                  ← Recalibrate Sensors
+                  Audit Another Candidate
                 </button>
-                <div className="px-6 py-2.5 rounded-lg bg-emerald-950/80 border border-emerald-500/60 text-emerald-300 font-mono text-xs flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  <span>Awaiting Stage 4 Interrogation Room</span>
-                </div>
               </div>
             </div>
           </div>
