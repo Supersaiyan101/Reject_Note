@@ -4,7 +4,7 @@ import { OpticalViewfinder } from './OpticalViewfinder';
 import { SecurityWaiver } from './SecurityWaiver';
 import { opticalEngine } from '../utils/opticalEngine';
 import { soundFX } from '../utils/sfx';
-import { ShieldCheck, Heart, Wind, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Heart, Wind, ArrowRight, CheckCircle2, Volume2 } from 'lucide-react';
 
 interface CalibrationStageProps {
   dossier: CandidateDossier;
@@ -43,7 +43,7 @@ export const CalibrationStage: React.FC<CalibrationStageProps> = ({
         clearInterval(timer);
         setIsCalibrating(false);
         setIsLocked(true);
-        soundFX.playDramaticSting();
+        soundFX.playMangekyouLock();
       }
     }, 1000);
 
@@ -112,11 +112,12 @@ export const CalibrationStage: React.FC<CalibrationStageProps> = ({
 
         {/* Viewfinder + Calibration Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 my-8 items-center">
-          {/* Left: Real Webcam Viewfinder */}
+          {/* Left: Real Webcam Viewfinder with Mangekyou Reticle */}
           <div className="lg:col-span-6">
             <OpticalViewfinder
               onVitalsUpdate={handleVitalsUpdate}
               isCalibrating={isCalibrating}
+              isLocked={isLocked}
             />
           </div>
 
@@ -164,6 +165,15 @@ export const CalibrationStage: React.FC<CalibrationStageProps> = ({
                   <p className="text-xs font-mono text-neutral-300 max-w-xs mx-auto">
                     Resting vitals locked into L&apos;s trial matrix. Deviations during interrogation will trigger bluff alarms.
                   </p>
+
+                  <button
+                    onClick={() => soundFX.playMangekyouLock()}
+                    title="Replay Mangekyou Sharingan activation sound"
+                    className="mt-3.5 px-3 py-1 rounded-full bg-neutral-900 hover:bg-neutral-800 border border-red-500/50 hover:border-red-400 text-[11px] font-mono text-neutral-300 hover:text-white inline-flex items-center gap-1.5 cursor-pointer transition-colors shadow-[0_0_10px_rgba(239,68,68,0.2)]"
+                  >
+                    <Volume2 className="w-3.5 h-3.5 text-red-400" />
+                    <span>Replay Sharingan Sound</span>
+                  </button>
                 </>
               )}
             </div>
@@ -227,3 +237,4 @@ export const CalibrationStage: React.FC<CalibrationStageProps> = ({
     </div>
   );
 };
+

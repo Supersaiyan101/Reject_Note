@@ -197,3 +197,4 @@ export const SecurityWaiver: React.FC<SecurityWaiverProps> = ({
     </div>
   );
 };
+
