@@ -221,16 +221,30 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
                   ? 'border-red-400 scale-110 shadow-[0_0_55px_rgba(239,68,68,1)] bg-red-950/40'
                   : isLocked
                   ? 'border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.7)] bg-red-950/20'
-                  : isCalibrating
-                  ? 'border-red-500/70 shadow-[0_0_15px_rgba(239,68,68,0.35)] bg-black/30'
-                  : 'border-dashed border-neutral-600/60 bg-black/20'
+                  : 'border-cyan-500/50 bg-black/20'
               }`}
             >
               {/* Corner Focus Ticks */}
-              <div className="absolute top-2 left-2 w-3.5 h-3.5 border-t-2 border-l-2 border-red-500/90" />
-              <div className="absolute top-2 right-2 w-3.5 h-3.5 border-t-2 border-r-2 border-red-500/90" />
-              <div className="absolute bottom-2 left-2 w-3.5 h-3.5 border-b-2 border-l-2 border-red-500/90" />
-              <div className="absolute bottom-2 right-2 w-3.5 h-3.5 border-b-2 border-r-2 border-red-500/90" />
+              <div
+                className={`absolute top-2 left-2 w-3.5 h-3.5 border-t-2 border-l-2 transition-colors ${
+                  isLocked ? 'border-red-500' : 'border-cyan-400/80'
+                }`}
+              />
+              <div
+                className={`absolute top-2 right-2 w-3.5 h-3.5 border-t-2 border-r-2 transition-colors ${
+                  isLocked ? 'border-red-500' : 'border-cyan-400/80'
+                }`}
+              />
+              <div
+                className={`absolute bottom-2 left-2 w-3.5 h-3.5 border-b-2 border-l-2 transition-colors ${
+                  isLocked ? 'border-red-500' : 'border-cyan-400/80'
+                }`}
+              />
+              <div
+                className={`absolute bottom-2 right-2 w-3.5 h-3.5 border-b-2 border-r-2 transition-colors ${
+                  isLocked ? 'border-red-500' : 'border-cyan-400/80'
+                }`}
+              />
 
               {/* Mangekyou Sharingan Eye */}
               <MangekyouSharingan
@@ -249,7 +263,7 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
                       : cameraState !== 'ACTIVE'
                       ? 'bg-amber-950/90 text-amber-300 border-amber-600/70'
                       : isCalibrating
-                      ? 'bg-neutral-900/90 text-amber-300 border-amber-500/60 animate-pulse'
+                      ? 'bg-cyan-950/80 text-cyan-300 border-cyan-500/50'
                       : 'bg-black/80 text-neutral-400 border-neutral-700'
                   }`}
                 >
@@ -258,7 +272,7 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
                     : cameraState !== 'ACTIVE'
                     ? 'WAITING FOR CAMERA'
                     : isCalibrating
-                    ? `LOCKING TARGET... ${Math.round(calibrationProgress * 100)}%`
+                    ? `CALIBRATING BASELINE (${Math.round(calibrationProgress * 100)}%)`
                     : 'POSITION FACE'}
                 </span>
               </div>
