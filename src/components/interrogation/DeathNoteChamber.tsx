@@ -13,7 +13,6 @@ import { candidateVoiceEngine } from '../../services/voiceEngine';
 import { OpticalViewfinder } from '../OpticalViewfinder';
 import { soundFX } from '../../utils/sfx';
 import { realAudio } from '../../utils/realAudio';
-import { lSpeechEngine } from '../../utils/speech';
 import { 
   Mic, 
   MicOff, 
@@ -103,11 +102,10 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
     }
     return () => {
       candidateVoiceEngine.stopListening();
-      lSpeechEngine.stop();
     };
   }, []);
 
-  // When question changes, speak question and prepare testimony
+  // When question changes, prepare question and start theme music
   useEffect(() => {
     setPhase('QUESTION');
     setTestimonyText('');
@@ -115,8 +113,10 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
     bpmReadingsRef.current = [];
     gazeDriftsRef.current = 0;
 
-    // L vocally asks the question via Web Speech
-    lSpeechEngine.speakAsL(currentQuestion.lQuestion);
+    // L's theme plays during cross-examination
+    realAudio.playLTheme();
+    setIsThemePlaying(true);
+    soundFX.playDramaticSting();
   }, [questionIdx, currentQuestion, baseline.restingBPM]);
 
   // Handle vitals updates from Presage optical camera
@@ -260,8 +260,10 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
           };
           setEvidenceLog((prev) => [...prev, evidenceItem]);
 
-          // L speaks his verdict aloud
-          lSpeechEngine.speakAsL(activeDeduction.deductionText);
+          // Verdict reached: music returns triumphantly with dramatic sting
+          soundFX.playDramaticSting();
+          realAudio.playLTheme();
+          setIsThemePlaying(true);
         }
       }
     }, 100);
@@ -272,7 +274,6 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
   // Advance to next question or final verdict
   const handleNextStep = () => {
     soundFX.playClick();
-    lSpeechEngine.stop();
 
     if (questionIdx + 1 < questions.length) {
       setQuestionIdx((prev) => prev + 1);
@@ -418,7 +419,8 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
             <OpticalViewfinder
               onVitalsUpdate={handleVitalsUpdate}
               onCameraStateChange={setCameraState}
-              isLocked={true}
+              isLocked={false}
+              showSharingan={false}
             />
 
             {/* High-Tech Telemetry Overlay HUD */}
@@ -502,6 +504,9 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
                 onClick={() => {
                   soundFX.playClick();
                   testimonyStartTimeRef.current = Date.now();
+                  // Stop music so candidate speaks in high-stakes silence
+                  realAudio.pauseLTheme();
+                  setIsThemePlaying(false);
                   setPhase('TESTIMONY');
                 }}
                 className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-mono text-sm font-bold flex items-center gap-2 cursor-pointer transition-all shadow-[0_0_20px_rgba(225,29,72,0.4)]"

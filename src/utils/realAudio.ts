@@ -12,6 +12,20 @@ class RealAudioController {
     }
   }
 
+  // Play L's Theme Piano OST
+  public playLTheme() {
+    if (!this.themeAudio) return;
+    this.themeAudio.play().catch(console.warn);
+    this.isThemePlaying = true;
+  }
+
+  // Pause L's Theme (e.g. for silent candidate testimony)
+  public pauseLTheme() {
+    if (!this.themeAudio) return;
+    this.themeAudio.pause();
+    this.isThemePlaying = false;
+  }
+
   // Toggle character theme (e.g. L's Theme Piano OST)
   public toggleLTheme(): boolean {
     if (!this.themeAudio) return false;

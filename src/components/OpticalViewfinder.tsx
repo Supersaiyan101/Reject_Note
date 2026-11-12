@@ -10,6 +10,7 @@ interface OpticalViewfinderProps {
   isCalibrating?: boolean;
   isLocked?: boolean;
   calibrationProgress?: number;
+  showSharingan?: boolean;
 }
 
 export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
@@ -18,6 +19,7 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
   isCalibrating = false,
   isLocked = false,
   calibrationProgress = 0,
+  showSharingan = false,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const waveformCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -212,53 +214,55 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
             <div className="w-6 h-6 border-t-2 border-r-2 border-cyan-400 shadow-[0_0_10px_#22d3ee]" />
           </div>
 
-          {/* Center Mangekyou Sharingan Reticle Overlay */}
+          {/* Center Viewfinder Reticle Overlay */}
           <div className="self-center relative flex flex-col items-center justify-center my-auto">
             {/* Reticle Boundary Frame */}
             <div
               className={`w-44 h-52 rounded-[2rem] border transition-all duration-300 flex flex-col items-center justify-center relative ${
-                jumpscareFlash
+                showSharingan && jumpscareFlash
                   ? 'border-red-400 scale-110 shadow-[0_0_55px_rgba(239,68,68,1)] bg-red-950/40'
-                  : isLocked
+                  : showSharingan && isLocked
                   ? 'border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.7)] bg-red-950/20'
-                  : 'border-cyan-500/50 bg-black/20'
+                  : 'border-cyan-500/50 bg-black/10'
               }`}
             >
               {/* Corner Focus Ticks */}
               <div
                 className={`absolute top-2 left-2 w-3.5 h-3.5 border-t-2 border-l-2 transition-colors ${
-                  isLocked ? 'border-red-500' : 'border-cyan-400/80'
+                  showSharingan && isLocked ? 'border-red-500' : 'border-cyan-400/80'
                 }`}
               />
               <div
                 className={`absolute top-2 right-2 w-3.5 h-3.5 border-t-2 border-r-2 transition-colors ${
-                  isLocked ? 'border-red-500' : 'border-cyan-400/80'
+                  showSharingan && isLocked ? 'border-red-500' : 'border-cyan-400/80'
                 }`}
               />
               <div
                 className={`absolute bottom-2 left-2 w-3.5 h-3.5 border-b-2 border-l-2 transition-colors ${
-                  isLocked ? 'border-red-500' : 'border-cyan-400/80'
+                  showSharingan && isLocked ? 'border-red-500' : 'border-cyan-400/80'
                 }`}
               />
               <div
                 className={`absolute bottom-2 right-2 w-3.5 h-3.5 border-b-2 border-r-2 transition-colors ${
-                  isLocked ? 'border-red-500' : 'border-cyan-400/80'
+                  showSharingan && isLocked ? 'border-red-500' : 'border-cyan-400/80'
                 }`}
               />
 
-              {/* Mangekyou Sharingan Eye */}
-              <MangekyouSharingan
-                isLocked={isLocked}
-                progress={calibrationProgress}
-                size={isLocked ? 112 : 98}
-                className="transition-transform duration-500"
-              />
+              {/* Mangekyou Sharingan Eye - Gated by showSharingan */}
+              {showSharingan && (
+                <MangekyouSharingan
+                  isLocked={isLocked}
+                  progress={calibrationProgress}
+                  size={isLocked ? 112 : 98}
+                  className="transition-transform duration-500"
+                />
+              )}
 
               {/* Status Badge */}
               <div className="mt-2.5">
                 <span
                   className={`font-mono text-[9px] px-2.5 py-0.5 rounded font-bold uppercase tracking-wider border backdrop-blur-md transition-all ${
-                    isLocked
+                    showSharingan && isLocked
                       ? 'bg-red-950 text-red-200 border-red-500 shadow-[0_0_12px_rgba(239,68,68,0.8)]'
                       : cameraState !== 'ACTIVE'
                       ? 'bg-amber-950/90 text-amber-300 border-amber-600/70'
@@ -267,13 +271,13 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
                       : 'bg-black/80 text-neutral-400 border-neutral-700'
                   }`}
                 >
-                  {isLocked
+                  {showSharingan && isLocked
                     ? 'MANGEKYOU LOCKED'
                     : cameraState !== 'ACTIVE'
                     ? 'WAITING FOR CAMERA'
                     : isCalibrating
                     ? `CALIBRATING BASELINE (${Math.round(calibrationProgress * 100)}%)`
-                    : 'POSITION FACE'}
+                    : 'PRESAGE SENSORS ACTIVE'}
                 </span>
               </div>
             </div>

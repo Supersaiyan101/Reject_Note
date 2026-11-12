@@ -133,6 +133,7 @@ export const CalibrationStage: React.FC<CalibrationStageProps> = ({
               isCalibrating={isCalibrating}
               isLocked={isLocked}
               calibrationProgress={calibrationProgress}
+              showSharingan={true}
             />
           </div>
 
