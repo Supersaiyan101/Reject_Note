@@ -127,7 +127,7 @@ export const ResumeUploader: React.FC<ResumeUploaderProps> = ({
             className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-500 hover:to-red-500 text-white font-['Orbitron'] font-bold text-sm tracking-wider flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(225,29,72,0.4)] hover:shadow-[0_4px_30px_rgba(225,29,72,0.6)] transform active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
           >
             <Zap className="w-4 h-4 text-amber-300 fill-amber-300 animate-pulse" />
-            <span>LOAD LIGHT YAGAMI&apos;S DOSSIER</span>
+            <span>LOAD LIGHT YAGAMI&apos;S RESUME</span>
           </button>
         </div>
 

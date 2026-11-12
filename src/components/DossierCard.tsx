@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { CandidateDossier } from '../types';
-import { ArrowRight, RotateCcw, FileCheck, Award, Sparkles, ShieldAlert, Activity } from 'lucide-react';
+import { ArrowRight, RotateCcw, FileCheck, Award, Sparkles } from 'lucide-react';
 import { soundFX } from '../utils/sfx';
 
 interface DossierCardProps {
@@ -42,7 +42,7 @@ export const DossierCard: React.FC<DossierCardProps> = ({
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-6">
       <div className="rounded-2xl bg-gradient-to-b from-neutral-900 via-neutral-950 to-black border-2 border-rose-500/70 p-6 md:p-8 shadow-[0_0_40px_rgba(225,29,72,0.3)]">
-        {/* Top Dossier Bar */}
+        {/* Top Profile Header Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-neutral-800">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-neutral-950 border border-emerald-500/60 flex items-center justify-center text-emerald-400 font-serif font-black text-2xl shadow-[0_0_15px_rgba(16,185,129,0.3)]">
@@ -51,7 +51,7 @@ export const DossierCard: React.FC<DossierCardProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-['Orbitron'] font-bold text-sm tracking-wider text-white">
-                  CANDIDATE APPLICATION DOSSIER
+                  CANDIDATE APPLICATION PROFILE
                 </span>
                 <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-600/50 font-mono text-[10px] font-bold">
                   INTAKE REGISTERED
@@ -104,92 +104,43 @@ export const DossierCard: React.FC<DossierCardProps> = ({
             <div className="p-4 rounded-xl bg-neutral-900/40 border border-neutral-800 text-xs text-neutral-300 font-mono leading-relaxed">
               <span className="text-emerald-400 font-bold uppercase tracking-wider block mb-1 flex items-center gap-1.5">
                 <Award className="w-3.5 h-3.5 text-emerald-400" />
-                Submitted Career Mission Statement:
+                Candidate Career Summary:
               </span>
               &ldquo;{dossier.summary}&rdquo;
             </div>
           </div>
 
-          {/* Col 3: Candidate Psyche Projection (Gojo Flowers vs Higuruma Despair) */}
+          {/* Col 3: Candidate Hubris GIF (Nah, I'd win vs You are Cooked) */}
           <div 
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className={`rounded-xl bg-neutral-950 p-4 border transition-all duration-300 flex flex-col justify-between ${
+            className={`rounded-xl bg-neutral-950 p-3.5 border transition-all duration-300 flex flex-col justify-between ${
               activeMode === 'panic' 
-                ? 'border-rose-600/70 shadow-[0_0_25px_rgba(225,29,72,0.3)]' 
-                : 'border-pink-500/40 shadow-[0_0_20px_rgba(244,114,182,0.15)]'
+                ? 'border-rose-600/70 shadow-[0_0_25px_rgba(225,29,72,0.35)]' 
+                : 'border-pink-500/40 shadow-[0_0_20px_rgba(244,114,182,0.2)]'
             }`}
           >
-            <div>
-              {/* Header */}
-              <div className="flex items-center justify-between mb-2">
-                <span className={`text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors ${
-                  activeMode === 'panic' ? 'text-rose-400' : 'text-pink-400'
-                }`}>
-                  <Activity className="w-3.5 h-3.5 animate-pulse" />
-                  Psyche Projection
-                </span>
-                <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold border transition-colors ${
-                  activeMode === 'panic'
-                    ? 'bg-rose-950/90 text-rose-300 border-rose-600 animate-pulse'
-                    : 'bg-pink-950/70 text-pink-300 border-pink-700/50'
-                }`}>
-                  {activeMode === 'panic' ? 'AUDIT PANIC' : 'EGO: "NAH, I\'D WIN"'}
-                </span>
-              </div>
-
-              {/* Dynamic GIF Viewport - Full view, zero cropping */}
-              <div className="relative w-full h-52 sm:h-56 rounded-lg overflow-hidden border border-neutral-800 bg-neutral-950 flex items-center justify-center group">
-                <img
-                  src={activeMode === 'panic' ? '/candidate-audit-despair.gif' : '/candidate-ego-bliss.gif'}
-                  alt={activeMode === 'panic' ? 'Audit Despair' : 'Ego Bliss'}
-                  className="w-full h-full object-contain object-center transition-all duration-150"
-                />
-
-                {/* Subtle CRT Scanline Overlay */}
-                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] opacity-35" />
-
-                {/* Top Corner Minimal Badge */}
-                <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-black/80 backdrop-blur-xs border border-white/10 text-[9px] font-mono text-neutral-300 uppercase">
-                  {activeMode === 'panic' ? '⚠️ Pulse Surge' : '🌸 Baseline Ego'}
-                </div>
-              </div>
-
-              {/* Telemetry Strip below Viewport */}
-              <div className={`mt-2 px-2.5 py-1.5 rounded flex items-center justify-between text-[11px] font-mono border transition-colors ${
-                activeMode === 'panic'
-                  ? 'bg-rose-950/40 border-rose-800/60 text-rose-300'
-                  : 'bg-pink-950/30 border-pink-800/40 text-pink-300'
+            {/* Header: Stylized Text Only */}
+            <div className="text-center py-1 pb-2">
+              <span className={`font-['Orbitron'] font-black tracking-wider text-base sm:text-lg transition-colors ${
+                activeMode === 'panic' 
+                  ? 'text-rose-500 drop-shadow-[0_0_12px_rgba(225,29,72,0.9)] animate-pulse' 
+                  : 'text-pink-300 drop-shadow-[0_0_12px_rgba(244,114,182,0.8)]'
               }`}>
-                <span className="flex items-center gap-1.5 font-bold">
-                  <Activity className={`w-3.5 h-3.5 ${activeMode === 'panic' ? 'text-rose-400 animate-pulse' : 'text-pink-400'}`} />
-                  {activeMode === 'panic' ? '188 BPM // Critical Pulse Spike' : '62 BPM // Untouchable Calm'}
-                </span>
-                <span className="text-[10px] text-neutral-400 font-bold">
-                  {activeMode === 'panic' ? 'COLLAPSED' : 'SPECIAL GRADE'}
-                </span>
-              </div>
-
-              <p className="text-[11px] font-mono text-neutral-400 mt-2">
-                {activeMode === 'panic' 
-                  ? 'Projected Cross-Exam Reality: Complete existential breakdown under L.' 
-                  : 'Self-Assessed Intake Vibe: 100% confidence, entirely untouched.'}
-              </p>
+                {activeMode === 'panic' ? 'You are Cooked' : "Nah, I'd win"}
+              </span>
             </div>
 
-            {/* Verification status footer */}
-            <div className="mt-3 pt-2.5 border-t border-neutral-800 text-[11px] font-mono text-neutral-400 space-y-1">
-              <div className="flex justify-between">
-                <span>Intake Verification:</span>
-                <span className="text-amber-400 font-bold flex items-center gap-1">
-                  <ShieldAlert className="w-3 h-3 text-amber-400" />
-                  Pending Ocular Audit
-                </span>
-              </div>
-              <div className="flex justify-between text-[10px] text-neutral-500">
-                <span>Polygraph Status:</span>
-                <span>Uncalibrated (Stage 3)</span>
-              </div>
+            {/* Dynamic GIF Viewport - Full view, zero clutter */}
+            <div className="relative w-full h-56 sm:h-60 rounded-lg overflow-hidden border border-neutral-800/80 bg-neutral-950 flex items-center justify-center">
+              <img
+                src={activeMode === 'panic' ? '/candidate-audit-despair.gif' : '/candidate-ego-bliss.gif'}
+                alt={activeMode === 'panic' ? 'You are Cooked' : "Nah, I'd win"}
+                className="w-full h-full object-contain object-center transition-all duration-150"
+              />
+
+              {/* Subtle CRT Scanline Overlay */}
+              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] opacity-25" />
             </div>
           </div>
         </div>

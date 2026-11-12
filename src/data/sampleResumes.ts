@@ -2,9 +2,9 @@ import type { CandidateDossier } from '../types';
 
 export const LIGHT_YAGAMI_DOSSIER: CandidateDossier = {
   name: 'Light Yagami',
-  title: 'Divine Lead System Architect & Chief Justice Optimizer',
+  title: 'Software Engineering Intern | National Police Agency Task Force',
   education: 'To-Oh University // Top Entrance Score: 100% (Valedictorian)',
-  summary: 'Supreme honors prodigy with unmatched deductive intellect, flawless tennis mechanics, and 10+ years of self-appointed moral superiority. "Nah, I\'d win." "I am creating an ideal, bug-free world."',
+  summary: 'Valedictorian at To-Oh University with research experience at the National Police Agency Task Force. Specializing in high-performance C++ systems, edge hardware engineering, and zero-latency distributed automation.',
   buzzwordCount: 9001,
   powerLevel: 'OVER 9,000!',
   isPreset: true,
@@ -48,10 +48,10 @@ export const LIGHT_YAGAMI_DOSSIER: CandidateDossier = {
   ],
   rawText: `LIGHT YAGAMI
 To-Oh University, Valedictorian
-Divine Lead System Architect
+Software Engineering Intern | National Police Agency Task Force
 
 SUMMARY:
-Supreme honors prodigy with unmatched deductive intellect, flawless tennis mechanics, and 10+ years of self-appointed moral superiority. Over 9,000 verified buzzwords. "I am creating an ideal, bug-free world."
+Valedictorian at To-Oh University with research experience at the National Police Agency Task Force. Specializing in high-performance C++ systems, edge hardware engineering, and zero-latency distributed automation.
 
 EXPERIENCE:
 National Police Agency Task Force | Lead Cyber Investigator Intern
@@ -68,64 +68,141 @@ PROJECTS:
    Junior Kanto Tennis Champion; claims to write lock-free memory-safe C++ with his left hand while solving differential equations with his right.`,
 };
 
-// Generic parser for user-uploaded custom resumes
+// Intelligent parser for user-uploaded custom resumes
 export function parseCustomResume(fileName: string, text: string): CandidateDossier {
-  const buzzwords = [
-    'kubernetes', 'docker', 'rust', 'c++', 'ai', 'neural', 'cloud', 'blockchain',
-    'distributed', 'agile', 'scrum', 'microservices', 'quantum', 'synergy',
-    'full-stack', 'paradigm', 'optimization', 'machine learning', 'llm', 'zero downtime'
+  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
+
+  // 1. Extract Candidate Name (Line 1 or Filename)
+  const firstLine = lines[0] || '';
+  const candidateName =
+    firstLine.length > 2 && firstLine.length < 35 && !firstLine.includes(':')
+      ? firstLine
+      : fileName.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ');
+
+  // 2. Extract Professional Title
+  const titleKeywords = [
+    'software engineer', 'full stack', 'frontend', 'backend', 'developer',
+    'architect', 'intern', 'analyst', 'lead', 'devops', 'engineer', 'specialist'
+  ];
+  let extractedTitle = '';
+  for (const line of lines.slice(0, 8)) {
+    const lLower = line.toLowerCase();
+    if (titleKeywords.some((kw) => lLower.includes(kw)) && line.length < 60) {
+      extractedTitle = line.replace(/^[|•\-\s]+/, '').trim();
+      break;
+    }
+  }
+  if (!extractedTitle && lines[1] && lines[1].length < 45) {
+    extractedTitle = lines[1];
+  }
+  const candidateTitle = extractedTitle || 'Software Engineer';
+
+  // 3. Extract Education
+  const eduKeywords = ['university', 'college', 'b.s.', 'm.s.', 'b.tech', 'computer science', 'degree', 'institute'];
+  let extractedEdu = '';
+  for (const line of lines) {
+    const lLower = line.toLowerCase();
+    if (eduKeywords.some((kw) => lLower.includes(kw)) && line.length < 75) {
+      extractedEdu = line.replace(/^[|•\-\s]+/, '').trim();
+      break;
+    }
+  }
+  const candidateEdu = extractedEdu || 'B.S. in Computer Science & Engineering';
+
+  // 4. Extract Real Intro / Summary Paragraph
+  let extractedSummary = '';
+  const summaryHeaderIdx = lines.findIndex((l) =>
+    /^(summary|about|profile|objective|bio):?$/i.test(l)
+  );
+  if (summaryHeaderIdx !== -1 && lines[summaryHeaderIdx + 1]) {
+    extractedSummary = lines[summaryHeaderIdx + 1];
+  } else {
+    // Grab the first substantive paragraph (longer than 40 chars, not a bullet)
+    const candidateP = lines.slice(1, 10).find((l) => l.length >= 45 && !l.startsWith('-') && !l.startsWith('•'));
+    if (candidateP) {
+      extractedSummary = candidateP;
+    }
+  }
+  const candidateSummary =
+    extractedSummary ||
+    'Software engineer with a focus on building scalable systems, clean architecture, and reliable services.';
+
+  // 5. Extract 4 Active Project / Experience Claim Cards
+  const bulletLines = lines.filter((l) =>
+    /^[-*•\d.]\s+/.test(l) ||
+    /^(built|developed|architected|engineered|designed|led|created|implemented|optimized|scaled|managed|deployed)\b/i.test(l)
+  );
+
+  const landmines: CandidateDossier['flaggedLandmines'] = [];
+  const defaultBadges = ['CORE ARCHITECTURE', 'PERFORMANCE METRIC', 'DATABASE & STORAGE', 'CLOUD DEPLOYMENT'];
+
+  for (let i = 0; i < Math.min(4, bulletLines.length); i++) {
+    const cleanLine = bulletLines[i].replace(/^[-*•\d.]\s+/, '').trim();
+    const words = cleanLine.split(/\s+/);
+    const shortTitle = words.slice(0, 5).join(' ');
+    landmines.push({
+      id: `custom-claim-${i + 1}`,
+      category: i % 2 === 0 ? 'TECHNICAL_SCRUTINY' : 'PERFORMANCE_AUDIT',
+      title: shortTitle.length > 3 ? shortTitle : `Engineering Achievement #${i + 1}`,
+      claimText: cleanLine,
+      suspicionPercent: Math.round((92 + Math.random() * 6) * 10) / 10,
+      lInterrogationAngle: `Candidate-kun... can you defend this claim under optical polygraph scrutiny?`,
+      badge: defaultBadges[i] || 'SYSTEM CLAIM',
+    });
+  }
+
+  // If fewer than 4 bullets found in resume, fill remaining with smart technical probes
+  const fallbackClaims = [
+    {
+      title: 'Scalable System Architecture',
+      claimText: 'Engineered maintainable software components and automated workflows with zero regression downtime.',
+      badge: 'SYSTEM DESIGN',
+      category: 'TECHNICAL_SCRUTINY' as const,
+    },
+    {
+      title: 'High-Throughput API Resilience',
+      claimText: 'Delivered secure REST APIs and microservice communication under strict p99 latency benchmarks.',
+      badge: 'API RESILIENCE',
+      category: 'PERFORMANCE_AUDIT' as const,
+    },
+    {
+      title: 'Data Modeling & Query Tuning',
+      claimText: 'Optimized schema indices and caching layers to minimize database connection starvation.',
+      badge: 'DATABASE INTEGRITY',
+      category: 'TECHNICAL_SCRUTINY' as const,
+    },
+    {
+      title: 'Production Incident Recovery',
+      claimText: 'Maintained resilient deployment cadence and handled unexpected production alerts without service interruption.',
+      badge: 'INCIDENT PROTOCOL',
+      category: 'PERFORMANCE_AUDIT' as const,
+    },
   ];
 
-  let detectedCount = 0;
-  const lower = text.toLowerCase();
-  buzzwords.forEach((bw) => {
-    const matches = lower.match(new RegExp(`\\b${bw}\\b`, 'g'));
-    if (matches) detectedCount += matches.length * 420; // Anime inflated scouter math
-  });
-
-  const finalBuzzwordCount = Math.max(9001, detectedCount + Math.floor(Math.random() * 2000));
-
-  // Extract candidate name from first line or filename
-  const firstLine = text.split('\n')[0]?.trim();
-  const candidateName = firstLine && firstLine.length < 35 ? firstLine : fileName.replace(/\.[^/.]+$/, '');
+  let fIdx = 0;
+  while (landmines.length < 4 && fIdx < fallbackClaims.length) {
+    const fb = fallbackClaims[fIdx];
+    landmines.push({
+      id: `custom-fallback-${landmines.length + 1}`,
+      category: fb.category,
+      title: fb.title,
+      claimText: fb.claimText,
+      suspicionPercent: Math.round((93 + Math.random() * 5) * 10) / 10,
+      lInterrogationAngle: 'Can your autonomic pulse verify that you implemented this without copying boilerplate?',
+      badge: fb.badge,
+    });
+    fIdx++;
+  }
 
   return {
-    name: candidateName || 'Anonymous Applicant',
-    title: 'Senior 10x Full-Stack Operative',
-    education: 'Classified Self-Taught Academy // Level 99 Coding Ninja',
-    summary: `Extracted ${detectedCount} high-density tech buzzwords from candidate document. Scouter readings indicate excessive confidence and high probability of bluffing.`,
-    buzzwordCount: finalBuzzwordCount,
-    powerLevel: 'OVER 9,000!',
+    name: candidateName,
+    title: candidateTitle,
+    education: candidateEdu,
+    summary: candidateSummary,
+    buzzwordCount: 4200,
+    powerLevel: 'SPECIAL GRADE',
     isPreset: false,
-    flaggedLandmines: [
-      {
-        id: 'custom-1',
-        category: 'BUZZWORD_OVERFLOW',
-        title: 'High-Density Buzzword Concentration',
-        claimText: `Document contains an overwhelming concentration of tech jargon (${finalBuzzwordCount} scouter points).`,
-        suspicionPercent: 95.4,
-        lInterrogationAngle: 'You loaded your CV with buzzwords. But can your pulse remain calm when I ask you to explain how they actually work?',
-        badge: 'BUZZWORD OVERLOAD',
-      },
-      {
-        id: 'custom-2',
-        category: 'TIMELINE_PARADOX',
-        title: 'Senior Velocity Anomaly',
-        claimText: 'Claims extensive multi-year architectural mastery across incompatible technology generations.',
-        suspicionPercent: 93.1,
-        lInterrogationAngle: 'Your timeline contains severe temporal paradoxes. Let us see if your respiration rate agrees.',
-        badge: 'TIMELINE PARADOX',
-      },
-      {
-        id: 'custom-3',
-        category: 'MEGALOMANIA',
-        title: 'Single-Handed Optimization Boast',
-        claimText: 'Boasts of single-handedly refactoring enterprise architecture without introducing regression bugs.',
-        suspicionPercent: 97.2,
-        lInterrogationAngle: 'Zero regressions on an enterprise rewrite? That is scientifically impossible. Presage sensors will expose the truth.',
-        badge: 'UNREALISTIC BOAST',
-      },
-    ],
+    flaggedLandmines: landmines.slice(0, 4),
     rawText: text,
   };
 }

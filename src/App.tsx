@@ -55,7 +55,7 @@ export function App() {
     setStage('STAGE_2_ROSTER');
   };
 
-  const handleBackToDossier = () => {
+  const handleBackToProfile = () => {
     setStage('STAGE_1_LOBBY');
   };
 
@@ -127,7 +127,7 @@ export function App() {
               inquisitor={selectedInquisitor}
               candidateName={selectedDossier.name}
               onConfirm={handleConfirmInquisitor}
-              onBack={handleBackToDossier}
+              onBack={handleBackToProfile}
             />
           </div>
         )}

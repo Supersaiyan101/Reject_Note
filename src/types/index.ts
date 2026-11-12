@@ -7,7 +7,7 @@ export type AppStage =
 
 export interface FlaggedLandmine {
   id: string;
-  category: 'MEGALOMANIA' | 'TIMELINE_PARADOX' | 'HARDWARE_ANOMALY' | 'BUZZWORD_OVERFLOW';
+  category: string;
   title: string;
   claimText: string;
   suspicionPercent: number; // e.g., 99.8%

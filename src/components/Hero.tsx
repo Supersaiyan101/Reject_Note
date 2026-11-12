@@ -63,7 +63,7 @@ export const Hero: React.FC = () => {
         <div className="flex items-center gap-3 mt-8 text-xs font-mono text-neutral-500">
           <span className="flex items-center gap-1.5 text-rose-400 font-semibold px-2.5 py-1 rounded-md bg-rose-950/40 border border-rose-900/50">
             <Skull className="w-3.5 h-3.5 text-rose-400" />
-            STAGE 1: APPLICATION DOSSIER
+            STAGE 1: APPLICATION PROFILE
           </span>
           <span className="text-neutral-700">→</span>
           <span className="text-neutral-500">STAGE 2: INQUISITOR SELECT</span>

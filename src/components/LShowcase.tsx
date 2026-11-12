@@ -74,7 +74,7 @@ export const LShowcase: React.FC<LShowcaseProps> = ({
               className="px-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-700 hover:border-neutral-500 text-neutral-400 hover:text-white font-mono text-xs flex items-center gap-1.5 cursor-pointer transition-colors"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
-              <span>Back to Resume Dossier</span>
+              <span>Back to Candidate Profile</span>
             </button>
           </div>
 
