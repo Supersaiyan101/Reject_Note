@@ -70,55 +70,84 @@ PROJECTS:
 
 // Intelligent parser for user-uploaded custom resumes
 export function parseCustomResume(fileName: string, text: string): CandidateDossier {
-  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
+  // 1. Sanitize text: filter out binary/PDF artifacts and empty lines
+  const rawLines = text
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
 
-  // 1. Extract Candidate Name (Line 1 or Filename)
-  const firstLine = lines[0] || '';
-  const candidateName =
-    firstLine.length > 2 && firstLine.length < 35 && !firstLine.includes(':')
-      ? firstLine
-      : fileName.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ');
+  const cleanLines = rawLines.filter((l) => {
+    const s = l.trim();
+    if (s.startsWith('%') || s.startsWith('<<') || s.startsWith('>>') || s.endsWith('obj') || s === 'endobj') {
+      return false;
+    }
+    if (/^[0-9]+\s+[0-9]+\s+obj/i.test(s)) return false;
+    if (/^(\/|stream|endstream|xref|trailer|startxref)/i.test(s)) return false;
+    if (/ReportLab Generated/i.test(s)) return false;
+    return true;
+  });
 
-  // 2. Extract Professional Title
+  const lines = cleanLines.length > 0 ? cleanLines : rawLines;
+
+  // 2. Extract Candidate Name (First clean line that looks like a name or filename)
+  let candidateName = fileName.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ').trim();
+  for (const line of lines.slice(0, 4)) {
+    const isHeader = /^(education|experience|skills|projects|summary|objective|curriculum|resume)/i.test(line);
+    const hasContact = /(@|http|www|\.com|\+?\d{2,})/i.test(line);
+    const isAlpha = /^[a-zA-Z\s.'-]+$/.test(line);
+    if (!isHeader && !hasContact && isAlpha && line.length >= 2 && line.length <= 40) {
+      candidateName = line;
+      break;
+    }
+  }
+
+  // 3. Extract Professional Title
   const titleKeywords = [
     'software engineer', 'full stack', 'frontend', 'backend', 'developer',
-    'architect', 'intern', 'analyst', 'lead', 'devops', 'engineer', 'specialist'
+    'architect', 'intern', 'analyst', 'lead', 'devops', 'engineer', 'specialist',
+    'cloud engineer', 'data scientist', 'machine learning'
   ];
   let extractedTitle = '';
   for (const line of lines.slice(0, 8)) {
     const lLower = line.toLowerCase();
-    if (titleKeywords.some((kw) => lLower.includes(kw)) && line.length < 60) {
+    if (titleKeywords.some((kw) => lLower.includes(kw)) && line.length < 65) {
       extractedTitle = line.replace(/^[|•\-\s]+/, '').trim();
       break;
     }
   }
-  if (!extractedTitle && lines[1] && lines[1].length < 45) {
-    extractedTitle = lines[1];
-  }
   const candidateTitle = extractedTitle || 'Software Engineer';
 
-  // 3. Extract Education
-  const eduKeywords = ['university', 'college', 'b.s.', 'm.s.', 'b.tech', 'computer science', 'degree', 'institute'];
+  // 4. Extract Education
+  const eduKeywords = ['university', 'college', 'b.s.', 'm.s.', 'b.tech', 'b.e.', 'computer science', 'degree', 'institute', 'bachelor', 'master'];
   let extractedEdu = '';
   for (const line of lines) {
     const lLower = line.toLowerCase();
-    if (eduKeywords.some((kw) => lLower.includes(kw)) && line.length < 75) {
+    if (eduKeywords.some((kw) => lLower.includes(kw)) && line.length < 80) {
       extractedEdu = line.replace(/^[|•\-\s]+/, '').trim();
       break;
     }
   }
   const candidateEdu = extractedEdu || 'B.S. in Computer Science & Engineering';
 
-  // 4. Extract Real Intro / Summary Paragraph
+  // 5. Extract Real Intro / Summary Paragraph
   let extractedSummary = '';
   const summaryHeaderIdx = lines.findIndex((l) =>
-    /^(summary|about|profile|objective|bio):?$/i.test(l)
+    /^(summary|about|profile|objective|bio|professional summary):?$/i.test(l)
   );
   if (summaryHeaderIdx !== -1 && lines[summaryHeaderIdx + 1]) {
     extractedSummary = lines[summaryHeaderIdx + 1];
+    if (lines[summaryHeaderIdx + 2] && lines[summaryHeaderIdx + 2].length > 25 && !lines[summaryHeaderIdx + 2].startsWith('-')) {
+      extractedSummary += ' ' + lines[summaryHeaderIdx + 2];
+    }
   } else {
-    // Grab the first substantive paragraph (longer than 40 chars, not a bullet)
-    const candidateP = lines.slice(1, 10).find((l) => l.length >= 45 && !l.startsWith('-') && !l.startsWith('•'));
+    // Look for first substantive sentence paragraph (longer than 45 chars, not a bullet)
+    const candidateP = lines.slice(1, 10).find((l) => 
+      l.length >= 45 && 
+      !l.startsWith('-') && 
+      !l.startsWith('•') && 
+      !/@|www|http/i.test(l) &&
+      !/^(education|skills|experience|projects)/i.test(l)
+    );
     if (candidateP) {
       extractedSummary = candidateP;
     }
@@ -127,10 +156,10 @@ export function parseCustomResume(fileName: string, text: string): CandidateDoss
     extractedSummary ||
     'Software engineer with a focus on building scalable systems, clean architecture, and reliable services.';
 
-  // 5. Extract 4 Active Project / Experience Claim Cards
+  // 6. Extract 4 Active Project / Experience Claim Cards
   const bulletLines = lines.filter((l) =>
     /^[-*•\d.]\s+/.test(l) ||
-    /^(built|developed|architected|engineered|designed|led|created|implemented|optimized|scaled|managed|deployed)\b/i.test(l)
+    /^(built|developed|architected|engineered|designed|led|created|implemented|optimized|scaled|managed|deployed|spearheaded|automated)\b/i.test(l)
   );
 
   const landmines: CandidateDossier['flaggedLandmines'] = [];
@@ -139,7 +168,7 @@ export function parseCustomResume(fileName: string, text: string): CandidateDoss
   for (let i = 0; i < Math.min(4, bulletLines.length); i++) {
     const cleanLine = bulletLines[i].replace(/^[-*•\d.]\s+/, '').trim();
     const words = cleanLine.split(/\s+/);
-    const shortTitle = words.slice(0, 5).join(' ');
+    const shortTitle = words.slice(0, 5).join(' ').replace(/[,;:.]$/, '');
     landmines.push({
       id: `custom-claim-${i + 1}`,
       category: i % 2 === 0 ? 'TECHNICAL_SCRUTINY' : 'PERFORMANCE_AUDIT',

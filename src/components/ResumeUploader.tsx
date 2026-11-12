@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { Upload, Zap, FileText, Sparkles, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Upload, Zap, FileText, Sparkles, AlertCircle, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { soundFX } from '../utils/sfx';
+import { extractTextFromPdf } from '../utils/pdfParser';
 
 interface ResumeUploaderProps {
   onLoadLightYagami: () => void;
@@ -16,11 +17,12 @@ export const ResumeUploader: React.FC<ResumeUploaderProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [showPasteArea, setShowPasteArea] = useState(false);
   const [pastedText, setPastedText] = useState('');
+  const [isParsingPdf, setIsParsingPdf] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    if (!disabled) setIsDragging(true);
+    if (!disabled && !isParsingPdf) setIsDragging(true);
   };
 
   const handleDragLeave = () => {
@@ -30,7 +32,7 @@ export const ResumeUploader: React.FC<ResumeUploaderProps> = ({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    if (disabled) return;
+    if (disabled || isParsingPdf) return;
 
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       processFile(e.dataTransfer.files[0]);
@@ -43,11 +45,28 @@ export const ResumeUploader: React.FC<ResumeUploaderProps> = ({
     }
   };
 
-  const processFile = (file: File) => {
+  const processFile = async (file: File) => {
     soundFX.playScouterBeep();
-    const reader = new FileReader();
 
-    // Read plain text directly
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+
+    if (isPdf) {
+      try {
+        setIsParsingPdf(true);
+        const extracted = await extractTextFromPdf(file);
+        setIsParsingPdf(false);
+        if (extracted && extracted.trim().length > 0) {
+          onCustomResume(file.name, extracted);
+          return;
+        }
+      } catch (err) {
+        console.error('Error extracting PDF text:', err);
+        setIsParsingPdf(false);
+      }
+    }
+
+    // Fallback or plain text files (.txt, .md, .rtf)
+    const reader = new FileReader();
     reader.onload = (event) => {
       const content = event.target?.result as string;
       if (content) {
@@ -58,7 +77,7 @@ export const ResumeUploader: React.FC<ResumeUploaderProps> = ({
   };
 
   const handlePasteSubmit = () => {
-    if (!pastedText.trim() || disabled) return;
+    if (!pastedText.trim() || disabled || isParsingPdf) return;
     soundFX.playScouterBeep();
     onCustomResume('Pasted_Resume.txt', pastedText);
   };
@@ -97,7 +116,7 @@ export const ResumeUploader: React.FC<ResumeUploaderProps> = ({
                   Valedictorian, To-Oh University
                 </p>
                 <p className="text-xs text-rose-400/90 font-mono mt-0.5">
-                  &ldquo;Divine Lead System Architect&rdquo;
+                  &ldquo;Software Engineering Intern | NPA Task Force&rdquo;
                 </p>
               </div>
             </div>
@@ -123,7 +142,7 @@ export const ResumeUploader: React.FC<ResumeUploaderProps> = ({
               soundFX.playDramaticSting();
               onLoadLightYagami();
             }}
-            disabled={disabled}
+            disabled={disabled || isParsingPdf}
             className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-500 hover:to-red-500 text-white font-['Orbitron'] font-bold text-sm tracking-wider flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(225,29,72,0.4)] hover:shadow-[0_4px_30px_rgba(225,29,72,0.6)] transform active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
           >
             <Zap className="w-4 h-4 text-amber-300 fill-amber-300 animate-pulse" />
@@ -147,12 +166,12 @@ export const ResumeUploader: React.FC<ResumeUploaderProps> = ({
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => !isParsingPdf && fileInputRef.current?.click()}
               className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
                 isDragging
                   ? 'border-rose-500 bg-rose-950/20 shadow-[0_0_20px_rgba(225,29,72,0.3)]'
                   : 'border-neutral-700/80 hover:border-neutral-500 bg-neutral-950/50'
-              }`}
+              } ${isParsingPdf ? 'opacity-70 cursor-wait' : ''}`}
             >
               <input
                 ref={fileInputRef}
@@ -160,17 +179,31 @@ export const ResumeUploader: React.FC<ResumeUploaderProps> = ({
                 accept=".txt,.pdf,.md"
                 onChange={handleFileChange}
                 className="hidden"
-                disabled={disabled}
+                disabled={disabled || isParsingPdf}
               />
-              <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-neutral-900 border border-neutral-700 flex items-center justify-center text-neutral-400 group-hover:text-white">
-                <Upload className="w-5 h-5" />
-              </div>
-              <p className="text-sm font-semibold text-white mb-1">
-                Drop your CV here or <span className="text-rose-400 underline">Browse</span>
-              </p>
-              <p className="text-xs text-neutral-400 font-mono">
-                Accepts .txt, .pdf, or paste plain text below
-              </p>
+              {isParsingPdf ? (
+                <div className="flex flex-col items-center justify-center py-2">
+                  <Loader2 className="w-10 h-10 text-rose-500 animate-spin mb-3" />
+                  <p className="text-sm font-['Orbitron'] font-bold text-white mb-1">
+                    DECODING PDF TEXT LAYERS...
+                  </p>
+                  <p className="text-xs text-neutral-400 font-mono">
+                    Presage optical parser active
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-neutral-900 border border-neutral-700 flex items-center justify-center text-neutral-400 group-hover:text-white">
+                    <Upload className="w-5 h-5" />
+                  </div>
+                  <p className="text-sm font-semibold text-white mb-1">
+                    Drop your CV here or <span className="text-rose-400 underline">Browse</span>
+                  </p>
+                  <p className="text-xs text-neutral-400 font-mono">
+                    Accepts .txt, .pdf, or paste plain text below
+                  </p>
+                </>
+              )}
             </div>
 
             {/* Accordion toggle for direct text pasting */}
