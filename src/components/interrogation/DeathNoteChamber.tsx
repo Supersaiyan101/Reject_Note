@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { 
   CandidateDossier, 
   InquisitorProfile, 
@@ -47,7 +47,7 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
   onBack,
 }) => {
   // Generate 4 targeted questions for this candidate's resume
-  const questions = useRef(generateQuestionsForDossier(dossier)).current;
+  const questions = useMemo(() => generateQuestionsForDossier(dossier), [dossier]);
   const [questionIdx, setQuestionIdx] = useState(0);
   const currentQuestion = questions[questionIdx];
 
@@ -73,7 +73,7 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
   // Track peak BPM and gaze deviations during active testimony
   const peakBPMRef = useRef(baseline.restingBPM);
   const bpmReadingsRef = useRef<number[]>([]);
-  const gazeDriftsRef = useRef(0);
+  const [gazeDrifts, setGazeDrifts] = useState(0);
   const testimonyStartTimeRef = useRef(0);
 
   // L 15-second deduction phase
@@ -111,7 +111,7 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
     setTestimonyText('');
     peakBPMRef.current = baseline.restingBPM;
     bpmReadingsRef.current = [];
-    gazeDriftsRef.current = 0;
+    setGazeDrifts(0);
 
     // L's theme plays during cross-examination
     realAudio.playLTheme();
@@ -132,7 +132,7 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
 
       // Randomly simulate occasional micro gaze drift if face box shifts
       if (Math.random() < 0.04) {
-        gazeDriftsRef.current += 1;
+        setGazeDrifts((prev) => prev + 1);
       }
     }
   };
@@ -184,7 +184,7 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
       peakBPM,
       deltaBPM,
       avgBPM,
-      gazeDeviations: gazeDriftsRef.current,
+      gazeDeviations: gazeDrifts,
       durationSec,
     });
 
@@ -220,7 +220,7 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
       } else if (timeLeft === 7.0) {
         setDeductionLogs((prev) => [
           ...prev,
-          `[00:11] Gaze aversion index flagged: ${gazeDriftsRef.current} deviations recorded.`,
+          `[00:11] Gaze aversion index flagged: ${gazeDrifts} deviations recorded.`,
         ]);
       } else if (timeLeft === 3.0) {
         setDeductionLogs((prev) => [
@@ -252,8 +252,8 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
                 ? bpmReadingsRef.current.reduce((a, b) => a + b, 0) / bpmReadingsRef.current.length
                 : liveVitals.currentBPM
             ),
-            gazeDeviations: gazeDriftsRef.current,
-            fidgetIndex: Math.min(100, gazeDriftsRef.current * 18 + 20),
+            gazeDeviations: gazeDrifts,
+            fidgetIndex: Math.min(100, gazeDrifts * 18 + 20),
             durationSec: 15,
             deductionVerdict: activeDeduction.deductionText,
             suspicionAdded: activeDeduction.suspicionDelta,
@@ -269,7 +269,7 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
     }, 100);
 
     return () => clearInterval(interval);
-  }, [phase, activeDeduction, currentQuestion, testimonyText, baseline.restingBPM, liveVitals.currentBPM]);
+  }, [phase, activeDeduction, currentQuestion, testimonyText, baseline.restingBPM, liveVitals.currentBPM, gazeDrifts]);
 
   // Advance to next question or final verdict
   const handleNextStep = () => {
@@ -470,7 +470,7 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
           {/* Telemetry Footer */}
           <div className="pt-3 border-t border-neutral-800 flex items-center justify-between text-[11px] font-mono text-neutral-400">
             <span>Camera: <strong className={cameraState === 'ACTIVE' ? 'text-emerald-400' : 'text-amber-400'}>{cameraState}</strong></span>
-            <span>Gaze Deviations: <strong className="text-rose-400">{gazeDriftsRef.current}</strong></span>
+            <span>Gaze Deviations: <strong className="text-rose-400">{gazeDrifts}</strong></span>
             <span>Signal: <strong className="text-cyan-400">{liveVitals.signalQuality}</strong></span>
           </div>
         </div>

@@ -49,10 +49,15 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
 
   // Keep callback references stable to prevent effect re-runs
   const onVitalsUpdateRef = useRef(onVitalsUpdate);
-  onVitalsUpdateRef.current = onVitalsUpdate;
-
   const onCameraStateChangeRef = useRef(onCameraStateChange);
-  onCameraStateChangeRef.current = onCameraStateChange;
+
+  useEffect(() => {
+    onVitalsUpdateRef.current = onVitalsUpdate;
+  }, [onVitalsUpdate]);
+
+  useEffect(() => {
+    onCameraStateChangeRef.current = onCameraStateChange;
+  }, [onCameraStateChange]);
 
   const drawWaveform = useCallback((waveform: number[]) => {
     const canvas = waveformCanvasRef.current;

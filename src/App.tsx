@@ -8,6 +8,7 @@ import { InquisitorRoster } from './components/InquisitorRoster';
 import { LShowcase } from './components/LShowcase';
 import { CalibrationStage } from './components/CalibrationStage';
 import { InterrogationStage } from './components/InterrogationStage';
+import { VerdictStage } from './components/VerdictStage';
 import type { CandidateDossier, AppStage, InquisitorProfile, BaselineCalibration, InterrogationSummary } from './types';
 import { LIGHT_YAGAMI_DOSSIER, parseCustomResume } from './data/sampleResumes';
 import { INQUISITORS } from './data/inquisitors';
@@ -157,54 +158,10 @@ export function App() {
 
         {/* ----------------- STAGE 5: THE FINAL REJECT NOTE VERDICT ----------------- */}
         {stage === 'STAGE_5_VERDICT' && selectedDossier && interrogationSummary && (
-          <div className="w-full max-w-4xl mx-auto px-4 py-8">
-            <div className="rounded-2xl bg-gradient-to-b from-neutral-900 via-neutral-950 to-black border-2 border-rose-600 p-8 text-center shadow-[0_0_60px_rgba(225,29,72,0.4)] space-y-6">
-              <div className="w-20 h-20 mx-auto rounded-2xl bg-black border-2 border-rose-500 flex items-center justify-center text-rose-500 font-serif text-4xl font-black shadow-[0_0_25px_rgba(225,29,72,0.5)]">
-                死
-              </div>
-
-              <div>
-                <span className="font-mono text-xs text-rose-400 font-bold tracking-widest uppercase block mb-1">
-                  STAGE 5 // FINAL BIOFEEDBACK VERDICT
-                </span>
-                <h2 className="font-['Cinzel_Decorative'] text-3xl md:text-5xl text-white tracking-wider">
-                  {interrogationSummary.finalVerdict === 'GUILTY_REJECTED'
-                    ? 'NAME INSCRIBED IN REJECT NOTE'
-                    : 'PROBATIONARY CLEARANCE GRANTED'}
-                </h2>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto text-left">
-                <div className="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
-                  <span className="text-[10px] font-mono text-neutral-400 block uppercase">Candidate</span>
-                  <strong className="text-white font-mono text-base">{interrogationSummary.candidateName}</strong>
-                </div>
-                <div className="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
-                  <span className="text-[10px] font-mono text-neutral-400 block uppercase">Chief Inquisitor</span>
-                  <strong className="text-rose-400 font-mono text-base">L Lawliet</strong>
-                </div>
-                <div className="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
-                  <span className="text-[10px] font-mono text-neutral-400 block uppercase">Final Bluff Probability</span>
-                  <strong className="text-rose-500 font-mono text-base">{interrogationSummary.totalSuspicionPercent}%</strong>
-                </div>
-              </div>
-
-              <p className="text-sm font-mono text-neutral-300 max-w-lg mx-auto">
-                {interrogationSummary.finalVerdict === 'GUILTY_REJECTED'
-                  ? 'Cause of Rejection: Unrecoverable Cardiovascular Bluff. Terminated from Pipeline within 40 seconds.'
-                  : 'Candidate vitals remained resilient under clinical cross-examination.'}
-              </p>
-
-              <div className="pt-4 flex items-center justify-center gap-4">
-                <button
-                  onClick={handleReset}
-                  className="px-6 py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-mono text-xs cursor-pointer transition-colors"
-                >
-                  Audit Another Candidate
-                </button>
-              </div>
-            </div>
-          </div>
+          <VerdictStage
+            summary={interrogationSummary}
+            onRestart={handleReset}
+          />
         )}
       </main>
 

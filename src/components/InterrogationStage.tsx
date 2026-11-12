@@ -38,3 +38,4 @@ export const InterrogationStage: React.FC<InterrogationStageProps> = ({
       );
   }
 };
+
