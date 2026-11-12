@@ -6,14 +6,18 @@ import { MangekyouSharingan } from './MangekyouSharingan';
 
 interface OpticalViewfinderProps {
   onVitalsUpdate?: (vitals: LiveVitals) => void;
+  onCameraStateChange?: (state: CameraState) => void;
   isCalibrating?: boolean;
   isLocked?: boolean;
+  calibrationProgress?: number;
 }
 
 export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
   onVitalsUpdate,
+  onCameraStateChange,
   isCalibrating = false,
   isLocked = false,
+  calibrationProgress = 0,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const waveformCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -56,18 +60,21 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
   const startVideo = useCallback(async () => {
     if (!videoRef.current) return;
     setCameraState('REQUESTING');
+    onCameraStateChange?.('REQUESTING');
     setErrorMessage(null);
 
     try {
       await opticalEngine.startCamera(videoRef.current);
       setCameraState('ACTIVE');
+      onCameraStateChange?.('ACTIVE');
     } catch (err: unknown) {
       console.warn('Camera request failed:', err);
       setCameraState('ERROR');
+      onCameraStateChange?.('ERROR');
       const msg = err instanceof Error ? err.message : 'Webcam permission denied or camera not found.';
       setErrorMessage(msg);
     }
-  }, []);
+  }, [onCameraStateChange]);
 
   useEffect(() => {
     startVideo();
@@ -86,8 +93,9 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
     return () => {
       if (animLoopRef.current) cancelAnimationFrame(animLoopRef.current);
       opticalEngine.stopCamera();
+      onCameraStateChange?.('INIT');
     };
-  }, [drawWaveform, onVitalsUpdate, startVideo]);
+  }, [drawWaveform, onVitalsUpdate, startVideo, onCameraStateChange]);
 
   return (
     <div className="relative rounded-2xl bg-black border-2 border-rose-500/80 p-3 shadow-[0_0_35px_rgba(225,29,72,0.3)] overflow-hidden flex flex-col justify-between">
@@ -157,7 +165,8 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
               {/* Mangekyou Sharingan Eye */}
               <MangekyouSharingan
                 isLocked={isLocked}
-                size={isLocked ? 108 : 96}
+                progress={calibrationProgress}
+                size={isLocked ? 112 : 98}
                 className="transition-transform duration-500"
               />
 
@@ -167,12 +176,20 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
                   className={`font-mono text-[9px] px-2.5 py-0.5 rounded font-bold uppercase tracking-wider border backdrop-blur-md transition-all ${
                     isLocked
                       ? 'bg-red-950 text-red-200 border-red-500 shadow-[0_0_12px_rgba(239,68,68,0.8)]'
+                      : cameraState !== 'ACTIVE'
+                      ? 'bg-amber-950/90 text-amber-300 border-amber-600/70'
                       : isCalibrating
                       ? 'bg-neutral-900/90 text-amber-300 border-amber-500/60 animate-pulse'
                       : 'bg-black/80 text-neutral-400 border-neutral-700'
                   }`}
                 >
-                  {isLocked ? 'MANGEKYOU LOCKED' : isCalibrating ? 'LOCKING TARGET...' : 'POSITION FACE'}
+                  {isLocked
+                    ? 'MANGEKYOU LOCKED'
+                    : cameraState !== 'ACTIVE'
+                    ? 'WAITING FOR CAMERA'
+                    : isCalibrating
+                    ? `LOCKING TARGET... ${Math.round(calibrationProgress * 100)}%`
+                    : 'POSITION FACE'}
                 </span>
               </div>
             </div>

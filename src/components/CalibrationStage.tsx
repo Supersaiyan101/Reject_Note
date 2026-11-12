@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import type { CandidateDossier, InquisitorProfile, BaselineCalibration, LiveVitals } from '../types';
+import type { CandidateDossier, InquisitorProfile, BaselineCalibration, LiveVitals, CameraState } from '../types';
 import { OpticalViewfinder } from './OpticalViewfinder';
 import { SecurityWaiver } from './SecurityWaiver';
 import { opticalEngine } from '../utils/opticalEngine';
 import { soundFX } from '../utils/sfx';
-import { ShieldCheck, Heart, Wind, ArrowRight, CheckCircle2, Volume2 } from 'lucide-react';
+import { ShieldCheck, Heart, Wind, ArrowRight, CheckCircle2, Volume2, Camera } from 'lucide-react';
 
 interface CalibrationStageProps {
   dossier: CandidateDossier;
@@ -20,35 +20,43 @@ export const CalibrationStage: React.FC<CalibrationStageProps> = ({
   onBack,
 }) => {
   const [hasConsented, setHasConsented] = useState(false);
-  const [countdown, setCountdown] = useState<number>(5);
+  const [cameraState, setCameraState] = useState<CameraState>('INIT');
+  const [countdown, setCountdown] = useState<number>(10);
   const [isCalibrating, setIsCalibrating] = useState<boolean>(false);
   const [isLocked, setIsLocked] = useState<boolean>(false);
 
   const [measuredBPM, setMeasuredBPM] = useState<number>(72);
   const [measuredRPM, setMeasuredRPM] = useState<number>(14);
 
-  // Trigger calibration countdown once consent is granted
+  // Trigger calibration countdown ONLY when consent is granted AND camera is ACTIVE
   useEffect(() => {
-    if (!hasConsented) return;
+    if (!hasConsented || isLocked) return;
+
+    if (cameraState !== 'ACTIVE') {
+      setIsCalibrating(false);
+      return;
+    }
 
     setIsCalibrating(true);
-    let remaining = 5;
 
     const timer = setInterval(() => {
-      remaining -= 1;
-      setCountdown(remaining);
-      soundFX.playHeartbeat();
-
-      if (remaining <= 0) {
-        clearInterval(timer);
-        setIsCalibrating(false);
-        setIsLocked(true);
-        soundFX.playMangekyouLock();
-      }
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setIsCalibrating(false);
+          setIsLocked(true);
+          soundFX.playMangekyouLock();
+          return 0;
+        }
+        soundFX.playHeartbeat();
+        return prev - 1;
+      });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [hasConsented]);
+  }, [hasConsented, cameraState, isLocked]);
+
+  const calibrationProgress = Math.max(0, Math.min(1, (10 - countdown) / 10));
 
   const handleVitalsUpdate = (vitals: LiveVitals) => {
     if (isCalibrating) {
@@ -116,35 +124,48 @@ export const CalibrationStage: React.FC<CalibrationStageProps> = ({
           <div className="lg:col-span-6">
             <OpticalViewfinder
               onVitalsUpdate={handleVitalsUpdate}
+              onCameraStateChange={setCameraState}
               isCalibrating={isCalibrating}
               isLocked={isLocked}
+              calibrationProgress={calibrationProgress}
             />
           </div>
 
-          {/* Right: 5-Second Calibration Status & Baseline Lock */}
+          {/* Right: 10-Second Calibration Status & Baseline Lock */}
           <div className="lg:col-span-6 space-y-5">
             {/* Countdown / Status Box */}
             <div className="p-6 rounded-2xl bg-neutral-950 border border-neutral-800 text-center">
               {!isLocked ? (
                 <>
-                  <span className="font-mono text-xs text-amber-400 font-bold uppercase tracking-widest block mb-2">
-                    Measuring Resting Vitals (Hold Still)
-                  </span>
+                  <div className="flex items-center justify-center gap-1.5 mb-2">
+                    {cameraState === 'ACTIVE' ? (
+                      <span className="font-mono text-xs text-amber-400 font-bold uppercase tracking-widest">
+                        Measuring Resting Baseline (Hold Still)
+                      </span>
+                    ) : (
+                      <span className="font-mono text-xs text-rose-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                        <Camera className="w-3.5 h-3.5" />
+                        Camera Activation Required
+                      </span>
+                    )}
+                  </div>
 
                   {/* Giant Countdown Number */}
                   <div className="font-['Orbitron'] text-6xl font-black text-white my-3 animate-pulse">
-                    00:0{countdown}
+                    00:{countdown < 10 ? `0${countdown}` : countdown}
                   </div>
 
                   <p className="text-xs font-mono text-neutral-400 max-w-sm mx-auto mb-4">
-                    Scanning facial micro-vascular flush and chest rise to establish your resting baseline before L begins.
+                    {cameraState === 'ACTIVE'
+                      ? 'Position your face inside the Mangekyou Sharingan reticle. Keep still for 10 seconds to establish resting pulse & breathing baseline.'
+                      : 'Webcam stream is awaiting permission. Calibration will start automatically once camera feed is active.'}
                   </p>
 
                   {/* Progress Bar */}
                   <div className="w-full bg-neutral-900 h-2.5 rounded-full overflow-hidden border border-neutral-800">
                     <div
                       className="bg-gradient-to-r from-amber-500 via-rose-500 to-emerald-500 h-full transition-all duration-300"
-                      style={{ width: `${((5 - countdown) / 5) * 100}%` }}
+                      style={{ width: `${calibrationProgress * 100}%` }}
                     />
                   </div>
                 </>
