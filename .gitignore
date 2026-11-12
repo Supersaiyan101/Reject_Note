@@ -1,4 +1,7 @@
-# Logs
+# Local credentials and keys
+*.credentials.txt
+.presage_credentials.txt
+.env*
 logs
 *.log
 npm-debug.log*

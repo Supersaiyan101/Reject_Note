@@ -32,6 +32,10 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
     stressDeltaBPM: 0,
     waveform: new Array(60).fill(0.5),
     signalQuality: 'SEARCHING',
+    isFaceLocked: false,
+    faceConfidence: 0,
+    motionEnergy: 0,
+    faceStatus: 'NO_FACE_DETECTED',
   });
 
   const animLoopRef = useRef<number | null>(null);
@@ -228,28 +232,48 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
                   ? 'border-red-400 scale-110 shadow-[0_0_55px_rgba(239,68,68,1)] bg-red-950/40'
                   : showSharingan && isLocked
                   ? 'border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.7)] bg-red-950/20'
-                  : 'border-cyan-500/50 bg-black/10'
+                  : cameraState !== 'ACTIVE'
+                  ? 'border-neutral-700 bg-black/40'
+                  : !vitals.isFaceLocked
+                  ? 'border-rose-500/80 shadow-[0_0_25px_rgba(244,63,94,0.5)] bg-rose-950/25 animate-pulse'
+                  : 'border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.4)] bg-emerald-950/10'
               }`}
             >
               {/* Corner Focus Ticks */}
               <div
                 className={`absolute top-2 left-2 w-3.5 h-3.5 border-t-2 border-l-2 transition-colors ${
-                  showSharingan && isLocked ? 'border-red-500' : 'border-cyan-400/80'
+                  showSharingan && isLocked
+                    ? 'border-red-500'
+                    : !vitals.isFaceLocked && cameraState === 'ACTIVE'
+                    ? 'border-rose-400'
+                    : 'border-emerald-400'
                 }`}
               />
               <div
                 className={`absolute top-2 right-2 w-3.5 h-3.5 border-t-2 border-r-2 transition-colors ${
-                  showSharingan && isLocked ? 'border-red-500' : 'border-cyan-400/80'
+                  showSharingan && isLocked
+                    ? 'border-red-500'
+                    : !vitals.isFaceLocked && cameraState === 'ACTIVE'
+                    ? 'border-rose-400'
+                    : 'border-emerald-400'
                 }`}
               />
               <div
                 className={`absolute bottom-2 left-2 w-3.5 h-3.5 border-b-2 border-l-2 transition-colors ${
-                  showSharingan && isLocked ? 'border-red-500' : 'border-cyan-400/80'
+                  showSharingan && isLocked
+                    ? 'border-red-500'
+                    : !vitals.isFaceLocked && cameraState === 'ACTIVE'
+                    ? 'border-rose-400'
+                    : 'border-emerald-400'
                 }`}
               />
               <div
                 className={`absolute bottom-2 right-2 w-3.5 h-3.5 border-b-2 border-r-2 transition-colors ${
-                  showSharingan && isLocked ? 'border-red-500' : 'border-cyan-400/80'
+                  showSharingan && isLocked
+                    ? 'border-red-500'
+                    : !vitals.isFaceLocked && cameraState === 'ACTIVE'
+                    ? 'border-rose-400'
+                    : 'border-emerald-400'
                 }`}
               />
 
@@ -271,18 +295,24 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
                       ? 'bg-red-950 text-red-200 border-red-500 shadow-[0_0_12px_rgba(239,68,68,0.8)]'
                       : cameraState !== 'ACTIVE'
                       ? 'bg-amber-950/90 text-amber-300 border-amber-600/70'
+                      : !vitals.isFaceLocked
+                      ? 'bg-rose-950 text-rose-300 border-rose-600 shadow-[0_0_15px_rgba(225,29,72,0.6)] animate-pulse'
                       : isCalibrating
-                      ? 'bg-cyan-950/80 text-cyan-300 border-cyan-500/50'
-                      : 'bg-black/80 text-neutral-400 border-neutral-700'
+                      ? 'bg-emerald-950/90 text-emerald-300 border-emerald-500/60 shadow-[0_0_10px_rgba(16,185,129,0.3)]'
+                      : 'bg-black/80 text-emerald-400 border-emerald-500/50'
                   }`}
                 >
                   {showSharingan && isLocked
                     ? 'MANGEKYOU LOCKED'
                     : cameraState !== 'ACTIVE'
                     ? 'WAITING FOR CAMERA'
+                    : !vitals.isFaceLocked
+                    ? vitals.faceStatus === 'NOT_CENTERED'
+                      ? '⚠️ ALIGN FACE IN RETICLE'
+                      : '⚠️ NO FACE DETECTED'
                     : isCalibrating
-                    ? `CALIBRATING BASELINE (${Math.round(calibrationProgress * 100)}%)`
-                    : 'PRESAGE SENSORS ACTIVE'}
+                    ? `CALIBRATING (${Math.round(calibrationProgress * 100)}%)`
+                    : 'OPTICAL TRACK: 100%'}
                 </span>
               </div>
             </div>
@@ -307,9 +337,16 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
             <Heart className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
             Live PPG Pulse Waveform:
           </span>
-          <span className="text-emerald-400 font-bold">
-            {vitals.currentBPM} BPM
-          </span>
+          <div className="flex items-center gap-2">
+            {vitals.stressDeltaBPM > 6 && (
+              <span className="px-1.5 py-0.2 rounded bg-rose-950/90 text-rose-400 text-[10px] border border-rose-600/70 font-bold animate-pulse">
+                +{vitals.stressDeltaBPM} BPM STRESS
+              </span>
+            )}
+            <span className={`font-bold ${vitals.isFaceLocked ? 'text-emerald-400' : 'text-neutral-500'}`}>
+              {vitals.isFaceLocked ? `${vitals.currentBPM} BPM` : 'TARGET LOST'}
+            </span>
+          </div>
         </div>
 
         <canvas
@@ -320,8 +357,9 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
         />
 
         <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500 mt-1.5">
-          <span>Respiration: <strong className="text-cyan-400">{vitals.currentBreathingRate} RPM</strong></span>
-          <span>Signal: <strong className="text-emerald-400">{vitals.signalQuality}</strong></span>
+          <span>Respiration: <strong className="text-cyan-400">{vitals.isFaceLocked ? `${vitals.currentBreathingRate} RPM` : '--'}</strong></span>
+          <span>Motion: <strong className={vitals.motionEnergy > 0.15 ? 'text-rose-400' : 'text-emerald-400'}>{Math.round(vitals.motionEnergy * 100)}%</strong></span>
+          <span>Signal: <strong className={vitals.isFaceLocked ? 'text-emerald-400' : 'text-rose-400'}>{vitals.signalQuality}</strong></span>
         </div>
       </div>
     </div>

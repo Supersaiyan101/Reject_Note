@@ -68,6 +68,10 @@ export interface LiveVitals {
   stressDeltaBPM: number;
   waveform: number[];
   signalQuality: 'OPTIMAL' | 'FAIR' | 'SEARCHING';
+  isFaceLocked: boolean;
+  faceConfidence: number; // 0.0 to 1.0
+  motionEnergy: number; // 0.0 (still) to 1.0 (agitated/crying/talking)
+  faceStatus: 'LOCKED' | 'NOT_CENTERED' | 'NO_FACE_DETECTED';
 }
 
 // STAGE 4: INTERROGATION & FORENSIC TYPES

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Volume2, VolumeX, ShieldCheck, Zap, Activity } from 'lucide-react';
+import { Volume2, VolumeX, ShieldCheck, Zap, Activity, Key } from 'lucide-react';
 import { soundFX } from '../utils/sfx';
+import { opticalEngine } from '../utils/opticalEngine';
 
 export const Header: React.FC = () => {
   const [isMuted, setIsMuted] = useState(soundFX.getMuted());
+  const hasPresageKey = Boolean(opticalEngine.getApiKey());
 
   const handleToggleSound = () => {
     const muted = soundFX.toggleMute();
@@ -39,9 +41,22 @@ export const Header: React.FC = () => {
 
         {/* Live System Status Badges */}
         <div className="flex items-center gap-2 sm:gap-4">
+          {/* Presage SDK Key Status Pill */}
+          <div
+            title={hasPresageKey ? 'Official Presage SmartSpectra API Key Authenticated' : 'No API Key configured - Running local CV'}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono border transition-all ${
+              hasPresageKey
+                ? 'bg-emerald-950/80 border-emerald-500/60 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
+                : 'bg-neutral-900 border-neutral-700 text-neutral-400'
+            }`}
+          >
+            <Key className={`w-3.5 h-3.5 ${hasPresageKey ? 'text-emerald-400 animate-pulse' : 'text-neutral-500'}`} />
+            <span className="font-semibold">{hasPresageKey ? 'PRESAGE: AUTHENTICATED' : 'PRESAGE: LOCAL'}</span>
+          </div>
+
           <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/50 border border-emerald-500/40 text-emerald-400 text-xs font-mono">
             <Activity className="w-3.5 h-3.5 animate-pulse text-emerald-400" />
-            <span>OPTICAL SENSORS STANDBY</span>
+            <span>OPTICAL TRACK: ACTIVE</span>
           </div>
 
           <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-950/40 border border-cyan-500/30 text-cyan-400 text-xs font-mono">

@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { CandidateDossier, InquisitorProfile, BaselineCalibration, LiveVitals, CameraState } from '../types';
 import { OpticalViewfinder } from './OpticalViewfinder';
 import { SecurityWaiver } from './SecurityWaiver';
 import { opticalEngine } from '../utils/opticalEngine';
 import { soundFX } from '../utils/sfx';
-import { ShieldCheck, Heart, Wind, ArrowRight, CheckCircle2, Volume2, Camera } from 'lucide-react';
+import { ShieldCheck, Heart, Wind, ArrowRight, CheckCircle2, Volume2, Camera, AlertTriangle, Activity } from 'lucide-react';
 
 interface CalibrationStageProps {
   dossier: CandidateDossier;
@@ -24,9 +24,13 @@ export const CalibrationStage: React.FC<CalibrationStageProps> = ({
   const [countdown, setCountdown] = useState<number>(10);
   const [isCalibrating, setIsCalibrating] = useState<boolean>(false);
   const [isLocked, setIsLocked] = useState<boolean>(false);
+  const [isFaceLocked, setIsFaceLocked] = useState<boolean>(false);
 
   const [measuredBPM, setMeasuredBPM] = useState<number>(72);
   const [measuredRPM, setMeasuredRPM] = useState<number>(14);
+
+  const isFaceLockedRef = useRef<boolean>(false);
+  const lastVitalsUpdateRef = useRef<number>(0);
 
   // Trigger calibration countdown ONLY when consent is granted AND camera is ACTIVE
   useEffect(() => {
@@ -40,6 +44,11 @@ export const CalibrationStage: React.FC<CalibrationStageProps> = ({
     setIsCalibrating(true);
 
     const timer = setInterval(() => {
+      // STRICT FACE GATING: If face is out of frame / not locked, PAUSE the countdown!
+      if (!isFaceLockedRef.current) {
+        return;
+      }
+
       setCountdown((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
@@ -58,12 +67,14 @@ export const CalibrationStage: React.FC<CalibrationStageProps> = ({
 
   const calibrationProgress = Math.max(0, Math.min(1, (10 - countdown) / 10));
 
-  const lastVitalsUpdateRef = React.useRef<number>(0);
   const handleVitalsUpdate = (vitals: LiveVitals) => {
+    isFaceLockedRef.current = vitals.isFaceLocked;
+    setIsFaceLocked(vitals.isFaceLocked);
+
     const now = Date.now();
-    if (now - lastVitalsUpdateRef.current > 350) {
+    if (now - lastVitalsUpdateRef.current > 300) {
       lastVitalsUpdateRef.current = now;
-      if (isCalibrating) {
+      if (isCalibrating && vitals.isFaceLocked) {
         setMeasuredBPM(vitals.currentBPM);
         setMeasuredRPM(vitals.currentBreathingRate);
       }
@@ -144,33 +155,54 @@ export const CalibrationStage: React.FC<CalibrationStageProps> = ({
               {!isLocked ? (
                 <>
                   <div className="flex items-center justify-center gap-1.5 mb-2">
-                    {cameraState === 'ACTIVE' ? (
-                      <span className="font-mono text-xs text-amber-400 font-bold uppercase tracking-widest">
-                        Measuring Resting Baseline (Hold Still)
-                      </span>
-                    ) : (
+                    {cameraState !== 'ACTIVE' ? (
                       <span className="font-mono text-xs text-rose-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
                         <Camera className="w-3.5 h-3.5" />
                         Camera Activation Required
+                      </span>
+                    ) : !isFaceLocked ? (
+                      <span className="font-mono text-xs text-rose-400 font-bold uppercase tracking-widest flex items-center gap-1.5 animate-pulse">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        Target Lost // Align Face in Reticle
+                      </span>
+                    ) : (
+                      <span className="font-mono text-xs text-emerald-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                        <Activity className="w-3.5 h-3.5 animate-pulse text-emerald-400" />
+                        Measuring Resting Baseline (Hold Still)
                       </span>
                     )}
                   </div>
 
                   {/* Giant Countdown Number */}
-                  <div className="font-['Orbitron'] text-6xl font-black text-white my-3 animate-pulse">
+                  <div className={`font-['Orbitron'] text-6xl font-black my-3 transition-colors ${
+                    !isFaceLocked && cameraState === 'ACTIVE'
+                      ? 'text-rose-500 animate-pulse'
+                      : 'text-white'
+                  }`}>
                     00:{countdown < 10 ? `0${countdown}` : countdown}
+                    {!isFaceLocked && cameraState === 'ACTIVE' && (
+                      <span className="text-[11px] font-mono text-rose-400 block tracking-widest mt-1">
+                        PAUSED // NO FACE DETECTED
+                      </span>
+                    )}
                   </div>
 
-                  <p className="text-xs font-mono text-neutral-400 max-w-sm mx-auto mb-4">
-                    {cameraState === 'ACTIVE'
-                      ? 'Position your face inside the Mangekyou Sharingan reticle. Keep still for 10 seconds to establish resting pulse & breathing baseline.'
-                      : 'Webcam stream is awaiting permission. Calibration will start automatically once camera feed is active.'}
+                  <p className="text-xs font-mono max-w-sm mx-auto mb-4 transition-colors">
+                    {cameraState !== 'ACTIVE'
+                      ? 'Webcam stream is awaiting permission. Calibration will start automatically once camera feed is active.'
+                      : !isFaceLocked
+                      ? 'Optical sensors cannot detect your face in the reticle. Return your face to the center to resume the countdown.'
+                      : `Face locked in reticle. Keep still for ${countdown} more seconds to establish resting pulse & breathing baseline.`}
                   </p>
 
                   {/* Progress Bar */}
                   <div className="w-full bg-neutral-900 h-2.5 rounded-full overflow-hidden border border-neutral-800">
                     <div
-                      className="bg-gradient-to-r from-amber-500 via-rose-500 to-emerald-500 h-full transition-all duration-300"
+                      className={`h-full transition-all duration-300 ${
+                        !isFaceLocked && cameraState === 'ACTIVE'
+                          ? 'bg-rose-600/50'
+                          : 'bg-gradient-to-r from-amber-500 via-rose-500 to-emerald-500'
+                      }`}
                       style={{ width: `${calibrationProgress * 100}%` }}
                     />
                   </div>

@@ -67,6 +67,10 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
     stressDeltaBPM: 0,
     waveform: [],
     signalQuality: 'OPTIMAL',
+    isFaceLocked: true,
+    faceConfidence: 1.0,
+    motionEnergy: 0,
+    faceStatus: 'LOCKED',
   });
   const [cameraState, setCameraState] = useState<CameraState>('ACTIVE');
 
@@ -130,8 +134,8 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
       }
       bpmReadingsRef.current.push(vitals.currentBPM);
 
-      // Randomly simulate occasional micro gaze drift if face box shifts
-      if (Math.random() < 0.04) {
+      // Detect micro gaze drift or head shifts from real optical tracking
+      if (vitals.faceStatus === 'NOT_CENTERED' || vitals.motionEnergy > 0.22) {
         setGazeDrifts((prev) => prev + 1);
       }
     }
