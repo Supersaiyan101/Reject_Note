@@ -1,5 +1,6 @@
 // Optical Biometric Engine // Real-Time Camera PPG & Respiration Analysis
 import type { LiveVitals, OpticalMode } from '../types';
+import { neuralFaceTracker } from './faceTracker';
 
 class OpticalBiometricEngine {
   private mediaStream: MediaStream | null = null;
@@ -105,6 +106,11 @@ class OpticalBiometricEngine {
       this.prevLumaBuffer = new Float32Array(160 * 120);
     }
 
+    // Initialize Neural Face Tracker in the background
+    neuralFaceTracker.initialize().catch((err) => {
+      console.warn('Neural face tracker init warning:', err);
+    });
+
     return stream;
   }
 
@@ -196,33 +202,35 @@ class OpticalBiometricEngine {
           }
         }
 
-        // Calculate skin ratio inside the optical reticle
+        // Calculate skin ratio inside the optical reticle as secondary fallback
         const skinRatio = totalReticlePixels > 0 ? skinPixelCount / totalReticlePixels : 0;
         
         // Measure normalized motion energy inside reticle (0.00 = zen still, 0.20+ = heavy talking/crying/moving)
         const instantMotion = totalReticlePixels > 0 ? (frameMotionSum / totalReticlePixels) / 45 : 0;
         this.motionEnergy = Math.max(0, Math.min(1.0, this.motionEnergy * 0.70 + instantMotion * 0.30));
 
-        // Face presence evaluation:
-        // A centered face typically occupies 22% - 85% of the central reticle
-        if (skinRatio >= 0.18) {
+        // Primary: Check Neural Face Tracker (MediaPipe BlazeFace)
+        const neural = neuralFaceTracker.detectFace(this.videoElement);
+        if (neural.hasFace) {
           this.consecutiveFaceFrames++;
           this.consecutiveLostFrames = 0;
-          if (this.consecutiveFaceFrames >= 2) {
+          if (neural.isCentered) {
             isFaceLocked = true;
             faceStatus = 'LOCKED';
-            faceConfidence = Math.min(1.0, skinRatio / 0.40);
+            faceConfidence = neural.confidence;
+          } else {
+            isFaceLocked = false;
+            faceStatus = 'NOT_CENTERED';
+            faceConfidence = neural.confidence;
           }
-        } else if (skinRatio >= 0.08) {
-          // Off-center or partially out of frame
-          isFaceLocked = false;
-          faceStatus = 'NOT_CENTERED';
-          faceConfidence = skinRatio / 0.18;
-          this.consecutiveFaceFrames = 0;
+          this.motionEnergy = Math.max(this.motionEnergy, neural.motionDelta);
         } else {
-          // No face in reticle (moved away, head turned, or empty frame)
+          // If Neural tracker is loaded and sees no face, lock is definitely false!
+          if (skinRatio > 0.45) {
+            faceConfidence = 0.4;
+          }
           this.consecutiveLostFrames++;
-          if (this.consecutiveLostFrames >= 3) {
+          if (this.consecutiveLostFrames >= 2) {
             this.consecutiveFaceFrames = 0;
             isFaceLocked = false;
             faceStatus = 'NO_FACE_DETECTED';

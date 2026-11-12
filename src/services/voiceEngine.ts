@@ -19,6 +19,9 @@ export class CandidateVoiceEngine {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private recognition: any = null;
   private isListening = false;
+  private hasFatalError = false;
+  private restartTimeout: number | null = null;
+
   private audioCtx: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;
   private mediaStream: MediaStream | null = null;
@@ -27,10 +30,17 @@ export class CandidateVoiceEngine {
   private currentTranscript = '';
 
   constructor() {
-    if (typeof window !== 'undefined') {
-      const win = window as unknown as IWindow;
-      const SpeechRec = win.SpeechRecognition || win.webkitSpeechRecognition;
-      if (SpeechRec) {
+    this.initRecognition();
+  }
+
+  private initRecognition() {
+    if (typeof window === 'undefined') return;
+
+    const win = window as unknown as IWindow;
+    const SpeechRec = win.SpeechRecognition || win.webkitSpeechRecognition;
+
+    if (SpeechRec) {
+      try {
         this.recognition = new SpeechRec();
         this.recognition.continuous = true;
         this.recognition.interimResults = true;
@@ -54,38 +64,56 @@ export class CandidateVoiceEngine {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.recognition.onerror = (event: any) => {
           console.warn('SpeechRecognition error:', event.error);
+          if (
+            event.error === 'network' ||
+            event.error === 'not-allowed' ||
+            event.error === 'service-not-allowed'
+          ) {
+            this.hasFatalError = true;
+          }
           this.callbacks?.onError?.(event.error);
         };
 
         this.recognition.onend = () => {
-          if (this.isListening) {
-            // Keep listening continuous unless explicitly stopped
-            try {
-              this.recognition?.start();
-            } catch {
-              this.stopListening();
-            }
+          if (this.isListening && !this.hasFatalError) {
+            if (this.restartTimeout) window.clearTimeout(this.restartTimeout);
+            this.restartTimeout = window.setTimeout(() => {
+              if (this.isListening && !this.hasFatalError) {
+                try {
+                  this.recognition?.start();
+                } catch {
+                  // Ignore already started
+                }
+              }
+            }, 300);
           } else {
+            this.isListening = false;
             this.callbacks?.onListeningStateChange?.(false);
           }
         };
+      } catch (err) {
+        console.warn('SpeechRecognition constructor failed:', err);
+        this.recognition = null;
       }
     }
   }
 
   public isSpeechRecognitionSupported(): boolean {
-    return this.recognition !== null;
+    return this.recognition !== null && !this.hasFatalError;
   }
 
   public async startListening(callbacks: VoiceEngineCallbacks): Promise<boolean> {
     this.callbacks = callbacks;
     this.currentTranscript = '';
+    this.hasFatalError = false;
 
     // 1. Start Audio Meter via Web Audio API
     try {
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        const AudioCtx =
+          window.AudioContext ||
+          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
         this.audioCtx = new AudioCtx();
         const source = this.audioCtx.createMediaStreamSource(this.mediaStream);
         this.analyser = this.audioCtx.createAnalyser();
@@ -109,6 +137,7 @@ export class CandidateVoiceEngine {
       }
     } catch (err) {
       console.warn('Microphone audio level capture warning:', err);
+      this.callbacks?.onError?.('mic-permission-denied');
     }
 
     // 2. Start Speech Recognition
@@ -118,12 +147,21 @@ export class CandidateVoiceEngine {
         this.recognition.start();
         this.callbacks?.onListeningStateChange?.(true);
         return true;
-      } catch (err) {
-        console.warn('Speech recognition start failed:', err);
+      } catch {
+        // Recognition might already be running, reset and try once
+        try {
+          this.recognition.abort();
+          this.recognition.start();
+          this.isListening = true;
+          this.callbacks?.onListeningStateChange?.(true);
+          return true;
+        } catch (e2) {
+          console.warn('Failed to start speech recognition:', e2);
+        }
       }
     }
 
-    // Fallback: even without SpeechRecognition, mic audio level works
+    // Fallback: mic audio level still works even if speech recognition is unsupported/blocked
     this.isListening = true;
     this.callbacks?.onListeningStateChange?.(true);
     return false;
@@ -131,11 +169,15 @@ export class CandidateVoiceEngine {
 
   public stopListening() {
     this.isListening = false;
+    if (this.restartTimeout) {
+      window.clearTimeout(this.restartTimeout);
+      this.restartTimeout = null;
+    }
     this.callbacks?.onListeningStateChange?.(false);
 
     if (this.recognition) {
       try {
-        this.recognition.stop();
+        this.recognition.abort();
       } catch {
         // Ignore
       }
@@ -163,4 +205,3 @@ export class CandidateVoiceEngine {
 }
 
 export const candidateVoiceEngine = new CandidateVoiceEngine();
-

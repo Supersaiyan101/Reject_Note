@@ -59,6 +59,7 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
   const [testimonyText, setTestimonyText] = useState('');
   const [isMicRecording, setIsMicRecording] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
+  const [voiceWarning, setVoiceWarning] = useState<string | null>(null);
 
   // Biometrics harvest during testimony
   const [liveVitals, setLiveVitals] = useState<LiveVitals>({
@@ -149,15 +150,24 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
       setAudioLevel(0);
     } else {
       soundFX.playClick();
+      setVoiceWarning(null);
       const supported = await candidateVoiceEngine.startListening({
         onTranscriptUpdate: (text) => {
           setTestimonyText(text);
+          setVoiceWarning(null);
         },
         onAudioLevel: (level) => {
           setAudioLevel(level);
         },
         onError: (err) => {
           console.warn('Voice error:', err);
+          if (err === 'not-allowed' || err === 'mic-permission-denied') {
+            setVoiceWarning('Microphone permission blocked. Please allow mic access in your browser or switch to Keyboard mode.');
+          } else if (err === 'network') {
+            setVoiceWarning('Speech recognition blocked by browser shield (Brave blocks Google speech API by default). Mic level is active — type defense below or enable Google services in brave://settings/privacy.');
+          } else if (err !== 'no-speech') {
+            setVoiceWarning(`Speech recognition note: ${err}. You can type directly in keyboard mode.`);
+          }
         },
         onListeningStateChange: (state) => {
           setIsMicRecording(state);
@@ -165,7 +175,7 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
       });
 
       if (!supported && !candidateVoiceEngine.isSpeechRecognitionSupported()) {
-        // Fallback to keyboard if browser has no speech recognition
+        setVoiceWarning('Browser speech recognition not supported in this browser. Switching to Keyboard mode.');
         setInputMode('KEYBOARD');
       }
     }
@@ -563,23 +573,54 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
             {/* Input Surface */}
             {inputMode === 'VOICE' ? (
               <div className="p-4 rounded-xl bg-neutral-900/80 border border-neutral-800 space-y-3">
-                <div className="flex items-center justify-between">
-                  <button
-                    onClick={toggleVoiceRecording}
-                    className={`px-4 py-2 rounded-lg font-mono text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
-                      isMicRecording
-                        ? 'bg-rose-600 text-white shadow-[0_0_20px_rgba(225,29,72,0.6)] animate-pulse'
-                        : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-200'
-                    }`}
-                  >
-                    {isMicRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                    <span>{isMicRecording ? 'Stop Recording' : 'Start Speaking Defense'}</span>
-                  </button>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={toggleVoiceRecording}
+                      className={`px-4 py-2 rounded-lg font-mono text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                        isMicRecording
+                          ? 'bg-rose-600 text-white shadow-[0_0_20px_rgba(225,29,72,0.6)] animate-pulse'
+                          : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-200'
+                      }`}
+                    >
+                      {isMicRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                      <span>{isMicRecording ? 'Stop Recording' : 'Start Speaking Defense'}</span>
+                    </button>
+
+                    {/* Live Audio VU Level Bar */}
+                    {isMicRecording && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono text-neutral-400">Mic Level:</span>
+                        <div className="w-20 h-2 bg-neutral-800 rounded-full overflow-hidden border border-neutral-700">
+                          <div
+                            className="h-full bg-gradient-to-r from-emerald-500 via-amber-500 to-rose-500 transition-all duration-75"
+                            style={{ width: `${Math.max(8, audioLevel)}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
                   <span className="text-xs font-mono text-neutral-400">
-                    {isMicRecording ? 'Listening to voice...' : 'Click to speak your defense into the microphone'}
+                    {isMicRecording ? 'Recording microphone speech...' : 'Click to speak your defense'}
                   </span>
                 </div>
+
+                {voiceWarning && (
+                  <div className="p-3 rounded-lg bg-amber-950/40 border border-amber-600/50 text-[11px] font-mono text-amber-300 flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <p>{voiceWarning}</p>
+                      <button
+                        type="button"
+                        onClick={() => setInputMode('KEYBOARD')}
+                        className="text-xs text-amber-200 underline font-bold cursor-pointer hover:text-white"
+                      >
+                        Switch to Type (Text) Mode
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 <div className="min-h-16 p-3 rounded-lg bg-black/60 border border-neutral-800 font-mono text-sm text-neutral-200">
                   {testimonyText || (
@@ -587,6 +628,20 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
                       Your spoken defense will appear here live in real-time...
                     </span>
                   )}
+                </div>
+
+                {/* Quick Auto-Fill suggestion pill */}
+                <div className="flex items-center justify-between text-[11px] font-mono text-neutral-500">
+                  <span>Need quick testimony?</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTestimonyText(`I architected this project from the ground up, guaranteeing strict p99 latency benchmarks and automated fault tolerance without regression.`);
+                    }}
+                    className="text-neutral-400 hover:text-rose-400 underline transition-colors cursor-pointer"
+                  >
+                    Auto-Fill Defiant Statement
+                  </button>
                 </div>
               </div>
             ) : (
