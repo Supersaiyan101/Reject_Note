@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import type { CandidateDossier } from '../types';
-import { ArrowRight, RotateCcw, Flame, FileCheck, Award, Sparkles, ShieldAlert } from 'lucide-react';
+import { ArrowRight, RotateCcw, FileCheck, Award, Sparkles, ShieldAlert, Activity } from 'lucide-react';
 import { soundFX } from '../utils/sfx';
 
 interface DossierCardProps {
@@ -14,6 +14,18 @@ export const DossierCard: React.FC<DossierCardProps> = ({
   onProceed,
   onReset,
 }) => {
+  const [psycheMode, setPsycheMode] = useState<'bliss' | 'panic'>('bliss');
+  const [isHovered, setIsHovered] = useState(false);
+
+  useEffect(() => {
+    // Alternate: 4.2 seconds bliss, 1.4 seconds panic
+    const interval = setInterval(() => {
+      setPsycheMode((prev) => (prev === 'bliss' ? 'panic' : 'bliss'));
+    }, 3800);
+    return () => clearInterval(interval);
+  }, []);
+
+  const activeMode = isHovered ? 'panic' : psycheMode;
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-6">
       <div className="rounded-2xl bg-gradient-to-b from-neutral-900 via-neutral-950 to-black border-2 border-rose-500/70 p-6 md:p-8 shadow-[0_0_40px_rgba(225,29,72,0.3)]">
@@ -85,26 +97,70 @@ export const DossierCard: React.FC<DossierCardProps> = ({
             </div>
           </div>
 
-          {/* Col 3: Applicant Registry Credentials */}
-          <div className="rounded-xl bg-neutral-950 p-5 border border-cyan-500/40 flex flex-col justify-between shadow-[0_0_20px_rgba(6,182,212,0.15)]">
+          {/* Col 3: Candidate Psyche Projection (Gojo Flowers vs Higuruma Despair) */}
+          <div 
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            className={`rounded-xl bg-neutral-950 p-4 border transition-all duration-300 flex flex-col justify-between ${
+              activeMode === 'panic' 
+                ? 'border-rose-600/70 shadow-[0_0_25px_rgba(225,29,72,0.3)]' 
+                : 'border-pink-500/40 shadow-[0_0_20px_rgba(244,114,182,0.15)]'
+            }`}
+          >
             <div>
+              {/* Header */}
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-mono text-cyan-400 font-bold uppercase tracking-wider">
-                  Registry Standing
+                <span className={`text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors ${
+                  activeMode === 'panic' ? 'text-rose-400' : 'text-pink-400'
+                }`}>
+                  <Activity className="w-3.5 h-3.5 animate-pulse" />
+                  Psyche Projection
                 </span>
-                <Flame className="w-4 h-4 text-amber-400 animate-pulse" />
+                <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold border transition-colors ${
+                  activeMode === 'panic'
+                    ? 'bg-rose-950/90 text-rose-300 border-rose-600 animate-pulse'
+                    : 'bg-pink-950/70 text-pink-300 border-pink-700/50'
+                }`}>
+                  {activeMode === 'panic' ? 'AUDIT PANIC' : 'EGO: "NAH, I\'D WIN"'}
+                </span>
               </div>
 
-              <div className="font-['Orbitron'] text-2xl font-black text-white tracking-tight my-1">
-                TIER-S CANDIDATE
+              {/* Dynamic GIF Viewport */}
+              <div className="relative w-full h-36 rounded-lg overflow-hidden border border-neutral-800 bg-neutral-900 group">
+                <img
+                  src={activeMode === 'panic' ? '/candidate-audit-despair.gif' : '/candidate-ego-bliss.gif'}
+                  alt={activeMode === 'panic' ? 'Audit Despair' : 'Ego Bliss'}
+                  className="w-full h-full object-cover object-center transition-all duration-200"
+                />
+
+                {/* Subtle CRT Scanline Overlay */}
+                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.35)_50%)] bg-[length:100%_4px] opacity-40" />
+
+                {/* Top Corner Label */}
+                <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-black/75 backdrop-blur-xs border border-white/10 text-[9px] font-mono text-neutral-300 uppercase">
+                  {activeMode === 'panic' ? '⚠️ Pulse Surge' : '🌸 Baseline Ego'}
+                </div>
+
+                {/* Bottom Overlay Label */}
+                <div className="absolute bottom-2 inset-x-2 px-2 py-1 rounded bg-black/80 backdrop-blur-xs border border-white/10 flex items-center justify-between text-[10px] font-mono">
+                  <span className={activeMode === 'panic' ? 'text-rose-400 font-bold' : 'text-pink-300 font-medium'}>
+                    {activeMode === 'panic' ? '188 BPM // Heart Rate Breach' : '62 BPM // Untouchable Calm'}
+                  </span>
+                  <span className="text-[9px] text-neutral-400 hidden sm:inline">
+                    {activeMode === 'panic' ? 'CRITICAL' : 'SPECIAL GRADE'}
+                  </span>
+                </div>
               </div>
 
-              <p className="text-[11px] font-mono text-neutral-400">
-                Registered Claim Volume: <span className="text-cyan-400 font-bold">{dossier.buzzwordCount.toLocaleString()}</span> buzzword points
+              <p className="text-[11px] font-mono text-neutral-400 mt-2">
+                {activeMode === 'panic' 
+                  ? 'Projected Cross-Exam Reality: Complete existential breakdown under L.' 
+                  : 'Self-Assessed Intake Vibe: 100% confidence, entirely untouched.'}
               </p>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-neutral-800 text-[11px] font-mono text-neutral-400 space-y-1.5">
+            {/* Verification status footer */}
+            <div className="mt-3 pt-2.5 border-t border-neutral-800 text-[11px] font-mono text-neutral-400 space-y-1">
               <div className="flex justify-between">
                 <span>Intake Verification:</span>
                 <span className="text-amber-400 font-bold flex items-center gap-1">
@@ -112,9 +168,9 @@ export const DossierCard: React.FC<DossierCardProps> = ({
                   Pending Ocular Audit
                 </span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between text-[10px] text-neutral-500">
                 <span>Polygraph Status:</span>
-                <span className="text-neutral-500">Uncalibrated (Stage 3)</span>
+                <span>Uncalibrated (Stage 3)</span>
               </div>
             </div>
           </div>

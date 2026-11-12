@@ -4,7 +4,7 @@ export const LIGHT_YAGAMI_DOSSIER: CandidateDossier = {
   name: 'Light Yagami',
   title: 'Divine Lead System Architect & Chief Justice Optimizer',
   education: 'To-Oh University // Top Entrance Score: 100% (Valedictorian)',
-  summary: 'Supreme honors prodigy with unmatched deductive intellect, flawless tennis mechanics, and 10+ years of self-appointed moral superiority. Over 9,000 verified buzzwords. "I am creating an ideal, bug-free world."',
+  summary: 'Supreme honors prodigy with unmatched deductive intellect, flawless tennis mechanics, and 10+ years of self-appointed moral superiority. "Nah, I\'d win." "I am creating an ideal, bug-free world."',
   buzzwordCount: 9001,
   powerLevel: 'OVER 9,000!',
   isPreset: true,
