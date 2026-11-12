@@ -1,6 +1,6 @@
 import React from 'react';
 import type { CandidateDossier } from '../types';
-import { AlertTriangle, ArrowRight, RotateCcw, Skull, Flame, FileCheck, Brain } from 'lucide-react';
+import { ArrowRight, RotateCcw, Flame, FileCheck, Award, Sparkles, ShieldAlert } from 'lucide-react';
 import { soundFX } from '../utils/sfx';
 
 interface DossierCardProps {
@@ -20,20 +20,20 @@ export const DossierCard: React.FC<DossierCardProps> = ({
         {/* Top Dossier Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-neutral-800">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-rose-950/60 border border-rose-500/60 flex items-center justify-center text-rose-400 font-serif font-black text-2xl shadow-[0_0_15px_rgba(225,29,72,0.4)]">
-              審
+            <div className="w-12 h-12 rounded-xl bg-neutral-950 border border-emerald-500/60 flex items-center justify-center text-emerald-400 font-serif font-black text-2xl shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+              申
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-['Orbitron'] font-bold text-sm tracking-wider text-rose-400">
-                  CLASSIFIED CANDIDATE DOSSIER
+                <span className="font-['Orbitron'] font-bold text-sm tracking-wider text-white">
+                  CANDIDATE APPLICATION DOSSIER
                 </span>
-                <span className="px-2 py-0.5 rounded bg-rose-600 text-white font-mono text-[10px] font-bold">
-                  HIGH SUSPICION
+                <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-600/50 font-mono text-[10px] font-bold">
+                  INTAKE REGISTERED
                 </span>
               </div>
               <p className="text-xs font-mono text-neutral-400">
-                Prepared for Lead Inquisitor // Presage Optical Interrogation
+                Applicant Intake File // Awaiting Inquisitor Cross-Examination
               </p>
             </div>
           </div>
@@ -47,22 +47,25 @@ export const DossierCard: React.FC<DossierCardProps> = ({
               className="px-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-700 hover:border-neutral-500 text-neutral-300 hover:text-white font-mono text-xs flex items-center gap-1.5 cursor-pointer transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Audit Another CV</span>
+              <span>Submit Another CV</span>
             </button>
           </div>
         </div>
 
         {/* Candidate Summary Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 my-6">
-          {/* Col 1 & 2: Candidate Bio */}
+          {/* Col 1 & 2: Candidate Bio & Submitted Statement */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-start gap-4 p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
-              <div className="w-16 h-16 rounded-lg bg-neutral-950 border border-neutral-700 flex items-center justify-center font-['Cinzel_Decorative'] text-rose-400 text-3xl font-bold shrink-0">
+              <div className="w-16 h-16 rounded-lg bg-neutral-950 border border-neutral-700 flex items-center justify-center font-['Cinzel_Decorative'] text-rose-400 text-3xl font-bold shrink-0 shadow-[0_0_15px_rgba(244,63,94,0.2)]">
                 {dossier.isPreset ? '夜' : '申'}
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-white font-['Space_Grotesk']">
-                  {dossier.name}
+                <h3 className="text-2xl font-bold text-white font-['Space_Grotesk'] flex items-center gap-2">
+                  <span>{dossier.name}</span>
+                  <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-neutral-800 text-neutral-300 font-normal border border-neutral-700">
+                    Applicant #001
+                  </span>
                 </h3>
                 <p className="text-xs text-rose-400 font-mono font-medium">
                   {dossier.title}
@@ -74,83 +77,94 @@ export const DossierCard: React.FC<DossierCardProps> = ({
             </div>
 
             <div className="p-4 rounded-xl bg-neutral-900/40 border border-neutral-800 text-xs text-neutral-300 font-mono leading-relaxed">
-              <span className="text-rose-400 font-bold uppercase tracking-wider block mb-1">
-                Executive Profile Summary:
+              <span className="text-emerald-400 font-bold uppercase tracking-wider block mb-1 flex items-center gap-1.5">
+                <Award className="w-3.5 h-3.5 text-emerald-400" />
+                Submitted Career Mission Statement:
               </span>
               &ldquo;{dossier.summary}&rdquo;
             </div>
           </div>
 
-          {/* Col 3: Scouter Metrics Box */}
-          <div className="rounded-xl bg-neutral-950 p-5 border border-emerald-500/40 flex flex-col justify-between shadow-[0_0_20px_rgba(34,197,94,0.15)]">
+          {/* Col 3: Applicant Registry Credentials */}
+          <div className="rounded-xl bg-neutral-950 p-5 border border-cyan-500/40 flex flex-col justify-between shadow-[0_0_20px_rgba(6,182,212,0.15)]">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-mono text-emerald-400 font-bold uppercase tracking-wider">
-                  Threat Classification
+                <span className="text-xs font-mono text-cyan-400 font-bold uppercase tracking-wider">
+                  Registry Standing
                 </span>
-                <Flame className="w-4 h-4 text-amber-400 animate-bounce" />
+                <Flame className="w-4 h-4 text-amber-400 animate-pulse" />
               </div>
 
-              <div className="font-['Orbitron'] text-2xl font-black text-amber-400 tracking-tight my-1">
-                CLASS-S (CRITICAL)
+              <div className="font-['Orbitron'] text-2xl font-black text-white tracking-tight my-1">
+                TIER-S CANDIDATE
               </div>
 
               <p className="text-[11px] font-mono text-neutral-400">
-                Verified Buzzwords: <span className="text-emerald-400 font-bold">{dossier.buzzwordCount.toLocaleString()}</span> points
+                Registered Claim Volume: <span className="text-cyan-400 font-bold">{dossier.buzzwordCount.toLocaleString()}</span> buzzword points
               </p>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-neutral-800 text-[11px] font-mono text-neutral-400 space-y-1">
+            <div className="mt-4 pt-3 border-t border-neutral-800 text-[11px] font-mono text-neutral-400 space-y-1.5">
               <div className="flex justify-between">
-                <span>Optical Stress Risk:</span>
-                <span className="text-rose-400 font-bold">99.8%</span>
+                <span>Intake Verification:</span>
+                <span className="text-amber-400 font-bold flex items-center gap-1">
+                  <ShieldAlert className="w-3 h-3 text-amber-400" />
+                  Pending Ocular Audit
+                </span>
               </div>
               <div className="flex justify-between">
-                <span>Poker Face Reliability:</span>
-                <span className="text-neutral-500">Uncalibrated</span>
+                <span>Polygraph Status:</span>
+                <span className="text-neutral-500">Uncalibrated (Stage 3)</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* FLAGGED LANDMINES LIST */}
+        {/* REGISTERED CANDIDATE CLAIMS & ACHIEVEMENTS */}
         <div className="mt-8">
-          <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle className="w-5 h-5 text-amber-400" />
-            <h4 className="font-['Orbitron'] text-base font-bold text-white uppercase tracking-wider">
-              Flagged Landmines to Grill ({dossier.flaggedLandmines.length} High-Risk Claims)
-            </h4>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-amber-400" />
+              <h4 className="font-['Orbitron'] text-base font-bold text-white uppercase tracking-wider">
+                Submitted Portfolio Claims ({dossier.flaggedLandmines.length} Key Achievements)
+              </h4>
+            </div>
+            <span className="text-[11px] font-mono text-neutral-400 hidden sm:inline-block">
+              Recorded for live trial verification
+            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {dossier.flaggedLandmines.map((landmine) => (
+            {dossier.flaggedLandmines.map((claim) => (
               <div
-                key={landmine.id}
-                className="p-4 rounded-xl bg-neutral-900/80 border border-neutral-800 hover:border-rose-500/60 transition-all flex flex-col justify-between"
+                key={claim.id}
+                className="p-5 rounded-xl bg-neutral-900/70 border border-neutral-800 hover:border-neutral-700 transition-all flex flex-col justify-between"
               >
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-950 text-rose-300 border border-rose-800">
-                      {landmine.badge}
+                  <div className="flex items-center justify-between mb-2.5">
+                    <span className="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold bg-neutral-800 text-cyan-300 border border-neutral-700">
+                      {claim.badge}
                     </span>
-                    <span className="text-[11px] font-mono text-amber-400 font-semibold">
-                      Bluff Risk: {landmine.suspicionPercent}%
+                    <span className="text-[11px] font-mono text-neutral-400 flex items-center gap-1">
+                      <span>Status:</span>
+                      <strong className="text-amber-400 font-normal">Pending Audit</strong>
                     </span>
                   </div>
 
-                  <h5 className="text-sm font-bold text-white mb-1.5 flex items-center gap-1.5">
-                    <Skull className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                    <span>{landmine.title}</span>
+                  <h5 className="text-sm font-bold text-white mb-2">
+                    {claim.title}
                   </h5>
 
-                  <p className="text-xs font-mono text-neutral-300 leading-relaxed bg-black/40 p-2.5 rounded border border-neutral-800 mb-3">
-                    &ldquo;{landmine.claimText}&rdquo;
+                  <p className="text-xs font-mono text-neutral-300 leading-relaxed bg-black/50 p-3 rounded-lg border border-neutral-800/90 mb-3">
+                    &ldquo;{claim.claimText}&rdquo;
                   </p>
                 </div>
 
-                <div className="pt-2 border-t border-neutral-800/80 text-[11px] font-mono text-rose-400/90 italic flex items-start gap-1.5">
-                  <Brain className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
-                  <span>L&apos;s Interrogation Target: &ldquo;{landmine.lInterrogationAngle}&rdquo;</span>
+                <div className="pt-2.5 border-t border-neutral-800/60 text-[11px] font-mono text-neutral-400 flex items-center justify-between">
+                  <span>Cross-Examination:</span>
+                  <span className="text-rose-400 font-semibold tracking-wider uppercase text-[10px] bg-rose-950/60 px-2 py-0.5 rounded border border-rose-900/60">
+                    Sealed for Trial
+                  </span>
                 </div>
               </div>
             ))}
@@ -161,7 +175,7 @@ export const DossierCard: React.FC<DossierCardProps> = ({
         <div className="mt-8 pt-6 border-t border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-xs font-mono text-neutral-400">
             <FileCheck className="w-4 h-4 text-emerald-400" />
-            <span>Target Dossier Prepared. Inquisitor is waiting.</span>
+            <span>Applicant portfolio locked. Choose your examiner to commence the audit.</span>
           </div>
 
           <button
