@@ -152,6 +152,24 @@ class AnimeSoundEngine {
     osc.start();
     osc.stop(this.ctx.currentTime + 0.03);
   }
+
+  // Naruto Mangekyou Sharingan Activation on Baseline Lock
+  public playMangekyouLock() {
+    if (this.isMuted) return;
+    try {
+      const audio = new Audio('/itachi-mangekyou-voice.mp3');
+      audio.volume = 0.9;
+      const promise = audio.play();
+      if (promise !== undefined) {
+        promise.catch((err) => {
+          console.warn('Mangekyou audio play blocked, falling back to dramatic sting:', err);
+          this.playDramaticSting();
+        });
+      }
+    } catch {
+      this.playDramaticSting();
+    }
+  }
 }
 
 export const soundFX = new AnimeSoundEngine();
