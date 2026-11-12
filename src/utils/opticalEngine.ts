@@ -70,7 +70,11 @@ class OpticalBiometricEngine {
     this.mediaStream = stream;
     this.videoElement = videoEl;
     this.videoElement.srcObject = stream;
-    await this.videoElement.play();
+    try {
+      await this.videoElement.play();
+    } catch (e) {
+      console.warn('Video play deferred or paused:', e);
+    }
 
     // Prepare hidden canvas for optical frame sampling
     if (!this.canvasElement) {
@@ -145,3 +149,4 @@ class OpticalBiometricEngine {
 }
 
 export const opticalEngine = new OpticalBiometricEngine();
+

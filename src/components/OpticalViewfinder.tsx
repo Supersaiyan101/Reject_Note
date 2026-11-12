@@ -2,15 +2,18 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { opticalEngine } from '../utils/opticalEngine';
 import type { LiveVitals, CameraState } from '../types';
 import { Camera, AlertCircle, RefreshCw, Activity, Heart } from 'lucide-react';
+import { MangekyouSharingan } from './MangekyouSharingan';
 
 interface OpticalViewfinderProps {
   onVitalsUpdate?: (vitals: LiveVitals) => void;
   isCalibrating?: boolean;
+  isLocked?: boolean;
 }
 
 export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
   onVitalsUpdate,
   isCalibrating = false,
+  isLocked = false,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const waveformCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -133,11 +136,46 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
             <div className="w-6 h-6 border-t-2 border-r-2 border-cyan-400 shadow-[0_0_10px_#22d3ee]" />
           </div>
 
-          {/* Center Face Alignment Box */}
-          <div className="self-center w-36 h-44 rounded-2xl border border-dashed border-rose-500/60 flex items-center justify-center animate-pulse">
-            <span className="font-mono text-[9px] text-rose-400/80 bg-black/80 px-2 py-0.5 rounded border border-rose-900/60">
-              {isCalibrating ? 'LOCKING BASELINE' : 'ALIGN FACE'}
-            </span>
+          {/* Center Mangekyou Sharingan Reticle Overlay */}
+          <div className="self-center relative flex flex-col items-center justify-center my-auto">
+            {/* Reticle Boundary Frame */}
+            <div
+              className={`w-44 h-52 rounded-[2rem] border transition-all duration-500 flex flex-col items-center justify-center relative ${
+                isLocked
+                  ? 'border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.7)] bg-red-950/20'
+                  : isCalibrating
+                  ? 'border-red-500/70 shadow-[0_0_15px_rgba(239,68,68,0.35)] bg-black/30'
+                  : 'border-dashed border-neutral-600/60 bg-black/20'
+              }`}
+            >
+              {/* Corner Focus Ticks */}
+              <div className="absolute top-2 left-2 w-3.5 h-3.5 border-t-2 border-l-2 border-red-500/90" />
+              <div className="absolute top-2 right-2 w-3.5 h-3.5 border-t-2 border-r-2 border-red-500/90" />
+              <div className="absolute bottom-2 left-2 w-3.5 h-3.5 border-b-2 border-l-2 border-red-500/90" />
+              <div className="absolute bottom-2 right-2 w-3.5 h-3.5 border-b-2 border-r-2 border-red-500/90" />
+
+              {/* Mangekyou Sharingan Eye */}
+              <MangekyouSharingan
+                isLocked={isLocked}
+                size={isLocked ? 108 : 96}
+                className="transition-transform duration-500"
+              />
+
+              {/* Status Badge */}
+              <div className="mt-2.5">
+                <span
+                  className={`font-mono text-[9px] px-2.5 py-0.5 rounded font-bold uppercase tracking-wider border backdrop-blur-md transition-all ${
+                    isLocked
+                      ? 'bg-red-950 text-red-200 border-red-500 shadow-[0_0_12px_rgba(239,68,68,0.8)]'
+                      : isCalibrating
+                      ? 'bg-neutral-900/90 text-amber-300 border-amber-500/60 animate-pulse'
+                      : 'bg-black/80 text-neutral-400 border-neutral-700'
+                  }`}
+                >
+                  {isLocked ? 'MANGEKYOU LOCKED' : isCalibrating ? 'LOCKING TARGET...' : 'POSITION FACE'}
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Bottom brackets */}
@@ -179,3 +217,4 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
     </div>
   );
 };
+
