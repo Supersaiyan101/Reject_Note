@@ -33,6 +33,17 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
   });
 
   const animLoopRef = useRef<number | null>(null);
+  const [jumpscareFlash, setJumpscareFlash] = useState(false);
+
+  useEffect(() => {
+    if (isLocked) {
+      setJumpscareFlash(true);
+      const timer = setTimeout(() => {
+        setJumpscareFlash(false);
+      }, 750);
+      return () => clearTimeout(timer);
+    }
+  }, [isLocked]);
 
   // Keep callback references stable to prevent effect re-runs
   const onVitalsUpdateRef = useRef(onVitalsUpdate);
@@ -132,8 +143,21 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
 
   return (
     <div className="relative rounded-2xl bg-black border-2 border-rose-500/80 p-3 shadow-[0_0_35px_rgba(225,29,72,0.3)] overflow-hidden flex flex-col justify-between">
-      {/* Anime Surveillance Viewport */}
-      <div className="relative w-full aspect-video bg-neutral-950 rounded-xl overflow-hidden border border-neutral-800 flex items-center justify-center">
+      {/* Anime Surveillance Viewport with Jumpscare Tremor */}
+      <div
+        className={`relative w-full aspect-video bg-neutral-950 rounded-xl overflow-hidden border transition-all duration-300 flex items-center justify-center ${
+          jumpscareFlash
+            ? 'animate-jumpscare border-red-500 shadow-[0_0_60px_rgba(239,68,68,0.9)]'
+            : isLocked
+            ? 'border-red-600/80 shadow-[0_0_25px_rgba(239,68,68,0.4)]'
+            : 'border-neutral-800'
+        }`}
+      >
+        {/* Sudden Jumpscare Red Strobe Flash */}
+        {jumpscareFlash && (
+          <div className="absolute inset-0 bg-red-600/35 mix-blend-color-dodge animate-ping pointer-events-none z-10" />
+        )}
+
         {/* Real Webcam Video Stream */}
         <video
           ref={videoRef}
@@ -192,8 +216,10 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
           <div className="self-center relative flex flex-col items-center justify-center my-auto">
             {/* Reticle Boundary Frame */}
             <div
-              className={`w-44 h-52 rounded-[2rem] border transition-all duration-500 flex flex-col items-center justify-center relative ${
-                isLocked
+              className={`w-44 h-52 rounded-[2rem] border transition-all duration-300 flex flex-col items-center justify-center relative ${
+                jumpscareFlash
+                  ? 'border-red-400 scale-110 shadow-[0_0_55px_rgba(239,68,68,1)] bg-red-950/40'
+                  : isLocked
                   ? 'border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.7)] bg-red-950/20'
                   : isCalibrating
                   ? 'border-red-500/70 shadow-[0_0_15px_rgba(239,68,68,0.35)] bg-black/30'
