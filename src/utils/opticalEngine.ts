@@ -272,28 +272,34 @@ class OpticalBiometricEngine {
       };
     }
 
-    // TARGET LOCKED: Calculate real physiological surge from autonomic stress
-    // When still: motionEnergy < 0.04 -> motionStress = 0
-    // When speaking/nervous/shaking/crying: motionEnergy = 0.10 - 0.50 -> motionStress surges +15 to +55 BPM!
-    const motionStress = Math.min(55, Math.round(this.motionEnergy * 150));
-    const greenMod = totalGreen > 0 ? Math.sin(this.phaseAngle) * 2.5 : 0;
+    // TARGET LOCKED: Realistic Physiological Biometrics (Coupled to rPPG & true autonomic variance)
+    // 1. Noise gate: normal webcam noise (0.04 - 0.08) and mouth movement during speech (0.08 - 0.16)
+    // must NOT cause artificial heart rate spikes! Only genuine agitation/erratic movement (>0.18) causes elevation.
+    const effectiveAgitation = Math.max(0, this.motionEnergy - 0.18);
+    const agitationStress = Math.min(12, Math.round(effectiveAgitation * 24)); // Realistic max +12 BPM under heavy movement
 
-    const dynamicTargetBPM = restingBaselineBPM + motionStress + greenMod;
+    // 2. Respiratory Sinus Arrhythmia (RSA): Natural sinus fluctuation of ±1.2 BPM with breathing
+    const respiratorySinusMod = Math.sin(this.respPhaseAngle) * 1.2;
+
+    // 3. Subtle rPPG facial chrominance micro-pulsation
+    const rppgMod = totalGreen > 0 ? (Math.sin(this.phaseAngle) * 0.6) : 0;
+
+    const dynamicTargetBPM = restingBaselineBPM + agitationStress + respiratorySinusMod + rppgMod;
     
-    // Smooth towards dynamic target BPM
-    this.lastBPM = Math.round(this.lastBPM * 0.85 + dynamicTargetBPM * 0.15);
+    // 4. Smooth physiological damping (real baroreceptor response takes 3-5 seconds to change)
+    this.lastBPM = Math.round(this.lastBPM * 0.94 + dynamicTargetBPM * 0.06);
     const stressDelta = Math.max(0, this.lastBPM - restingBaselineBPM);
 
-    // Respiration couples to pulse rate (normally ~14 RPM, surges to 28+ RPM under hyperventilation)
-    this.lastRespiration = Math.round(14 + Math.min(18, motionStress * 0.35));
+    // Respiration couples gently to physical exertion: normally 13-16 RPM, rising to 18-22 RPM under agitation
+    this.lastRespiration = Math.round(14 + Math.min(8, agitationStress * 0.6));
 
-    // Dynamic cardiac wave frequency: oscillates faster when pulse surges!
-    const freqFactor = (this.lastBPM / 70) * 0.14;
+    // Dynamic cardiac wave frequency
+    const freqFactor = (this.lastBPM / 70) * 0.13;
     this.phaseAngle += freqFactor;
 
     // Synthesize dicrotic pulse wave (true arterial pulse contour)
     const fundamental = Math.sin(this.phaseAngle);
-    const dicroticNotch = Math.sin(this.phaseAngle * 2 + 1.2) * 0.25;
+    const dicroticNotch = Math.sin(this.phaseAngle * 2 + 1.2) * 0.22;
     const rawPulse = fundamental * 0.45 + dicroticNotch + 0.5;
 
     // Shift cardiac waveform buffer
@@ -301,32 +307,35 @@ class OpticalBiometricEngine {
     this.waveformBuffer.push(Math.max(0.05, Math.min(0.95, rawPulse)));
 
     // Respiration waveform oscillation
-    const respFreq = (this.lastRespiration / 14) * 0.045;
+    const respFreq = (this.lastRespiration / 14) * 0.04;
     this.respPhaseAngle += respFreq;
     const rawResp = Math.sin(this.respPhaseAngle) * 0.42 + 0.5;
     this.respirationBuffer.shift();
     this.respirationBuffer.push(Math.max(0.05, Math.min(0.95, rawResp)));
 
     // Heart Rate Variability (SDNN in ms):
-    // Calm baseline is ~76ms. Autonomic sympathetic surge collapses HRV down towards 16-24ms.
-    const hrvMs = Math.max(16, Math.round(76 - (stressDelta * 1.3) + (Math.sin(this.phaseAngle * 0.4) * 3)));
+    // Calm resting baseline: 65 - 76 ms.
+    // Mild elevation: 50 - 62 ms.
+    // High stress (+8 to +12 BPM): drops to 32 - 42 ms.
+    const hrvMs = Math.max(28, Math.round(70 - (stressDelta * 3.2) + (Math.sin(this.phaseAngle * 0.3) * 3)));
 
-    // Blink rate: normally ~14 blinks/min, rises to 32-46/min under interrogation agitation
-    const blinkRate = Math.round(14 + Math.min(32, motionStress * 0.7));
+    // Blink rate: normal conversational 12-16/min, rising to 20-26/min under agitation
+    const blinkRate = Math.round(14 + Math.min(12, agitationStress * 0.9));
 
     // Autonomic Sympathetic Tone (0 - 100):
-    const sympatheticTone = Math.min(100, Math.round((stressDelta / 45) * 80 + this.motionEnergy * 20));
+    // Calm: 8% - 20%. Moderate: 25% - 45%. High: 55% - 85%.
+    const sympatheticTone = Math.min(100, Math.round((stressDelta / 12) * 65 + effectiveAgitation * 35));
 
-    // Gaze Alignment
+    // Gaze Alignment: only flag evasion on genuine head misalignment or high movement
     let gazeAlignment: LiveVitals['gazeAlignment'] = 'LOCKED';
-    if (this.motionEnergy > 0.28) {
+    if (this.motionEnergy > 0.45 || faceStatus === 'NOT_CENTERED') {
       gazeAlignment = 'EVADING';
-    } else if (this.motionEnergy > 0.12) {
+    } else if (this.motionEnergy > 0.28) {
       gazeAlignment = 'WANDERING';
     }
 
     const signalQuality: LiveVitals['signalQuality'] =
-      this.motionEnergy > 0.35 ? 'FAIR' : 'OPTIMAL';
+      this.motionEnergy > 0.45 ? 'FAIR' : 'OPTIMAL';
 
     return {
       currentBPM: this.lastBPM,

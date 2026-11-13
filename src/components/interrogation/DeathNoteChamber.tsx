@@ -85,6 +85,7 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
   const peakBPMRef = useRef(baseline.restingBPM);
   const bpmReadingsRef = useRef<number[]>([]);
   const [gazeDrifts, setGazeDrifts] = useState(0);
+  const lastGazeDriftTimeRef = useRef(0);
   const testimonyStartTimeRef = useRef(0);
 
   // L 15-second deduction phase
@@ -134,15 +135,17 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
   const handleVitalsUpdate = (vitals: LiveVitals) => {
     setLiveVitals(vitals);
 
-    // If candidate is actively testifying, log peak BPM and detect gaze shifts
+    // If candidate is actively testifying, log peak BPM and detect genuine gaze shifts
     if (phase === 'TESTIMONY') {
       if (vitals.currentBPM > peakBPMRef.current) {
         peakBPMRef.current = vitals.currentBPM;
       }
       bpmReadingsRef.current.push(vitals.currentBPM);
 
-      // Detect micro gaze drift or head shifts from real optical tracking
-      if (vitals.faceStatus === 'NOT_CENTERED' || vitals.motionEnergy > 0.22) {
+      // Detect genuine gaze drift or head evasion, debounced to at most once per 2 seconds
+      const now = Date.now();
+      if ((vitals.faceStatus === 'NOT_CENTERED' || vitals.gazeAlignment === 'EVADING') && (now - lastGazeDriftTimeRef.current > 2000)) {
+        lastGazeDriftTimeRef.current = now;
         setGazeDrifts((prev) => prev + 1);
       }
     }
@@ -545,6 +548,9 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
                 onClick={() => {
                   soundFX.playClick();
                   testimonyStartTimeRef.current = Date.now();
+                  peakBPMRef.current = liveVitals.currentBPM;
+                  bpmReadingsRef.current = [liveVitals.currentBPM];
+                  setGazeDrifts(0);
                   // Stop music so candidate speaks in high-stakes silence
                   realAudio.pauseLTheme();
                   setIsThemePlaying(false);
