@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import type { 
   CandidateDossier, 
   InquisitorProfile, 
@@ -26,7 +26,8 @@ import {
   VolumeX,
   Eye,
   AlertTriangle,
-  Clock
+  Clock,
+  Zap
 } from 'lucide-react';
 
 interface DeathNoteChamberProps {
@@ -67,11 +68,16 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
     currentBreathingRate: baseline.restingBreathingRate,
     stressDeltaBPM: 0,
     waveform: [],
+    respirationWaveform: [],
     signalQuality: 'OPTIMAL',
     isFaceLocked: true,
     faceConfidence: 1.0,
     motionEnergy: 0,
     faceStatus: 'LOCKED',
+    hrvMs: 75,
+    blinkRate: 14,
+    sympatheticTone: 10,
+    gazeAlignment: 'LOCKED',
   });
   const [cameraState, setCameraState] = useState<CameraState>('ACTIVE');
 
@@ -181,7 +187,56 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
     }
   };
 
-  // Candidate confirms testimony -> Starts 15-second L deduction
+  // Stable refs to decouple the timer effect from high-frequency camera frame loops
+  const activeDeductionRef = useRef(activeDeduction);
+  activeDeductionRef.current = activeDeduction;
+
+  const liveVitalsRef = useRef(liveVitals);
+  liveVitalsRef.current = liveVitals;
+
+  const testimonyTextRef = useRef(testimonyText);
+  testimonyTextRef.current = testimonyText;
+
+  const gazeDriftsRef = useRef(gazeDrifts);
+  gazeDriftsRef.current = gazeDrifts;
+
+  const handleRevealVerdict = useCallback(() => {
+    const deduction = activeDeductionRef.current;
+    if (!deduction) return;
+
+    soundFX.playDramaticSting();
+    setPhase('VERDICT_REVEAL');
+    setSuspicionPercent((prev) => Math.min(100, prev + deduction.suspicionDelta));
+
+    const vitalsNow = liveVitalsRef.current;
+    const evidenceItem: BiometricEvidence = {
+      questionId: currentQuestion.id,
+      claimTitle: currentQuestion.claimTitle,
+      candidateTestimony: testimonyTextRef.current || '[Refused to testify]',
+      baselineBPM: baseline.restingBPM,
+      peakBPM: peakBPMRef.current,
+      deltaBPM: Math.max(0, peakBPMRef.current - baseline.restingBPM),
+      avgBPM: Math.round(
+        bpmReadingsRef.current.length > 0
+          ? bpmReadingsRef.current.reduce((a, b) => a + b, 0) / bpmReadingsRef.current.length
+          : vitalsNow.currentBPM
+      ),
+      gazeDeviations: gazeDriftsRef.current,
+      fidgetIndex: Math.min(100, gazeDriftsRef.current * 18 + 20),
+      durationSec: Math.max(2, Math.round((Date.now() - testimonyStartTimeRef.current) / 1000)),
+      deductionVerdict: deduction.deductionText,
+      suspicionAdded: deduction.suspicionDelta,
+      hrvMs: vitalsNow.hrvMs,
+      blinkRate: vitalsNow.blinkRate,
+      sympatheticTone: vitalsNow.sympatheticTone,
+    };
+    setEvidenceLog((prev) => [...prev, evidenceItem]);
+
+    realAudio.playLTheme();
+    setIsThemePlaying(true);
+  }, [currentQuestion, baseline.restingBPM]);
+
+  // Candidate confirms testimony -> Starts 6-second L deduction
   const handleConfirmTestimony = () => {
     soundFX.playDramaticSting();
     candidateVoiceEngine.stopListening();
@@ -200,22 +255,26 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
       avgBPM,
       gazeDeviations: gazeDrifts,
       durationSec,
+      hrvMs: liveVitals.hrvMs,
+      blinkRate: liveVitals.blinkRate,
+      sympatheticTone: liveVitals.sympatheticTone,
     });
 
     setActiveDeduction(deduction);
+    activeDeductionRef.current = deduction;
     setPhase('DEDUCTION');
-    setDeductionTimer(15.0);
+    setDeductionTimer(6.0);
     setDeductionLogs([
       `[00:01] Parsing candidate statement (${testimonyText.trim().split(/\s+/).length} words)...`,
-      `[00:03] Presage rPPG: Peak pulse detected at ${peakBPM} BPM (+${deltaBPM} BPM surge).`,
+      `[00:02] Presage rPPG: Peak pulse detected at ${peakBPM} BPM (+${deltaBPM} BPM surge).`,
     ]);
   };
 
-  // 15-Second L Deductive Countdown
+  // 6-Second L Deductive Countdown (decoupled from liveVitals frame rate)
   useEffect(() => {
     if (phase !== 'DEDUCTION') return;
 
-    let timeLeft = 15.0;
+    let timeLeft = 6.0;
     const interval = setInterval(() => {
       timeLeft = Math.max(0, Math.round((timeLeft - 0.1) * 10) / 10);
       setDeductionTimer(timeLeft);
@@ -226,64 +285,32 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
       }
 
       // Add forensic log lines as L computes
-      if (timeLeft === 11.0) {
+      if (timeLeft === 4.5) {
         setDeductionLogs((prev) => [
           ...prev,
-          `[00:07] Comparing acoustic cadence against baseline polygraph...`,
-        ]);
-      } else if (timeLeft === 7.0) {
-        setDeductionLogs((prev) => [
-          ...prev,
-          `[00:11] Gaze aversion index flagged: ${gazeDrifts} deviations recorded.`,
+          `[00:03] Presage Ch.02: Evaluating HRV autonomic tone & vagal suppression...`,
         ]);
       } else if (timeLeft === 3.0) {
         setDeductionLogs((prev) => [
           ...prev,
-          `[00:14] Probability of deception calculating: ${activeDeduction?.bluffProbability}%...`,
+          `[00:04] Presage Ch.03: Micro-saccades & ${gazeDriftsRef.current} gaze aversions verified.`,
+        ]);
+      } else if (timeLeft === 1.5) {
+        setDeductionLogs((prev) => [
+          ...prev,
+          `[00:05] Deception probability synthesized: ${activeDeductionRef.current?.bluffProbability}%...`,
         ]);
       }
 
       // At 00:00: Deductive verdict unlocked
       if (timeLeft <= 0) {
         clearInterval(interval);
-        soundFX.playDramaticSting();
-        setPhase('VERDICT_REVEAL');
-
-        if (activeDeduction) {
-          // Increase suspicion
-          setSuspicionPercent((prev) => Math.min(100, prev + activeDeduction.suspicionDelta));
-
-          // Log evidence
-          const evidenceItem: BiometricEvidence = {
-            questionId: currentQuestion.id,
-            claimTitle: currentQuestion.claimTitle,
-            candidateTestimony: testimonyText || '[Refused to testify]',
-            baselineBPM: baseline.restingBPM,
-            peakBPM: peakBPMRef.current,
-            deltaBPM: Math.max(0, peakBPMRef.current - baseline.restingBPM),
-            avgBPM: Math.round(
-              bpmReadingsRef.current.length > 0
-                ? bpmReadingsRef.current.reduce((a, b) => a + b, 0) / bpmReadingsRef.current.length
-                : liveVitals.currentBPM
-            ),
-            gazeDeviations: gazeDrifts,
-            fidgetIndex: Math.min(100, gazeDrifts * 18 + 20),
-            durationSec: 15,
-            deductionVerdict: activeDeduction.deductionText,
-            suspicionAdded: activeDeduction.suspicionDelta,
-          };
-          setEvidenceLog((prev) => [...prev, evidenceItem]);
-
-          // Verdict reached: music returns triumphantly with dramatic sting
-          soundFX.playDramaticSting();
-          realAudio.playLTheme();
-          setIsThemePlaying(true);
-        }
+        handleRevealVerdict();
       }
     }, 100);
 
     return () => clearInterval(interval);
-  }, [phase, activeDeduction, currentQuestion, testimonyText, baseline.restingBPM, liveVitals.currentBPM, gazeDrifts]);
+  }, [phase, handleRevealVerdict]);
 
   // Advance to next question or final verdict
   const handleNextStep = () => {
@@ -682,12 +709,23 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
                 L DEDUCTIVE ENGINE PROCESSING BIOFEEDBACK
               </span>
 
-              {/* 15-Second Digital Clock */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-mono text-neutral-400 uppercase">Deduction Clock:</span>
-                <span className="font-['Orbitron'] text-xl font-black text-rose-400 tracking-widest">
-                  {deductionTimer.toFixed(1)}s
-                </span>
+              {/* Deduction Digital Clock & Fast-Forward Action */}
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleRevealVerdict}
+                  className="px-2.5 py-1 rounded-lg bg-rose-950/80 hover:bg-rose-900 border border-rose-600/60 text-rose-300 font-mono text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-[0_0_12px_rgba(225,29,72,0.3)]"
+                  title="Skip analysis countdown and reveal L's verdict immediately"
+                >
+                  <Zap className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Reveal Verdict Now &rarr;</span>
+                </button>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-mono text-neutral-400 uppercase">Clock:</span>
+                  <span className="font-['Orbitron'] text-xl font-black text-rose-400 tracking-widest">
+                    {deductionTimer.toFixed(1)}s
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -699,12 +737,12 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
                   <span>{log}</span>
                 </div>
               ))}
-              <div className="text-neutral-500 animate-pulse">&gt; Analyzing autonomic stress indicators...</div>
+              <div className="text-neutral-500 animate-pulse">&gt; Analyzing Presage autonomic stress telemetry...</div>
             </div>
 
             <div className="flex items-center justify-between text-xs font-mono text-neutral-400">
               <span>L is correlating speech timestamps with Presage rPPG cardiovascular telemetry...</span>
-              <span className="text-rose-400 animate-pulse font-bold">15-SECOND SCRUTINY</span>
+              <span className="text-rose-400 animate-pulse font-bold">BIOFEEDBACK SCRUTINY</span>
             </div>
           </div>
         )}

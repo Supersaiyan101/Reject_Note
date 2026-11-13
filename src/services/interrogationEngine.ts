@@ -156,6 +156,9 @@ export function synthesizeLDeduction(
     avgBPM: number;
     gazeDeviations: number;
     durationSec: number;
+    hrvMs?: number;
+    blinkRate?: number;
+    sympatheticTone?: number;
   }
 ): {
   deductionText: string;
@@ -163,27 +166,47 @@ export function synthesizeLDeduction(
   bluffProbability: number;
 } {
   const { deltaBPM, peakBPM, gazeDeviations } = biometrics;
+  const hrv = biometrics.hrvMs ?? 65;
+  const blinks = biometrics.blinkRate ?? 16;
+  const tone = biometrics.sympatheticTone ?? 20;
+
   const wordCount = testimony.trim().split(/\s+/).filter(Boolean).length;
   const hasSubstance = wordCount >= 6;
 
-  // Calculate deception probability based on biofeedback
+  // Calculate deception probability based on Presage multi-sensor telemetry
   let bluffProb = 50.0;
 
+  // 1. Cardiovascular surge
   if (deltaBPM >= 18) {
-    bluffProb += 32.4;
+    bluffProb += 28.0;
   } else if (deltaBPM >= 10) {
-    bluffProb += 18.2;
+    bluffProb += 16.5;
   } else if (deltaBPM >= 5) {
-    bluffProb += 6.5;
+    bluffProb += 6.0;
   } else {
-    bluffProb -= 14.0;
+    bluffProb -= 12.0;
   }
 
-  if (gazeDeviations >= 3) {
-    bluffProb += 11.5;
+  // 2. Autonomic Tone & Heart Rate Variability collapse (vagal suppression under fear/bluff)
+  if (hrv < 26) {
+    bluffProb += 14.5;
+  } else if (hrv < 40) {
+    bluffProb += 7.0;
+  } else if (hrv > 65) {
+    bluffProb -= 8.0;
   }
+
+  // 3. Ocular micro-saccades & blink flurry
+  if (blinks > 30) {
+    bluffProb += 8.5;
+  }
+  if (gazeDeviations >= 3) {
+    bluffProb += 9.5;
+  }
+
+  // 4. Verbal substance vs evasiveness
   if (!hasSubstance) {
-    bluffProb += 15.0; // Evading the question
+    bluffProb += 14.0; // Evading the technical challenge
   }
 
   bluffProb = Math.min(99.4, Math.max(12.8, Math.round(bluffProb * 10) / 10));
@@ -195,17 +218,17 @@ export function synthesizeLDeduction(
   else if (bluffProb >= 50) suspicionDelta = 14;
   else suspicionDelta = 8;
 
-  // Compose in-character deductive monologue
+  // Compose in-character L deductive monologue citing Presage SmartSpectra channels
   let deductionText = '';
 
-  if (deltaBPM >= 16) {
-    deductionText = `Candidate-kun... while defending ${question.claimTitle}, your pulse experienced an alarming cardiovascular surge: from a calm ${biometrics.baselineBPM} BPM up to ${peakBPM} BPM (+${deltaBPM} BPM spike). In clinical polygraph terms, this is an undeniable tell. Furthermore, you averted your gaze ${gazeDeviations} times. There is a ${bluffProb}% probability of deliberate bluffing.`;
-  } else if (deltaBPM >= 8) {
-    deductionText = `Interesting. You delivered ${wordCount} words, yet your heart rate steadily climbed by +${deltaBPM} BPM, and Presage detected ocular drift. While your vocal delivery sounded rehearsed, your autonomic nervous system reveals measurable anxiety. The probability of deception stands at ${bluffProb}%.`;
-  } else if (hasSubstance && deltaBPM < 8) {
-    deductionText = `Remarkable... your pulse remained relatively stable at +${deltaBPM} BPM, and your gaze held within normal limits. Either your technical comprehension of ${question.claimTitle} is authentic... or you are an exceptionally cold-blooded deceiver. I calculate an initial bluff probability of ${bluffProb}%.`;
+  if (deltaBPM >= 15 || hrv < 28) {
+    deductionText = `Candidate-kun... while defending ${question.claimTitle}, Presage SmartSpectra captured an indisputable autonomic response: your vascular pulse surged from a resting ${biometrics.baselineBPM} BPM to ${peakBPM} BPM (+${deltaBPM} BPM), while your Heart Rate Variability collapsed to ${hrv}ms. Sensor telemetry also clocked ${blinks} blinks/min and ${gazeDeviations} ocular drifts. In forensic polygraph terms, your sympathetic nervous system is screaming. Probability of deception: ${bluffProb}%.`;
+  } else if (deltaBPM >= 8 || tone > 45) {
+    deductionText = `Interesting. You delivered ${wordCount} words, yet Presage Sensor Ch.01 logged a steady +${deltaBPM} BPM rise, and autonomic tone spiked to ${tone}%. While your vocal delivery sounded rehearsed, your micro-circulation reveals measurable panic. Probability of bluffing: ${bluffProb}%.`;
+  } else if (hasSubstance && deltaBPM < 8 && hrv >= 45) {
+    deductionText = `Remarkable... your pulse held steady at +${deltaBPM} BPM, HRV remained balanced at ${hrv}ms, and ocular gaze showed zero micro-tremors. Either your mastery of ${question.claimTitle} is authentic... or you are an exceptionally composed sociopath. Initial deception probability: ${bluffProb}%.`;
   } else {
-    deductionText = `You offered an evasive defense of only ${wordCount} words, yet your vitals registered significant agitation (+${deltaBPM} BPM). Silence is not an alibi in this room. Probability of deception: ${bluffProb}%.`;
+    deductionText = `You offered an evasive defense of only ${wordCount} words. Presage sensors detected an autonomic arousal spike of ${tone}%. Silence is not an alibi in this room, Candidate-kun. Probability of deception: ${bluffProb}%.`;
   }
 
   return {

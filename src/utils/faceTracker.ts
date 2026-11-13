@@ -140,3 +140,4 @@ class NeuralFaceTracker {
 }
 
 export const neuralFaceTracker = new NeuralFaceTracker();
+
