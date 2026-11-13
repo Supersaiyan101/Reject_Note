@@ -252,6 +252,9 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
     const deltaBPM = Math.max(0, peakBPM - baseline.restingBPM);
 
     const deduction = synthesizeLDeduction(currentQuestion, testimonyText, {
+      candidateName: dossier.name,
+      isPreset: dossier.isPreset,
+      questionIndex: questionIdx,
       baselineBPM: baseline.restingBPM,
       peakBPM,
       deltaBPM,

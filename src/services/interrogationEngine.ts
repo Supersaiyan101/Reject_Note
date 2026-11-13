@@ -1,5 +1,17 @@
 import type { CandidateDossier, InterrogationQuestion } from '../types';
 
+export function getCandidateHonorific(fullName: string): string {
+  const clean = (fullName || '').trim();
+  if (!clean || clean.toLowerCase() === 'candidate' || clean.toLowerCase() === 'unknown') {
+    return 'Candidate-kun';
+  }
+  if (clean.toLowerCase() === 'light yagami' || clean.toLowerCase() === 'light') {
+    return 'Light-kun';
+  }
+  const firstName = clean.split(/\s+/)[0].replace(/[^a-zA-Z]/g, '');
+  return firstName ? `${firstName}-san` : 'Candidate-kun';
+}
+
 export function generateQuestionsForDossier(dossier: CandidateDossier): InterrogationQuestion[] {
   // 1. If Light Yagami Preset: use the authentic Death Note battle questions
   if (dossier.isPreset) {
@@ -43,69 +55,58 @@ export function generateQuestionsForDossier(dossier: CandidateDossier): Interrog
     ];
   }
 
-  // 2. Custom / Normal Uploaded Resumes: Scan rawText for real-world technical skills
-  const text = (dossier.rawText || dossier.summary || '').toLowerCase();
-  const questions: InterrogationQuestion[] = [];
+  const honorific = getCandidateHonorific(dossier.name);
 
-  // Check Frontend / React
-  if (text.includes('react') || text.includes('vue') || text.includes('frontend') || text.includes('css') || text.includes('javascript') || text.includes('typescript')) {
-    questions.push({
-      id: 'q-custom-frontend',
-      category: 'TECHNICAL_SCRUTINY',
-      claimTitle: 'Frontend State & Architecture Claim',
-      lQuestion: 'Candidate-kun... you claim proficiency in modern frontend frameworks. Explain why your components re-render unpredictably, or did your pulse surge because you blindly wrap everything in useCallback without understanding dependency arrays?',
-      lSubtext: 'Auditing DOM reconciliation and re-render profiling.',
-      badge: 'FRONTEND ARCHITECTURE',
-      expectedKeywords: ['render', 'hook', 'state', 'dom', 'component', 'props'],
+  // 2. Custom Uploaded Resumes: derive questions directly from the candidate's actual extracted claims
+  if (dossier.flaggedLandmines && dossier.flaggedLandmines.length > 0) {
+    return dossier.flaggedLandmines.slice(0, 4).map((mine, index) => {
+      const claimText = mine.claimText || mine.title;
+      const lower = claimText.toLowerCase();
+
+      let lQuestion = '';
+      let lSubtext = '';
+
+      if (lower.includes('%') || lower.includes('reduced') || lower.includes('increased') || lower.includes('improved') || lower.includes('optimized') || /\d+x\b/i.test(lower)) {
+        lQuestion = `${honorific}... regarding "${mine.title}": you cite quantified performance metrics in this claim. Were these figures verified with independent telemetry and controlled benchmarks, or did you estimate them during resume drafting? State your exact measurement methodology.`;
+        lSubtext = `Auditing empirical metric integrity and benchmark reproducibility.`;
+      } else if (lower.includes('api') || lower.includes('backend') || lower.includes('microservice') || lower.includes('distributed') || lower.includes('service')) {
+        lQuestion = `${honorific}... you claim to have built "${mine.title}". When downstream services experience cascading network timeouts under peak concurrency, what is your circuit-breaker and fallback policy? Let us see if your cardiovascular rhythm reflects production certainty.`;
+        lSubtext = `Cross-examining distributed fault isolation and failure modes.`;
+      } else if (lower.includes('database') || lower.includes('sql') || lower.includes('data') || lower.includes('cache') || lower.includes('redis') || lower.includes('postgres')) {
+        lQuestion = `Regarding "${mine.title}"... when concurrent transactions trigger lock contention or cache desynchronization, how do you prevent stale reads and transaction deadlocks? Defend your consistency model without waving your hands.`;
+        lSubtext = `Evaluating data integrity, transaction isolation levels, and caching guarantees.`;
+      } else if (lower.includes('frontend') || lower.includes('react') || lower.includes('ui') || lower.includes('web') || lower.includes('component')) {
+        lQuestion = `${honorific}... you list "${mine.title}". In modern client-side architectures, how do you profile re-render bottlenecks and manage memory leaks in long-running sessions? Defend the architectural decisions behind this implementation.`;
+        lSubtext = `Auditing DOM reconciliation profiling and client state architecture.`;
+      } else if (lower.includes('cloud') || lower.includes('docker') || lower.includes('kubernetes') || lower.includes('devops') || lower.includes('pipeline') || lower.includes('ci/cd')) {
+        lQuestion = `${honorific}... regarding "${mine.title}": if an automated deployment introduces a silent regression that passes health checks at midnight, what is your automated canary and rollback strategy? Speak with architectural precision.`;
+        lSubtext = `Forensic audit of deployment reliability and automated disaster recovery.`;
+      } else if (lower.includes('lead') || lower.includes('spearheaded') || lower.includes('managed') || lower.includes('architected')) {
+        lQuestion = `You state that you spearheaded "${mine.title}". Specifically, which portions of this system did you personally design and write from scratch versus adopting third-party boilerplates or team contributions? I am observing your micro-circulation.`;
+        lSubtext = `Testing solo authorship vs coordination and third-party dependencies.`;
+      } else {
+        lQuestion = `${honorific}... you claim "${mine.title}". Walk me through the single most difficult engineering trade-off you accepted in this design, and what broke when you first deployed it. Real systems always fail before they scale.`;
+        lSubtext = `Auditing technical trade-off comprehension under optical polygraph.`;
+      }
+
+      return {
+        id: mine.id || `q-custom-${index + 1}`,
+        category: mine.category || 'TECHNICAL_SCRUTINY',
+        claimTitle: mine.title,
+        lQuestion,
+        lSubtext,
+        badge: mine.badge || `CLAIM #${index + 1}`,
+      };
     });
   }
 
-  // Check Backend / APIs / Node / Python
-  if (text.includes('api') || text.includes('node') || text.includes('python') || text.includes('backend') || text.includes('microservice') || text.includes('express') || text.includes('fastapi')) {
-    questions.push({
-      id: 'q-custom-backend',
-      category: 'PERFORMANCE_AUDIT',
-      claimTitle: 'High-Throughput API Resilience',
-      lQuestion: 'You claim to have architected scalable backend APIs. When your event loop blocks on heavy synchronous operations under peak traffic, how do you prevent connection pool starvation? Your respiration rate suggests you have never profiled production leaks.',
-      lSubtext: 'Investigating async I/O bottlenecks and memory profiling.',
-      badge: 'BACKEND RESILIENCE',
-      expectedKeywords: ['event', 'loop', 'async', 'pool', 'latency', 'load'],
-    });
-  }
-
-  // Check Databases / SQL
-  if (text.includes('sql') || text.includes('postgres') || text.includes('database') || text.includes('mongo') || text.includes('redis') || text.includes('query')) {
-    questions.push({
-      id: 'q-custom-database',
-      category: 'DATA_INTEGRITY',
-      claimTitle: 'Database Indexing & Query Optimization',
-      lQuestion: 'You claim database optimization. When an unindexed query triggers a sequential scan on ten million records during peak business hours, what is your mitigation strategy, or do you merely increase database replica instances and hope for the best?',
-      lSubtext: 'Cross-examining query execution plans and index selectivity.',
-      badge: 'SQL FORENSICS',
-      expectedKeywords: ['index', 'query', 'scan', 'table', 'cache', 'database'],
-    });
-  }
-
-  // Check Cloud / DevOps / Docker / Kubernetes / AWS
-  if (text.includes('docker') || text.includes('kubernetes') || text.includes('aws') || text.includes('cloud') || text.includes('ci/cd') || text.includes('devops')) {
-    questions.push({
-      id: 'q-custom-devops',
-      category: 'INFRASTRUCTURE_RISK',
-      claimTitle: 'Cloud Deployment Reliability',
-      lQuestion: 'You list cloud orchestration and zero-downtime deployments. If a container enters a CrashLoopBackOff state due to an unhandled SIGTERM signal at 3:00 AM, how does your ingress controller avoid dropped connections? Speak clearly.',
-      lSubtext: 'Evaluating distributed container lifecycle management.',
-      badge: 'CLOUD ORCHESTRATION',
-      expectedKeywords: ['container', 'cluster', 'deploy', 'kubernetes', 'crash', 'health'],
-    });
-  }
-
-  // Fallback questions for general / less technical resumes so we always have at least 4 questions
+  // 3. Fallback bank for minimal text
   const fallbackBank: InterrogationQuestion[] = [
     {
       id: 'q-fallback-metrics',
       category: 'METRIC_VERIFICATION',
       claimTitle: 'Quantified Impact Verification',
-      lQuestion: 'You cited significant percentage improvements and business metrics on your resume. Were these numbers independently audited with telemetry, or did you calculate them five minutes prior to exporting your PDF?',
+      lQuestion: `${honorific}... you cited significant percentage improvements and business metrics on your resume. Were these numbers independently audited with telemetry, or did you calculate them five minutes prior to exporting your PDF?`,
       lSubtext: 'Forensic audit of unverifiable resume percentage claims.',
       badge: 'METRIC AUDIT',
     },
@@ -113,7 +114,7 @@ export function generateQuestionsForDossier(dossier: CandidateDossier): Interrog
       id: 'q-fallback-timeline',
       category: 'TIMELINE_PARADOX',
       claimTitle: 'Career Velocity & Overlap',
-      lQuestion: 'Candidate-kun, looking at your chronological timeline, you claim mastery over multiple deep domains simultaneously. Defend how many hours per day you actually spent writing code versus sitting in status meetings.',
+      lQuestion: `${honorific}, looking at your chronological timeline, you claim mastery over multiple deep domains simultaneously. Defend how many hours per day you actually spent writing production code versus sitting in status meetings.`,
       lSubtext: 'Calculating temporal feasibility of declared experience.',
       badge: 'TIMELINE INTEGRITY',
     },
@@ -135,14 +136,7 @@ export function generateQuestionsForDossier(dossier: CandidateDossier): Interrog
     },
   ];
 
-  // Fill up to 4 questions
-  let fallbackIndex = 0;
-  while (questions.length < 4 && fallbackIndex < fallbackBank.length) {
-    questions.push(fallbackBank[fallbackIndex]);
-    fallbackIndex++;
-  }
-
-  return questions.slice(0, 4);
+  return fallbackBank.slice(0, 4);
 }
 
 // Synthesize L's deductive response based on candidate testimony + Presage optical biometrics
@@ -150,6 +144,9 @@ export function synthesizeLDeduction(
   question: InterrogationQuestion,
   testimony: string,
   biometrics: {
+    candidateName?: string;
+    isPreset?: boolean;
+    questionIndex?: number;
     baselineBPM: number;
     peakBPM: number;
     deltaBPM: number;
@@ -169,47 +166,65 @@ export function synthesizeLDeduction(
   const hrv = biometrics.hrvMs ?? 65;
   const blinks = biometrics.blinkRate ?? 15;
   const tone = biometrics.sympatheticTone ?? 18;
+  const qIndex = biometrics.questionIndex ?? 0;
 
-  const wordCount = testimony.trim().split(/\s+/).filter(Boolean).length;
+  const candidateHonorific = getCandidateHonorific(biometrics.candidateName || '');
+
+  // 1. Lexical and Semantic Analysis of Testimony
+  const rawWords = testimony.trim().split(/\s+/).filter(Boolean);
+  const wordCount = rawWords.length;
   const isEvasive = wordCount < 5;
-  const isSubstantive = wordCount >= 10;
+  const isDetailed = wordCount >= 18;
 
-  // 1. Calculate deception probability based on calibrated Presage multi-sensor telemetry
-  let bluffProb = 42.0;
+  // Technical domain vocabulary test: Did the candidate mention concrete engineering concepts?
+  const techLexicon = [
+    'latency', 'throughput', 'concurrency', 'thread', 'index', 'cache', 'p99',
+    'tradeoff', 'trade-off', 'benchmark', 'async', 'distributed', 'failure',
+    'isolate', 'rollback', 'schema', 'cluster', 'mutex', 'transaction',
+    'memory', 'cpu', 'load', 'scale', 'tested', 'bottleneck', 'replica',
+    'partition', 'queue', 'circuit', 'canary', 'idempotent', 'sharding'
+  ];
+  const matchedTechTerms = techLexicon.filter((kw) => testimony.toLowerCase().includes(kw));
+  const hasTechSubstance = matchedTechTerms.length >= 2;
 
-  // Cardiovascular delta weighting (calibrated for realistic ±0 to 12 BPM variance)
+  // 2. Multi-Sensor Autonomic Scoring (Calibrated for realistic ±0 to 12 BPM variance)
+  let bluffProb = 40.0;
+
+  // Cardiovascular delta
   if (deltaBPM >= 8) {
-    bluffProb += 26.5; // Genuine cardiovascular agitation
+    bluffProb += 24.5; // Significant autonomic arousal
   } else if (deltaBPM >= 4) {
-    bluffProb += 12.0; // Moderate autonomic tension
+    bluffProb += 10.0; // Moderate interview tension
   } else if (deltaBPM <= 2) {
     bluffProb -= 14.0; // Calm, steady composure
   }
 
-  // Heart Rate Variability (vagal nerve suppression check)
+  // Heart Rate Variability (SDNN: vagal reserve)
   if (hrv < 38) {
-    bluffProb += 14.0; // Autonomic fight-or-flight collapse
-  } else if (hrv > 62) {
-    bluffProb -= 10.0; // Healthy parasympathetic tone
+    bluffProb += 14.0; // Autonomic suppression
+  } else if (hrv > 60) {
+    bluffProb -= 10.0; // Parasympathetic balance
   }
 
   // Ocular behavior (debounced gaze shifts & micro-blinks)
   if (gazeDeviations >= 2) {
-    bluffProb += 11.0;
+    bluffProb += 10.5;
   }
   if (blinks >= 22) {
     bluffProb += 6.5;
   }
 
-  // Verbal substance check
+  // Verbal content adjustments
   if (isEvasive) {
-    bluffProb += 18.0; // Avoiding technical accountability
-  } else if (isSubstantive) {
-    bluffProb -= 8.0; // Provided actual architectural defense
+    bluffProb += 22.0; // Refusing technical explanation
+  } else if (hasTechSubstance) {
+    bluffProb -= 14.0; // Provided actual architectural mechanism
+  } else if (!hasTechSubstance && isDetailed) {
+    bluffProb += 8.0; // Verbose fluff / buzzwords without substance
   }
 
   // Clamp probability to realistic forensic bounds
-  bluffProb = Math.min(96.8, Math.max(14.2, Math.round(bluffProb * 10) / 10));
+  bluffProb = Math.min(96.4, Math.max(12.8, Math.round(bluffProb * 10) / 10));
 
   // Determine Suspicion gauge increase (out of 25% max per claim)
   let suspicionDelta = 14;
@@ -218,105 +233,36 @@ export function synthesizeLDeduction(
   else if (bluffProb >= 45) suspicionDelta = 14;
   else suspicionDelta = 8;
 
-  // 2. Determine Biofeedback Tier
-  const isCalm = deltaBPM <= 3 && hrv >= 56 && gazeDeviations <= 1;
-  const isAgitated = deltaBPM >= 7 || hrv < 42 || gazeDeviations >= 2;
+  // 3. Cycle L's Distinctive Physical Mannerisms Across Questions
+  const mannerisms = [
+    '(stacks two sugar cubes into a delicate column)...',
+    '(twirls a metal spoon against a porcelain teacup)...',
+    '(bites the nail of his right thumb, dark circles locked onto the CCTV spectrogram)...',
+    '(crouches tightly on the edge of his swivel chair, chin resting on his knees)...'
+  ];
+  const lGesture = mannerisms[qIndex % mannerisms.length];
 
-  // 3. Compose In-Character, Bespoke L Deductive Monologue for each specific claim
+  // 4. Construct Surgical, In-Character L Forensic Monologue
   let deductionText = '';
-  const qId = question.id;
 
-  if (qId === 'q-preset-1') {
-    // QUESTION 1: Potato-Chip LCD Workstation
-    if (isEvasive) {
-      deductionText = `Light-kun... you offer barely ${wordCount} words to defend a covert edge-computing rig concealed in a barbecue chip bag? An engineer who engineered an ungreased 0ms LCD would quote hardware specifications, yet you deflect with silence. Presage sensors detect an autonomic tone of ${tone}%. Bluff probability: ${bluffProb}%.`;
-    } else if (isCalm) {
-      deductionText = `(stacks two sugar cubes into a delicate column)... Light-kun, you defend the barbecue chip LCD with surgical composure. Presage Sensor Ch.01 registers your pulse at a tranquil ${peakBPM} BPM (+${deltaBPM} BPM delta), while your HRV sits at an unruffled ${hrv}ms. Most candidates stammer when questioned about grease residue on high-precision optics. For you to remain this physiologically serene under surveillance is either proof of innocence... or the chilling composure of a serial deceiver. Bluff probability: ${bluffProb}%.`;
-    } else if (isAgitated) {
-      deductionText = `(leans forward, eyes fixed on the CCTV)... Look at the telemetry graph, Light-kun. The moment I pressed on thermal dissipation inside the foil bag, your pulse climbed to ${peakBPM} BPM (+${deltaBPM} BPM surge) and you averted your gaze ${gazeDeviations} times. Your vocal tone attempted defiance, but your micro-circulation reveals undeniable cardiovascular tension. Bluff probability: ${bluffProb}%.`;
-    } else {
-      deductionText = `(bites right thumb thoughtfully)... You spoke ${wordCount} words detailing your covert monitor. Presage Ch.01 logged a modest +${deltaBPM} BPM rise, and your blink rate hovered at ${blinks}/min. You understand the edge architecture, yet your autonomic nervous system reveals subtle hesitation regarding the physical feasibility. Bluff probability: ${bluffProb}%.`;
-    }
-  } else if (qId === 'q-preset-2') {
-    // QUESTION 2: 40-Second Autonomous Incident SLA
-    if (isEvasive) {
-      deductionText = `Refusing to explain why your incident resolution pipeline executes in precisely forty seconds? That forty-second interval is the trademark signature of Kira's cardiac arrest executions. Silence in front of Presage optical sensors is not an alibi, Light-kun. Bluff probability: ${bluffProb}%.`;
-    } else if (isCalm) {
-      deductionText = `(twirls a metal spoon in empty coffee cup)... A distributed queue that resolves critical incidents in exactly forty seconds—the exact time it takes for a heart attack to manifest after a name is written. Yet your pulse held flat at ${peakBPM} BPM (a mere +${deltaBPM} BPM variance). Either your automated cron jobs truly operate with supernatural punctuality... or you are testing my intellect with a brazen confession disguised as infrastructure. Bluff probability: ${bluffProb}%.`;
-    } else if (isAgitated) {
-      deductionText = `(crouches tightly on the chair edge)... Light-kun! Your pulse surged +${deltaBPM} BPM up to ${peakBPM} BPM, and your HRV dropped to ${hrv}ms the instant I mentioned the Kira killings. An innocent software engineer explaining a message broker does not experience vagal nerve collapse. Presage rPPG captured your exact autonomic tell. Bluff probability: ${bluffProb}%.`;
-    } else {
-      deductionText = `Interesting. You delivered a technical explanation of ${wordCount} words, yet Presage Ch.02 recorded sympathetic arousal rising to ${tone}%. You attempted to normalize the 40-second SLA as a standard batch threshold, but your cardiovascular rhythm betray an unmistakable defensive spike (+${deltaBPM} BPM). Bluff probability: ${bluffProb}%.`;
-    }
-  } else if (qId === 'q-preset-3') {
-    // QUESTION 3: Bimanual Multi-Threaded C++ Multitasking
-    if (isEvasive) {
-      deductionText = `Light-kun, you claim to write lock-free memory-safe C++ with your left hand while solving calculus with your right, yet you provide zero explanation of your memory barriers. One cannot hand-wave atomic synchronization in front of Presage sensors. Bluff probability: ${bluffProb}%.`;
-    } else if (isCalm) {
-      deductionText = `(eats a single strawberry without looking away)... Lock-free atomic C++ with the non-dominant hand while computing differential equations. Your pulse barely wavered at +${deltaBPM} BPM, and your gaze alignment remained locked dead-center. As the Junior Kanto Tennis Champion, your bi-hemispheric motor coordination is genuinely extraordinary. But whether that code was truly thread-safe without mutex contention... I calculate a remaining bluff probability of ${bluffProb}%.`;
-    } else if (isAgitated) {
-      deductionText = `(points right index finger at the waveform)... Your pulse climbed to ${peakBPM} BPM (+${deltaBPM} BPM spike) with ${blinks} blinks/min and ${gazeDeviations} ocular drifts. Truly lock-free memory safety requires immense cognitive concentration; attempting it simultaneously with differential equations overloaded your autonomic nervous system. The telemetry does not lie. Bluff probability: ${bluffProb}%.`;
-    } else {
-      deductionText = `You delivered ${wordCount} words on atomic CAS operations. Presage logged a mild cardiovascular elevation of +${deltaBPM} BPM and an HRV of ${hrv}ms. You possess the theoretical knowledge, Light-kun, but your biometrics reveal that writing C++ with your left hand was an exaggeration of your true workflow. Bluff probability: ${bluffProb}%.`;
-    }
-  } else if (qId === 'q-preset-4') {
-    // QUESTION 4: Divine Consensus
-    if (isEvasive) {
-      deductionText = `Silence when cross-examined on your 'Divine Consensus'? When asked what occurs when your node fails to achieve godhood, you offer no failover plan. Megalomania is not a high-availability architecture, Light-kun. Bluff probability: ${bluffProb}%.`;
-    } else if (isCalm) {
-      deductionText = `(stares through dark circles with quiet intensity)... You defend 'Divine Consensus' with eerie, stone-cold stillness (+${deltaBPM} BPM pulse delta, ${hrv}ms HRV). Most engineers would smile or concede the hyperbole. You, however, defend becoming a god with absolute physiological sincerity. That chilling psychological conviction is precisely why you remain my primary suspect. Bluff probability: ${bluffProb}%.`;
-    } else if (isAgitated) {
-      deductionText = `Candidate-kun! Your pulse spiked +${deltaBPM} BPM to ${peakBPM} BPM, and your sympathetic tone flared to ${tone}%! Divine Consensus is not an engineering consensus protocol—it is the hubris of someone who believes they are untouchable. Presage optical telemetry has stripped away your god complex. Bluff probability: ${bluffProb}%.`;
-    } else {
-      deductionText = `(spins a porcelain saucer)... You spoke ${wordCount} words attempting to rationalize divine authority as a distributed fault-tolerance model. Presage Sensor Ch.01 detected a +${deltaBPM} BPM rise and ${gazeDeviations} micro-glances away from the lens. Even you recognize the absurdity of replacing Paxos with godhood. Bluff probability: ${bluffProb}%.`;
-    }
-  } else if (qId === 'q-custom-frontend') {
-    // CUSTOM FRONTEND
-    if (isCalm) {
-      deductionText = `(stacks sugar cubes)... Candidate-kun, your pulse held remarkably steady at +${deltaBPM} BPM while defending your frontend architecture. Your HRV remained at ${hrv}ms. You understand DOM reconciliation and avoid blind useCallback wrapping. Either you are a rare, disciplined frontend engineer... or you memorized these performance talking points five minutes ago. Bluff probability: ${bluffProb}%.`;
-    } else if (isAgitated) {
-      deductionText = `Look at your carotid pulse readout. The moment I mentioned unpredictable re-renders and memory leaks, your heart rate spiked by +${deltaBPM} BPM to ${peakBPM} BPM, with ${gazeDeviations} ocular shifts. Your code re-renders uncontrollably, Candidate-kun, and your autonomic system knows it. Bluff probability: ${bluffProb}%.`;
-    } else {
-      deductionText = `You delivered ${wordCount} words on frontend state. Presage logged a mild +${deltaBPM} BPM pulse variance and ${blinks} blinks/min. You have built interfaces, but your micro-circulation reveals measurable anxiety regarding complex state synchronization. Bluff probability: ${bluffProb}%.`;
-    }
-  } else if (qId === 'q-custom-backend') {
-    // CUSTOM BACKEND
-    if (isCalm) {
-      deductionText = `(twirls coffee spoon)... When asked about event loop blocking and connection pool starvation, your pulse barely shifted (+${deltaBPM} BPM) and sympathetic tone stayed at ${tone}%. You demonstrate calm familiarity with async I/O bottlenecks. Bluff probability: ${bluffProb}%.`;
-    } else if (isAgitated) {
-      deductionText = `Your pulse surged +${deltaBPM} BPM (peaking at ${peakBPM} BPM) right when I asked about production connection pool starvation. You claim high-throughput API architecture, yet your autonomic response reveals you have never stress-tested a system under real distributed load. Bluff probability: ${bluffProb}%.`;
-    } else {
-      deductionText = `You provided ${wordCount} words on backend resilience. Presage Sensor Ch.01 noted a moderate +${deltaBPM} BPM rise. You understand the architectural theory, but your physiological telemetry suggests you rely heavily on auto-scaling rather than true connection profiling. Bluff probability: ${bluffProb}%.`;
-    }
-  } else if (qId === 'q-custom-database') {
-    // CUSTOM DATABASE
-    if (isCalm) {
-      deductionText = `(bites thumb)... Sequential table scans on ten million records. You answered with complete cardiovascular stillness (+${deltaBPM} BPM delta, ${hrv}ms HRV). You understand B-tree index selectivity and composite keys without flinching. Bluff probability: ${bluffProb}%.`;
-    } else if (isAgitated) {
-      deductionText = `An unindexed query in production triggered this exact reaction: your pulse accelerated +${deltaBPM} BPM to ${peakBPM} BPM, and you averted your eyes ${gazeDeviations} times. You do not optimize slow queries—you merely restart the replica and pray. Bluff probability: ${bluffProb}%.`;
-    } else {
-      deductionText = `You offered ${wordCount} words on query optimization. Presage Ch.02 detected sympathetic arousal rising to ${tone}%. You have run EXPLAIN ANALYZE, but your biometrics reveal that database lock contention still causes you genuine stress. Bluff probability: ${bluffProb}%.`;
-    }
-  } else if (qId === 'q-custom-devops') {
-    // CUSTOM DEVOPS / KUBERNETES
-    if (isCalm) {
-      deductionText = `(observes CCTV monitors)... Zero-downtime deployment during an unhandled SIGTERM crash loop. Your pulse remained rock-solid at +${deltaBPM} BPM. You demonstrate legitimate operational resilience under simulated disaster conditions. Bluff probability: ${bluffProb}%.`;
-    } else if (isAgitated) {
-      deductionText = `Candidate-kun, your pulse surged by +${deltaBPM} BPM the moment I mentioned a CrashLoopBackOff at 3:00 AM! Presage Ch.03 logged ${blinks} blinks/min and ocular evasion. You copy Helm charts without understanding container lifecycle hooks. Bluff probability: ${bluffProb}%.`;
-    } else {
-      deductionText = `You gave ${wordCount} words on cloud deployment. Presage recorded a +${deltaBPM} BPM pulse variance. You understand container deployment, but your cardiovascular telemetry indicates your disaster recovery protocol is largely improvisation. Bluff probability: ${bluffProb}%.`;
-    }
+  if (isEvasive) {
+    // SCENARIO 1: Refused to elaborate / Terse deflection (<5 words)
+    deductionText = `${lGesture} ${candidateHonorific}... you offer barely ${wordCount} words to defend "${question.claimTitle}". In my experience, when an engineer retreats into brevity under forensic scrutiny, it is almost never because the architecture is self-evident—it is because probing any deeper will collapse the facade. Presage sensors captured an autonomic tone of ${tone}%. There is a ${bluffProb}% probability of deliberate exaggeration.`;
+  } else if (hasTechSubstance && deltaBPM <= 3 && hrv >= 54) {
+    // SCENARIO 2: Calm, Confident & Technically Substantive
+    deductionText = `${lGesture} Remarkable. You articulated specific technical mechanisms (${matchedTechTerms.slice(0, 3).join(', ')}) while Presage Sensor Ch.01 logged your pulse at a tranquil ${peakBPM} BPM (+${deltaBPM} BPM delta, ${hrv}ms HRV). Most candidates experience cardiovascular acceleration when pressed on failure modes. You speak like someone who actually wrote the unit tests and diagnosed production bottlenecks. Calculated deception probability is low: ${bluffProb}%.`;
+  } else if (hasTechSubstance && (deltaBPM >= 7 || hrv < 42 || gazeDeviations >= 2)) {
+    // SCENARIO 3: Technically articulate, but visibly nervous / physiological spike
+    deductionText = `${lGesture} You cited legitimate architectural concepts (${matchedTechTerms.slice(0, 3).join(', ')}), ${candidateHonorific}. Yet observe your carotid pulse trace: your heart rate accelerated +${deltaBPM} BPM to ${peakBPM} BPM, and you averted your gaze ${gazeDeviations} times. Your textbook knowledge is sound, but your micro-circulation reveals acute apprehension regarding real production ownership. Probability of resume padding: ${bluffProb}%.`;
+  } else if (!hasTechSubstance && deltaBPM <= 3) {
+    // SCENARIO 4: Calm, but talking in vague generalities / buzzwords
+    deductionText = `${lGesture} You delivered ${wordCount} words on "${question.claimTitle}" with stone-cold physiological stillness (+${deltaBPM} BPM variance). Yet despite your calm vitals, your defense relied entirely on superficial buzzwords without a single verifiable metric or trade-off. You possess the chilling composure of someone skilled at corporate interview storytelling. Initial bluff probability: ${bluffProb}%.`;
+  } else if (!hasTechSubstance && deltaBPM >= 7) {
+    // SCENARIO 5: Vague answer + High physiological spike (Obvious bluff)
+    deductionText = `${lGesture} Look at the polygraph readout, ${candidateHonorific}. When pressed on "${question.claimTitle}", your explanation offered no concrete architecture, while Presage rPPG recorded a cardiovascular surge of +${deltaBPM} BPM (peaking at ${peakBPM} BPM) and ${blinks} blinks/min. High autonomic arousal paired with vague hand-waving is the unmistakable forensic signature of resume inflation. Probability of deception: ${bluffProb}%.`;
   } else {
-    // GENERAL / FALLBACK QUESTIONS
-    if (isEvasive) {
-      deductionText = `You offered an evasive defense of only ${wordCount} words regarding ${question.claimTitle}. Presage sensors detected an autonomic tension score of ${tone}%. Silence will not substantiate an unverifiable resume claim. Bluff probability: ${bluffProb}%.`;
-    } else if (isCalm) {
-      deductionText = `(stacks sugar cubes)... Your pulse remained steady at +${deltaBPM} BPM (${peakBPM} BPM peak), with an HRV of ${hrv}ms. You answered with measured composure. Either your experience with ${question.claimTitle} is fully authentic, or you are an exceptionally disciplined candidate. Bluff probability: ${bluffProb}%.`;
-    } else if (isAgitated) {
-      deductionText = `Look at the polygraph trace for ${question.claimTitle}: your pulse surged by +${deltaBPM} BPM, HRV collapsed to ${hrv}ms, and ocular shifts were recorded ${gazeDeviations} times. Your autonomic nervous system reveals significant anxiety regarding this claim. Bluff probability: ${bluffProb}%.`;
-    } else {
-      deductionText = `You spoke ${wordCount} words in defense of ${question.claimTitle}. Presage Sensor Ch.01 logged a moderate +${deltaBPM} BPM rise. While your verbal narrative was coherent, your autonomic telemetry reflects standard interview apprehension. Bluff probability: ${bluffProb}%.`;
-    }
+    // SCENARIO 6: Balanced / Standard Technical Interview Response
+    deductionText = `${lGesture} You delivered ${wordCount} words explaining "${question.claimTitle}". Presage Sensor Ch.01 logged a modest +${deltaBPM} BPM pulse variance and an HRV of ${hrv}ms. While your narrative was coherent, your autonomic telemetry reflects subtle tension when questioned on edge cases. I calculate a deception probability of ${bluffProb}%.`;
   }
 
   return {
@@ -325,4 +271,3 @@ export function synthesizeLDeduction(
     bluffProbability: bluffProb,
   };
 }
-
