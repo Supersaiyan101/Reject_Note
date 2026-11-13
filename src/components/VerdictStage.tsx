@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { InterrogationSummary } from '../types';
 import { soundFX } from '../utils/sfx';
 import { realAudio } from '../utils/realAudio';
-import { RotateCcw, AlertTriangle, Heart, Eye } from 'lucide-react';
+import { RotateCcw, AlertTriangle, Heart, Eye, Download, Check, FileJson, Activity } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface VerdictStageProps {
@@ -12,6 +12,55 @@ interface VerdictStageProps {
 
 export const VerdictStage: React.FC<VerdictStageProps> = ({ summary, onRestart }) => {
   const isRejected = summary.finalVerdict === 'GUILTY_REJECTED';
+  const [hasExported, setHasExported] = useState(false);
+
+  const handleExportTelemetry = () => {
+    soundFX.playClick();
+    const payload = {
+      auditTimestamp: new Date().toISOString(),
+      sdkProvider: 'Presage Technologies SmartSpectra SDK',
+      sdkApiVersion: '3.5.0',
+      authStatus: import.meta.env.VITE_PRESAGE_API_KEY ? 'AUTHENTICATED' : 'LOCAL_CLIENT_FALLBACK',
+      candidate: {
+        name: summary.candidateName,
+        inquisitor: summary.inquisitorId,
+        finalVerdict: summary.finalVerdict,
+        bluffSuspicionScore: `${summary.totalSuspicionPercent}%`,
+      },
+      biometricEvidenceLog: summary.evidenceLog.map((e, i) => ({
+        index: i + 1,
+        questionId: e.questionId,
+        claimTitle: e.claimTitle,
+        testimony: e.candidateTestimony,
+        pulseBaselineBPM: e.baselineBPM,
+        pulsePeakBPM: e.peakBPM,
+        pulseSurgeDeltaBPM: e.deltaBPM,
+        heartRateVariabilitySDNN: e.hrvMs ? `${e.hrvMs} ms` : 'N/A',
+        blinkRatePerMin: e.blinkRate ?? 14,
+        sympatheticTonePercent: e.sympatheticTone ? `${e.sympatheticTone}%` : 'N/A',
+        ocularGazeDrifts: e.gazeDeviations,
+        fidgetIndex: `${e.fidgetIndex}/100`,
+        lForensicVerdict: e.deductionVerdict,
+        suspicionPenaltyAdded: `+${e.suspicionAdded}%`,
+      })),
+      compliance: {
+        cameraConsentGranted: true,
+        dataRetentionPolicy: 'Ephemeral Client-Side Memory Only',
+        hackathonChallenge: 'DEV Presage SmartSpectra SDK Challenge',
+      },
+    };
+
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `rejectnote-presage-telemetry-${summary.candidateName.replace(/\s+/g, '_').toLowerCase()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setHasExported(true);
+  };
 
   useEffect(() => {
     // Stop all background audio when entering verdict
@@ -126,16 +175,27 @@ export const VerdictStage: React.FC<VerdictStageProps> = ({ summary, onRestart }
                       &ldquo;{evidence.candidateTestimony}&rdquo;
                     </p>
 
-                    <div className="flex items-center gap-4 text-[10px] text-neutral-500 pt-1">
-                      <span className="flex items-center gap-1">
+                    <div className="flex flex-wrap items-center gap-3 text-[10px] text-neutral-500 pt-1">
+                      <span className="flex items-center gap-1 text-neutral-300">
                         <Heart className="w-3 h-3 text-rose-400" />
-                        Peak: {evidence.peakBPM} BPM
+                        Peak: {evidence.peakBPM} BPM (+{evidence.deltaBPM} &Delta;)
                       </span>
-                      <span className="flex items-center gap-1">
-                        <Eye className="w-3 h-3 text-cyan-400" />
-                        Gaze Shifts: {evidence.gazeDeviations}
+                      {evidence.hrvMs && (
+                        <span className="flex items-center gap-1 text-cyan-300">
+                          <Activity className="w-3 h-3 text-cyan-400" />
+                          HRV: {evidence.hrvMs} ms
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1 text-neutral-400">
+                        <Eye className="w-3 h-3 text-amber-400" />
+                        Ocular Shifts: {evidence.gazeDeviations}
                       </span>
-                      <span>
+                      {evidence.blinkRate && (
+                        <span className="text-neutral-400">
+                          Blinks: {evidence.blinkRate}/m
+                        </span>
+                      )}
+                      <span className="text-rose-400 font-bold ml-auto">
                         Bluff Risk Added: +{evidence.suspicionAdded}%
                       </span>
                     </div>
@@ -148,6 +208,21 @@ export const VerdictStage: React.FC<VerdictStageProps> = ({ summary, onRestart }
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10 pt-2">
+          <button
+            onClick={handleExportTelemetry}
+            className={`px-6 py-3 rounded-xl font-mono text-sm font-bold flex items-center gap-2 cursor-pointer transition-all border ${
+              hasExported
+                ? 'bg-emerald-950 text-emerald-300 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.3)]'
+                : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border-neutral-700 hover:border-neutral-500'
+            }`}
+          >
+            {hasExported ? <Check className="w-4 h-4 text-emerald-400" /> : <Download className="w-4 h-4 text-cyan-400" />}
+            <span className="flex items-center gap-1.5">
+              <FileJson className="w-3.5 h-3.5 text-rose-400" />
+              <span>{hasExported ? 'TELEMETRY EXPORTED (.JSON)' : 'EXPORT PRESAGE AUDIT (.JSON)'}</span>
+            </span>
+          </button>
+
           <button
             onClick={onRestart}
             className="px-8 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-mono text-sm font-bold flex items-center gap-2 cursor-pointer transition-all shadow-[0_0_25px_rgba(225,29,72,0.4)]"
