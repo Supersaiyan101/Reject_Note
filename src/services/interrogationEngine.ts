@@ -167,68 +167,156 @@ export function synthesizeLDeduction(
 } {
   const { deltaBPM, peakBPM, gazeDeviations } = biometrics;
   const hrv = biometrics.hrvMs ?? 65;
-  const blinks = biometrics.blinkRate ?? 16;
-  const tone = biometrics.sympatheticTone ?? 20;
+  const blinks = biometrics.blinkRate ?? 15;
+  const tone = biometrics.sympatheticTone ?? 18;
 
   const wordCount = testimony.trim().split(/\s+/).filter(Boolean).length;
-  const hasSubstance = wordCount >= 6;
+  const isEvasive = wordCount < 5;
+  const isSubstantive = wordCount >= 10;
 
-  // Calculate deception probability based on Presage multi-sensor telemetry
-  let bluffProb = 50.0;
+  // 1. Calculate deception probability based on calibrated Presage multi-sensor telemetry
+  let bluffProb = 42.0;
 
-  // 1. Cardiovascular surge
-  if (deltaBPM >= 18) {
-    bluffProb += 28.0;
-  } else if (deltaBPM >= 10) {
-    bluffProb += 16.5;
-  } else if (deltaBPM >= 5) {
-    bluffProb += 6.0;
-  } else {
-    bluffProb -= 12.0;
+  // Cardiovascular delta weighting (calibrated for realistic ±0 to 12 BPM variance)
+  if (deltaBPM >= 8) {
+    bluffProb += 26.5; // Genuine cardiovascular agitation
+  } else if (deltaBPM >= 4) {
+    bluffProb += 12.0; // Moderate autonomic tension
+  } else if (deltaBPM <= 2) {
+    bluffProb -= 14.0; // Calm, steady composure
   }
 
-  // 2. Autonomic Tone & Heart Rate Variability collapse (vagal suppression under fear/bluff)
-  if (hrv < 26) {
-    bluffProb += 14.5;
-  } else if (hrv < 40) {
-    bluffProb += 7.0;
-  } else if (hrv > 65) {
-    bluffProb -= 8.0;
+  // Heart Rate Variability (vagal nerve suppression check)
+  if (hrv < 38) {
+    bluffProb += 14.0; // Autonomic fight-or-flight collapse
+  } else if (hrv > 62) {
+    bluffProb -= 10.0; // Healthy parasympathetic tone
   }
 
-  // 3. Ocular micro-saccades & blink flurry
-  if (blinks > 30) {
-    bluffProb += 8.5;
+  // Ocular behavior (debounced gaze shifts & micro-blinks)
+  if (gazeDeviations >= 2) {
+    bluffProb += 11.0;
   }
-  if (gazeDeviations >= 3) {
-    bluffProb += 9.5;
-  }
-
-  // 4. Verbal substance vs evasiveness
-  if (!hasSubstance) {
-    bluffProb += 14.0; // Evading the technical challenge
+  if (blinks >= 22) {
+    bluffProb += 6.5;
   }
 
-  bluffProb = Math.min(99.4, Math.max(12.8, Math.round(bluffProb * 10) / 10));
+  // Verbal substance check
+  if (isEvasive) {
+    bluffProb += 18.0; // Avoiding technical accountability
+  } else if (isSubstantive) {
+    bluffProb -= 8.0; // Provided actual architectural defense
+  }
 
-  // Determine Suspicion gauge increase (out of 25% per question)
-  let suspicionDelta = 20;
-  if (bluffProb >= 85) suspicionDelta = 25;
-  else if (bluffProb >= 70) suspicionDelta = 20;
-  else if (bluffProb >= 50) suspicionDelta = 14;
+  // Clamp probability to realistic forensic bounds
+  bluffProb = Math.min(96.8, Math.max(14.2, Math.round(bluffProb * 10) / 10));
+
+  // Determine Suspicion gauge increase (out of 25% max per claim)
+  let suspicionDelta = 14;
+  if (bluffProb >= 80) suspicionDelta = 25;
+  else if (bluffProb >= 65) suspicionDelta = 20;
+  else if (bluffProb >= 45) suspicionDelta = 14;
   else suspicionDelta = 8;
 
-  // Compose in-character L deductive monologue citing Presage SmartSpectra channels
-  let deductionText = '';
+  // 2. Determine Biofeedback Tier
+  const isCalm = deltaBPM <= 3 && hrv >= 56 && gazeDeviations <= 1;
+  const isAgitated = deltaBPM >= 7 || hrv < 42 || gazeDeviations >= 2;
 
-  if (deltaBPM >= 15 || hrv < 28) {
-    deductionText = `Candidate-kun... while defending ${question.claimTitle}, Presage SmartSpectra captured an indisputable autonomic response: your vascular pulse surged from a resting ${biometrics.baselineBPM} BPM to ${peakBPM} BPM (+${deltaBPM} BPM), while your Heart Rate Variability collapsed to ${hrv}ms. Sensor telemetry also clocked ${blinks} blinks/min and ${gazeDeviations} ocular drifts. In forensic polygraph terms, your sympathetic nervous system is screaming. Probability of deception: ${bluffProb}%.`;
-  } else if (deltaBPM >= 8 || tone > 45) {
-    deductionText = `Interesting. You delivered ${wordCount} words, yet Presage Sensor Ch.01 logged a steady +${deltaBPM} BPM rise, and autonomic tone spiked to ${tone}%. While your vocal delivery sounded rehearsed, your micro-circulation reveals measurable panic. Probability of bluffing: ${bluffProb}%.`;
-  } else if (hasSubstance && deltaBPM < 8 && hrv >= 45) {
-    deductionText = `Remarkable... your pulse held steady at +${deltaBPM} BPM, HRV remained balanced at ${hrv}ms, and ocular gaze showed zero micro-tremors. Either your mastery of ${question.claimTitle} is authentic... or you are an exceptionally composed sociopath. Initial deception probability: ${bluffProb}%.`;
+  // 3. Compose In-Character, Bespoke L Deductive Monologue for each specific claim
+  let deductionText = '';
+  const qId = question.id;
+
+  if (qId === 'q-preset-1') {
+    // QUESTION 1: Potato-Chip LCD Workstation
+    if (isEvasive) {
+      deductionText = `Light-kun... you offer barely ${wordCount} words to defend a covert edge-computing rig concealed in a barbecue chip bag? An engineer who engineered an ungreased 0ms LCD would quote hardware specifications, yet you deflect with silence. Presage sensors detect an autonomic tone of ${tone}%. Bluff probability: ${bluffProb}%.`;
+    } else if (isCalm) {
+      deductionText = `(stacks two sugar cubes into a delicate column)... Light-kun, you defend the barbecue chip LCD with surgical composure. Presage Sensor Ch.01 registers your pulse at a tranquil ${peakBPM} BPM (+${deltaBPM} BPM delta), while your HRV sits at an unruffled ${hrv}ms. Most candidates stammer when questioned about grease residue on high-precision optics. For you to remain this physiologically serene under surveillance is either proof of innocence... or the chilling composure of a serial deceiver. Bluff probability: ${bluffProb}%.`;
+    } else if (isAgitated) {
+      deductionText = `(leans forward, eyes fixed on the CCTV)... Look at the telemetry graph, Light-kun. The moment I pressed on thermal dissipation inside the foil bag, your pulse climbed to ${peakBPM} BPM (+${deltaBPM} BPM surge) and you averted your gaze ${gazeDeviations} times. Your vocal tone attempted defiance, but your micro-circulation reveals undeniable cardiovascular tension. Bluff probability: ${bluffProb}%.`;
+    } else {
+      deductionText = `(bites right thumb thoughtfully)... You spoke ${wordCount} words detailing your covert monitor. Presage Ch.01 logged a modest +${deltaBPM} BPM rise, and your blink rate hovered at ${blinks}/min. You understand the edge architecture, yet your autonomic nervous system reveals subtle hesitation regarding the physical feasibility. Bluff probability: ${bluffProb}%.`;
+    }
+  } else if (qId === 'q-preset-2') {
+    // QUESTION 2: 40-Second Autonomous Incident SLA
+    if (isEvasive) {
+      deductionText = `Refusing to explain why your incident resolution pipeline executes in precisely forty seconds? That forty-second interval is the trademark signature of Kira's cardiac arrest executions. Silence in front of Presage optical sensors is not an alibi, Light-kun. Bluff probability: ${bluffProb}%.`;
+    } else if (isCalm) {
+      deductionText = `(twirls a metal spoon in empty coffee cup)... A distributed queue that resolves critical incidents in exactly forty seconds—the exact time it takes for a heart attack to manifest after a name is written. Yet your pulse held flat at ${peakBPM} BPM (a mere +${deltaBPM} BPM variance). Either your automated cron jobs truly operate with supernatural punctuality... or you are testing my intellect with a brazen confession disguised as infrastructure. Bluff probability: ${bluffProb}%.`;
+    } else if (isAgitated) {
+      deductionText = `(crouches tightly on the chair edge)... Light-kun! Your pulse surged +${deltaBPM} BPM up to ${peakBPM} BPM, and your HRV dropped to ${hrv}ms the instant I mentioned the Kira killings. An innocent software engineer explaining a message broker does not experience vagal nerve collapse. Presage rPPG captured your exact autonomic tell. Bluff probability: ${bluffProb}%.`;
+    } else {
+      deductionText = `Interesting. You delivered a technical explanation of ${wordCount} words, yet Presage Ch.02 recorded sympathetic arousal rising to ${tone}%. You attempted to normalize the 40-second SLA as a standard batch threshold, but your cardiovascular rhythm betray an unmistakable defensive spike (+${deltaBPM} BPM). Bluff probability: ${bluffProb}%.`;
+    }
+  } else if (qId === 'q-preset-3') {
+    // QUESTION 3: Bimanual Multi-Threaded C++ Multitasking
+    if (isEvasive) {
+      deductionText = `Light-kun, you claim to write lock-free memory-safe C++ with your left hand while solving calculus with your right, yet you provide zero explanation of your memory barriers. One cannot hand-wave atomic synchronization in front of Presage sensors. Bluff probability: ${bluffProb}%.`;
+    } else if (isCalm) {
+      deductionText = `(eats a single strawberry without looking away)... Lock-free atomic C++ with the non-dominant hand while computing differential equations. Your pulse barely wavered at +${deltaBPM} BPM, and your gaze alignment remained locked dead-center. As the Junior Kanto Tennis Champion, your bi-hemispheric motor coordination is genuinely extraordinary. But whether that code was truly thread-safe without mutex contention... I calculate a remaining bluff probability of ${bluffProb}%.`;
+    } else if (isAgitated) {
+      deductionText = `(points right index finger at the waveform)... Your pulse climbed to ${peakBPM} BPM (+${deltaBPM} BPM spike) with ${blinks} blinks/min and ${gazeDeviations} ocular drifts. Truly lock-free memory safety requires immense cognitive concentration; attempting it simultaneously with differential equations overloaded your autonomic nervous system. The telemetry does not lie. Bluff probability: ${bluffProb}%.`;
+    } else {
+      deductionText = `You delivered ${wordCount} words on atomic CAS operations. Presage logged a mild cardiovascular elevation of +${deltaBPM} BPM and an HRV of ${hrv}ms. You possess the theoretical knowledge, Light-kun, but your biometrics reveal that writing C++ with your left hand was an exaggeration of your true workflow. Bluff probability: ${bluffProb}%.`;
+    }
+  } else if (qId === 'q-preset-4') {
+    // QUESTION 4: Divine Consensus
+    if (isEvasive) {
+      deductionText = `Silence when cross-examined on your 'Divine Consensus'? When asked what occurs when your node fails to achieve godhood, you offer no failover plan. Megalomania is not a high-availability architecture, Light-kun. Bluff probability: ${bluffProb}%.`;
+    } else if (isCalm) {
+      deductionText = `(stares through dark circles with quiet intensity)... You defend 'Divine Consensus' with eerie, stone-cold stillness (+${deltaBPM} BPM pulse delta, ${hrv}ms HRV). Most engineers would smile or concede the hyperbole. You, however, defend becoming a god with absolute physiological sincerity. That chilling psychological conviction is precisely why you remain my primary suspect. Bluff probability: ${bluffProb}%.`;
+    } else if (isAgitated) {
+      deductionText = `Candidate-kun! Your pulse spiked +${deltaBPM} BPM to ${peakBPM} BPM, and your sympathetic tone flared to ${tone}%! Divine Consensus is not an engineering consensus protocol—it is the hubris of someone who believes they are untouchable. Presage optical telemetry has stripped away your god complex. Bluff probability: ${bluffProb}%.`;
+    } else {
+      deductionText = `(spins a porcelain saucer)... You spoke ${wordCount} words attempting to rationalize divine authority as a distributed fault-tolerance model. Presage Sensor Ch.01 detected a +${deltaBPM} BPM rise and ${gazeDeviations} micro-glances away from the lens. Even you recognize the absurdity of replacing Paxos with godhood. Bluff probability: ${bluffProb}%.`;
+    }
+  } else if (qId === 'q-custom-frontend') {
+    // CUSTOM FRONTEND
+    if (isCalm) {
+      deductionText = `(stacks sugar cubes)... Candidate-kun, your pulse held remarkably steady at +${deltaBPM} BPM while defending your frontend architecture. Your HRV remained at ${hrv}ms. You understand DOM reconciliation and avoid blind useCallback wrapping. Either you are a rare, disciplined frontend engineer... or you memorized these performance talking points five minutes ago. Bluff probability: ${bluffProb}%.`;
+    } else if (isAgitated) {
+      deductionText = `Look at your carotid pulse readout. The moment I mentioned unpredictable re-renders and memory leaks, your heart rate spiked by +${deltaBPM} BPM to ${peakBPM} BPM, with ${gazeDeviations} ocular shifts. Your code re-renders uncontrollably, Candidate-kun, and your autonomic system knows it. Bluff probability: ${bluffProb}%.`;
+    } else {
+      deductionText = `You delivered ${wordCount} words on frontend state. Presage logged a mild +${deltaBPM} BPM pulse variance and ${blinks} blinks/min. You have built interfaces, but your micro-circulation reveals measurable anxiety regarding complex state synchronization. Bluff probability: ${bluffProb}%.`;
+    }
+  } else if (qId === 'q-custom-backend') {
+    // CUSTOM BACKEND
+    if (isCalm) {
+      deductionText = `(twirls coffee spoon)... When asked about event loop blocking and connection pool starvation, your pulse barely shifted (+${deltaBPM} BPM) and sympathetic tone stayed at ${tone}%. You demonstrate calm familiarity with async I/O bottlenecks. Bluff probability: ${bluffProb}%.`;
+    } else if (isAgitated) {
+      deductionText = `Your pulse surged +${deltaBPM} BPM (peaking at ${peakBPM} BPM) right when I asked about production connection pool starvation. You claim high-throughput API architecture, yet your autonomic response reveals you have never stress-tested a system under real distributed load. Bluff probability: ${bluffProb}%.`;
+    } else {
+      deductionText = `You provided ${wordCount} words on backend resilience. Presage Sensor Ch.01 noted a moderate +${deltaBPM} BPM rise. You understand the architectural theory, but your physiological telemetry suggests you rely heavily on auto-scaling rather than true connection profiling. Bluff probability: ${bluffProb}%.`;
+    }
+  } else if (qId === 'q-custom-database') {
+    // CUSTOM DATABASE
+    if (isCalm) {
+      deductionText = `(bites thumb)... Sequential table scans on ten million records. You answered with complete cardiovascular stillness (+${deltaBPM} BPM delta, ${hrv}ms HRV). You understand B-tree index selectivity and composite keys without flinching. Bluff probability: ${bluffProb}%.`;
+    } else if (isAgitated) {
+      deductionText = `An unindexed query in production triggered this exact reaction: your pulse accelerated +${deltaBPM} BPM to ${peakBPM} BPM, and you averted your eyes ${gazeDeviations} times. You do not optimize slow queries—you merely restart the replica and pray. Bluff probability: ${bluffProb}%.`;
+    } else {
+      deductionText = `You offered ${wordCount} words on query optimization. Presage Ch.02 detected sympathetic arousal rising to ${tone}%. You have run EXPLAIN ANALYZE, but your biometrics reveal that database lock contention still causes you genuine stress. Bluff probability: ${bluffProb}%.`;
+    }
+  } else if (qId === 'q-custom-devops') {
+    // CUSTOM DEVOPS / KUBERNETES
+    if (isCalm) {
+      deductionText = `(observes CCTV monitors)... Zero-downtime deployment during an unhandled SIGTERM crash loop. Your pulse remained rock-solid at +${deltaBPM} BPM. You demonstrate legitimate operational resilience under simulated disaster conditions. Bluff probability: ${bluffProb}%.`;
+    } else if (isAgitated) {
+      deductionText = `Candidate-kun, your pulse surged by +${deltaBPM} BPM the moment I mentioned a CrashLoopBackOff at 3:00 AM! Presage Ch.03 logged ${blinks} blinks/min and ocular evasion. You copy Helm charts without understanding container lifecycle hooks. Bluff probability: ${bluffProb}%.`;
+    } else {
+      deductionText = `You gave ${wordCount} words on cloud deployment. Presage recorded a +${deltaBPM} BPM pulse variance. You understand container deployment, but your cardiovascular telemetry indicates your disaster recovery protocol is largely improvisation. Bluff probability: ${bluffProb}%.`;
+    }
   } else {
-    deductionText = `You offered an evasive defense of only ${wordCount} words. Presage sensors detected an autonomic arousal spike of ${tone}%. Silence is not an alibi in this room, Candidate-kun. Probability of deception: ${bluffProb}%.`;
+    // GENERAL / FALLBACK QUESTIONS
+    if (isEvasive) {
+      deductionText = `You offered an evasive defense of only ${wordCount} words regarding ${question.claimTitle}. Presage sensors detected an autonomic tension score of ${tone}%. Silence will not substantiate an unverifiable resume claim. Bluff probability: ${bluffProb}%.`;
+    } else if (isCalm) {
+      deductionText = `(stacks sugar cubes)... Your pulse remained steady at +${deltaBPM} BPM (${peakBPM} BPM peak), with an HRV of ${hrv}ms. You answered with measured composure. Either your experience with ${question.claimTitle} is fully authentic, or you are an exceptionally disciplined candidate. Bluff probability: ${bluffProb}%.`;
+    } else if (isAgitated) {
+      deductionText = `Look at the polygraph trace for ${question.claimTitle}: your pulse surged by +${deltaBPM} BPM, HRV collapsed to ${hrv}ms, and ocular shifts were recorded ${gazeDeviations} times. Your autonomic nervous system reveals significant anxiety regarding this claim. Bluff probability: ${bluffProb}%.`;
+    } else {
+      deductionText = `You spoke ${wordCount} words in defense of ${question.claimTitle}. Presage Sensor Ch.01 logged a moderate +${deltaBPM} BPM rise. While your verbal narrative was coherent, your autonomic telemetry reflects standard interview apprehension. Bluff probability: ${bluffProb}%.`;
+    }
   }
 
   return {
