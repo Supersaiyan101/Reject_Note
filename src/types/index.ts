@@ -67,11 +67,16 @@ export interface LiveVitals {
   currentBreathingRate: number;
   stressDeltaBPM: number;
   waveform: number[];
+  respirationWaveform: number[];
   signalQuality: 'OPTIMAL' | 'FAIR' | 'SEARCHING';
   isFaceLocked: boolean;
   faceConfidence: number; // 0.0 to 1.0
   motionEnergy: number; // 0.0 (still) to 1.0 (agitated/crying/talking)
   faceStatus: 'LOCKED' | 'NOT_CENTERED' | 'NO_FACE_DETECTED';
+  hrvMs: number; // Heart Rate Variability (SDNN) in ms: 65-85ms calm, <25ms panic
+  blinkRate: number; // Estimated blinks per min
+  sympatheticTone: number; // 0 - 100 autonomic arousal
+  gazeAlignment: 'LOCKED' | 'WANDERING' | 'EVADING';
 }
 
 // STAGE 4: INTERROGATION & FORENSIC TYPES
@@ -98,6 +103,9 @@ export interface BiometricEvidence {
   durationSec: number;
   deductionVerdict: string;
   suspicionAdded: number;
+  hrvMs?: number;
+  blinkRate?: number;
+  sympatheticTone?: number;
 }
 
 export interface InterrogationSummary {

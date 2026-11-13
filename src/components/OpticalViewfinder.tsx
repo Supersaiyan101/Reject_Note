@@ -31,11 +31,16 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
     currentBreathingRate: 14,
     stressDeltaBPM: 0,
     waveform: new Array(60).fill(0.5),
+    respirationWaveform: new Array(60).fill(0.5),
     signalQuality: 'SEARCHING',
     isFaceLocked: false,
     faceConfidence: 0,
     motionEnergy: 0,
     faceStatus: 'NO_FACE_DETECTED',
+    hrvMs: 76,
+    blinkRate: 14,
+    sympatheticTone: 10,
+    gazeAlignment: 'LOCKED',
   });
 
   const animLoopRef = useRef<number | null>(null);
@@ -63,7 +68,7 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
     onCameraStateChangeRef.current = onCameraStateChange;
   }, [onCameraStateChange]);
 
-  const drawWaveform = useCallback((waveform: number[]) => {
+  const drawWaveform = useCallback((waveform: number[], respWaveform?: number[]) => {
     const canvas = waveformCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -71,6 +76,21 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // 1. Respiration baseline envelope wave (Cyan / Blue)
+    if (respWaveform && respWaveform.length > 1) {
+      ctx.strokeStyle = 'rgba(6, 182, 212, 0.45)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      const respStep = canvas.width / (respWaveform.length - 1);
+      respWaveform.forEach((val, i) => {
+        const y = canvas.height - val * canvas.height;
+        if (i === 0) ctx.moveTo(0, y);
+        else ctx.lineTo(i * respStep, y);
+      });
+      ctx.stroke();
+    }
+
+    // 2. Emerald PPG arterial pulse wave
     ctx.strokeStyle = '#22c55e'; // Emerald PPG wave
     ctx.lineWidth = 2;
     ctx.shadowColor = 'rgba(34, 197, 94, 0.6)';
@@ -139,7 +159,7 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
       const current = opticalEngine.sampleFrame(72);
       setVitals(current);
       onVitalsUpdateRef.current?.(current);
-      drawWaveform(current.waveform);
+      drawWaveform(current.waveform, current.respirationWaveform);
       animLoopRef.current = requestAnimationFrame(loop);
     };
 
@@ -330,13 +350,17 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
         </div>
       </div>
 
-      {/* Real-time PPG Pulse Waveform Graph */}
+      {/* Real-time Presage Multi-Sensor Telemetry HUD */}
       <div className="mt-3 p-3 rounded-xl bg-neutral-950/90 border border-neutral-800">
         <div className="flex items-center justify-between mb-1.5 text-xs font-mono">
-          <span className="text-neutral-400 flex items-center gap-1.5">
-            <Heart className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
-            Live PPG Pulse Waveform:
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-neutral-400 flex items-center gap-1.5">
+              <Heart className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
+              Presage Dual-Trace:
+            </span>
+            <span className="text-[10px] text-emerald-400 font-bold">● Arterial PPG</span>
+            <span className="text-[10px] text-cyan-400 font-bold">● Respiration</span>
+          </div>
           <div className="flex items-center gap-2">
             {vitals.stressDeltaBPM > 6 && (
               <span className="px-1.5 py-0.2 rounded bg-rose-950/90 text-rose-400 text-[10px] border border-rose-600/70 font-bold animate-pulse">
@@ -356,10 +380,26 @@ export const OpticalViewfinder: React.FC<OpticalViewfinderProps> = ({
           className="w-full h-10 rounded bg-black/60 border border-neutral-900"
         />
 
-        <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500 mt-1.5">
-          <span>Respiration: <strong className="text-cyan-400">{vitals.isFaceLocked ? `${vitals.currentBreathingRate} RPM` : '--'}</strong></span>
-          <span>Motion: <strong className={vitals.motionEnergy > 0.15 ? 'text-rose-400' : 'text-emerald-400'}>{Math.round(vitals.motionEnergy * 100)}%</strong></span>
-          <span>Signal: <strong className={vitals.isFaceLocked ? 'text-emerald-400' : 'text-rose-400'}>{vitals.signalQuality}</strong></span>
+        {/* 6-Channel Telemetry Grid */}
+        <div className="grid grid-cols-3 gap-y-1.5 gap-x-2 text-[10px] font-mono text-neutral-400 mt-2 pt-2 border-t border-neutral-900">
+          <div>
+            Resp: <strong className="text-cyan-400">{vitals.isFaceLocked ? `${vitals.currentBreathingRate} RPM` : '--'}</strong>
+          </div>
+          <div>
+            HRV (SDNN): <strong className={vitals.hrvMs < 30 ? 'text-rose-400 font-bold' : 'text-emerald-400'}>{vitals.isFaceLocked ? `${vitals.hrvMs} ms` : '--'}</strong>
+          </div>
+          <div>
+            Blinks: <strong className={vitals.blinkRate > 30 ? 'text-amber-400 font-bold' : 'text-cyan-300'}>{vitals.isFaceLocked ? `${vitals.blinkRate}/m` : '--'}</strong>
+          </div>
+          <div>
+            Symp. Tone: <strong className={vitals.sympatheticTone > 50 ? 'text-rose-400 font-bold' : 'text-emerald-400'}>{vitals.isFaceLocked ? `${vitals.sympatheticTone}%` : '--'}</strong>
+          </div>
+          <div>
+            Gaze: <strong className={vitals.gazeAlignment === 'EVADING' ? 'text-rose-400' : vitals.gazeAlignment === 'WANDERING' ? 'text-amber-400' : 'text-emerald-400'}>{vitals.gazeAlignment}</strong>
+          </div>
+          <div>
+            Signal: <strong className={vitals.isFaceLocked ? 'text-emerald-400' : 'text-rose-400'}>{vitals.signalQuality}</strong>
+          </div>
         </div>
       </div>
     </div>

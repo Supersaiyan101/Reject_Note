@@ -14,9 +14,11 @@ class OpticalBiometricEngine {
 
   // PPG Waveform buffer
   private waveformBuffer: number[] = new Array(60).fill(0.5);
+  private respirationBuffer: number[] = new Array(60).fill(0.5);
   private lastBPM: number = 72;
   private lastRespiration: number = 14;
   private phaseAngle: number = 0;
+  private respPhaseAngle: number = 0;
 
   // Real-time Computer Vision & Biometric tracking states
   private prevLumaBuffer: Float32Array | null = null;
@@ -249,16 +251,24 @@ class OpticalBiometricEngine {
       // Erratic/searching flatline signal with slight static noise
       this.waveformBuffer.push(0.5 + (Math.random() - 0.5) * 0.05);
 
+      this.respirationBuffer.shift();
+      this.respirationBuffer.push(0.5 + (Math.random() - 0.5) * 0.03);
+
       return {
         currentBPM: restingBaselineBPM,
         currentBreathingRate: 0,
         stressDeltaBPM: 0,
         waveform: [...this.waveformBuffer],
+        respirationWaveform: [...this.respirationBuffer],
         signalQuality: 'SEARCHING',
         isFaceLocked: false,
         faceConfidence: 0,
         motionEnergy: 0,
         faceStatus: faceStatus,
+        hrvMs: 0,
+        blinkRate: 0,
+        sympatheticTone: 0,
+        gazeAlignment: 'EVADING',
       };
     }
 
@@ -286,9 +296,34 @@ class OpticalBiometricEngine {
     const dicroticNotch = Math.sin(this.phaseAngle * 2 + 1.2) * 0.25;
     const rawPulse = fundamental * 0.45 + dicroticNotch + 0.5;
 
-    // Shift waveform buffer
+    // Shift cardiac waveform buffer
     this.waveformBuffer.shift();
     this.waveformBuffer.push(Math.max(0.05, Math.min(0.95, rawPulse)));
+
+    // Respiration waveform oscillation
+    const respFreq = (this.lastRespiration / 14) * 0.045;
+    this.respPhaseAngle += respFreq;
+    const rawResp = Math.sin(this.respPhaseAngle) * 0.42 + 0.5;
+    this.respirationBuffer.shift();
+    this.respirationBuffer.push(Math.max(0.05, Math.min(0.95, rawResp)));
+
+    // Heart Rate Variability (SDNN in ms):
+    // Calm baseline is ~76ms. Autonomic sympathetic surge collapses HRV down towards 16-24ms.
+    const hrvMs = Math.max(16, Math.round(76 - (stressDelta * 1.3) + (Math.sin(this.phaseAngle * 0.4) * 3)));
+
+    // Blink rate: normally ~14 blinks/min, rises to 32-46/min under interrogation agitation
+    const blinkRate = Math.round(14 + Math.min(32, motionStress * 0.7));
+
+    // Autonomic Sympathetic Tone (0 - 100):
+    const sympatheticTone = Math.min(100, Math.round((stressDelta / 45) * 80 + this.motionEnergy * 20));
+
+    // Gaze Alignment
+    let gazeAlignment: LiveVitals['gazeAlignment'] = 'LOCKED';
+    if (this.motionEnergy > 0.28) {
+      gazeAlignment = 'EVADING';
+    } else if (this.motionEnergy > 0.12) {
+      gazeAlignment = 'WANDERING';
+    }
 
     const signalQuality: LiveVitals['signalQuality'] =
       this.motionEnergy > 0.35 ? 'FAIR' : 'OPTIMAL';
@@ -298,11 +333,16 @@ class OpticalBiometricEngine {
       currentBreathingRate: this.lastRespiration,
       stressDeltaBPM: stressDelta,
       waveform: [...this.waveformBuffer],
+      respirationWaveform: [...this.respirationBuffer],
       signalQuality: signalQuality,
       isFaceLocked: true,
       faceConfidence: Math.round(faceConfidence * 100) / 100,
       motionEnergy: Math.round(this.motionEnergy * 100) / 100,
       faceStatus: 'LOCKED',
+      hrvMs,
+      blinkRate,
+      sympatheticTone,
+      gazeAlignment,
     };
   }
 }
