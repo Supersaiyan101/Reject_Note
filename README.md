@@ -10,6 +10,8 @@
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4.0-cyan?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 
 > **"I am L. Candidate kun... why did your pulse surge by +18 BPM the exact moment I asked you about Redis caching under 64 cameras?"**
+>
+> 📺 **Watch Full Walkthrough on YouTube**: [RejectNote Interrogation Demo](https://youtu.be/7mf08mP4sQg)
 
 ***
 
