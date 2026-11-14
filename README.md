@@ -24,20 +24,15 @@ Currently in its Season 1 (🤭), the master detective **L Lawliet** from *Death
 
 ***
 
-## 🎭 The Cast of Interrogators
+## 🎭 The Interrogation Chamber
 
-RejectNote is built from the ground up as an expandable anime character roasting engine. Each character brings their own interrogation style, psychological traps, and verbal cruelty:
+RejectNote is built from the ground up as an extensible anime character roasting engine designed to simulate high stakes technical interrogations. 
 
-* 🍰 **L Lawliet (Death Note) [ACTIVE SEASON 1 INQUISITOR]**
-  The eccentric world class detective. Crouching on his chair, calculating exact guilt probabilities, stacking sugar cubes, and analyzing micro vascular cardiac spikes with clinical coldness.
-* 🔪 **Ryomen Sukuna (Jujutsu Kaisen) [COMING IN SEASON 2]**
-  The King of Curses presiding over the Malevolent Kitchen. Roasting candidates who cannot invert a binary tree or balance a B tree under pressure.
-* 🧹 **Levi Ackerman (Attack on Titan) [COMING IN SEASON 2]**
-  The Captain of the Scout Regiment. Inspecting your pull requests for dirty syntax, bloated dependencies, and sloppy code architecture.
-* ⚡ **Gojo Satoru (Jujutsu Kaisen) [COMING IN SEASON 2]**
-  The Smug Prodigy. Flexing infinite domain expansion while mocking your inability to debug asynchronous event loops.
-* 💥 **Prince Vegeta (Dragon Ball Z) [COMING IN SEASON 2]**
-  The Saiyan Prince. Screaming at candidates whose throughput is lower than Raditz.
+* 🍰 **L Lawliet (Death Note) [ACTIVE CHIEF INQUISITOR]**
+  The legendary master detective. Crouching on his chair, calculating mathematical guilt probabilities, stacking sugar cubes, and clocking micro vascular cardiac surges with clinical detachment.
+
+* 🔮 **Future Inquisitor Expansions**
+  In the future, more iconic anime personalities will be carefully tailored and integrated into the chamber. Each upcoming character will feature their own custom psychological interrogation philosophy, unique voice acting cues, specialized roasting deductions, and tailored visual novel reactions to push candidates to their biological limits.
 
 ***
 
