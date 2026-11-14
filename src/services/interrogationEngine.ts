@@ -24,7 +24,7 @@ export function generateQuestionsForDossier(dossier: CandidateDossier): Interrog
         lSubtext: 'Interrogating edge hardware claim & salt-to-silicon ratio under 64 cameras.',
         badge: 'POTATO CHIP PROTOCOL',
         expectedKeywords: ['chip', 'potato', 'eat', 'snack', 'exam', 'study', 'grease', 'lcd'],
-        actingCue: 'Hold your head high, speak with calm honor-student indignation!',
+        actingCue: 'Honor-student composure with calm indignation',
         suggestedDefense: "I'll take a potato chip... AND EAT IT! I was studying for university entrance exams, Ryuzaki! There is no law against having a snack!",
       },
       {
@@ -35,7 +35,7 @@ export function generateQuestionsForDossier(dossier: CandidateDossier): Interrog
         lSubtext: 'Analyzing distributed incident resolution vs 40-second heart attack timing.',
         badge: '40-SEC KIRA SLA',
         expectedKeywords: ['sla', 'second', 'queue', 'cardiac', 'arrest', 'heart', 'engineer', 'backend'],
-        actingCue: 'Sound deeply offended that your engineering competence is being questioned!',
+        actingCue: 'Offended engineer defending technical competence',
         suggestedDefense: 'Any competent backend engineer can build a 40-second automated queue! Accusing an honor student of murder over an SLA delay is completely absurd!',
       },
       {
@@ -46,7 +46,7 @@ export function generateQuestionsForDossier(dossier: CandidateDossier): Interrog
         lSubtext: 'Auditing televised broadcast trap and geographic localization.',
         badge: 'KANTO BROADCAST TRAP',
         expectedKeywords: ['broadcast', 'tv', 'kanto', 'bait', 'tailor', 'decoy', 'speculation'],
-        actingCue: "Denounce L's illegal broadcast trap with righteous indignation!",
+        actingCue: 'Righteous indignation against police overreach',
         suggestedDefense: 'You staged an illegal television broadcast using a condemned death-row inmate to bait a killer! Blaming an honor student watching TV in Kanto is baseless speculation!',
       },
       {
@@ -57,7 +57,7 @@ export function generateQuestionsForDossier(dossier: CandidateDossier): Interrog
         lSubtext: 'Probing metaphysical consensus claims under optical polygraph.',
         badge: 'GOD COMPLEX AUDIT',
         expectedKeywords: ['god', 'world', 'crime', 'justice', 'safer', 'student', 'telemetry'],
-        actingCue: 'Climax of the scene! Speak with intense dramatic conviction!',
+        actingCue: 'Dramatic conviction defending a safer world',
         suggestedDefense: 'I am the top student in Japan! I only want to build technology that makes the world a safer, better place! How is that a crime, Ryuzaki?!',
       },
     ];
