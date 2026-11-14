@@ -18,9 +18,9 @@ Technical interviews in 2026 are completely broken.
 
 Every candidate resume is stuffed with artificial intelligence buzzwords, inflated claims of scaling distributed clusters to 50M QPS with zero downtime, and rehearsed LeetCode answers memorized the night before. Standard whiteboard interviews can no longer distinguish genuine engineering expertise from confident deception.
 
-**RejectNote** is a ruthless anime character tech interview roasting chamber. Instead of a boring HR screen, legendary anime personalities take your technical interview, dissect your resume claims, and roast your fraudulent tech experience in real time using **optical contactless photoplethysmography (rPPG) polygraph surveillance**.
+**RejectNote** is a ruthless  tech interview roasting chamber. Instead of a boring HR screen, Legendary anime personalities take your technical interview, dissect your resume claims, and roast your fraudulent tech experience in real time using **optical contactless photoplethysmography (rPPG) polygraph surveillance**.
 
-Currently in Season 1, the master detective **L Lawliet** from *Death Note* serves as your chief inquisitor. He does not care about your memorized algorithms. He monitors your involuntary sub surface facial blood flow, micro tremors, blink rates, and ocular gaze shifts while you attempt to defend your claims.
+Currently in its Season 1 (🤭), the master detective **L Lawliet** from *Death Note* serves as your chief inquisitor. He does not care about your memorized algorithms. He monitors your involuntary sub surface facial blood flow, micro tremors, blink rates, and  gaze shifts while you attempt to defend your claims.
 
 ***
 
