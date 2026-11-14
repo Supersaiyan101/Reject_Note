@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import type { InterrogationSummary } from '../types';
 import { soundFX } from '../utils/sfx';
 import { realAudio } from '../utils/realAudio';
-import { RotateCcw, AlertTriangle, Heart, Eye, Download, Check, FileJson, Activity } from 'lucide-react';
+import { RotateCcw, AlertTriangle, Heart, Eye, Download, Check, FileJson, Activity, Share2, FileImage } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface VerdictStageProps {
@@ -13,6 +13,152 @@ interface VerdictStageProps {
 export const VerdictStage: React.FC<VerdictStageProps> = ({ summary, onRestart }) => {
   const isRejected = summary.finalVerdict === 'GUILTY_REJECTED';
   const [hasExported, setHasExported] = useState(false);
+  const [hasDownloadedWarrant, setHasDownloadedWarrant] = useState(false);
+
+  const handleDownloadWarrant = () => {
+    soundFX.playClick();
+    const canvas = document.createElement('canvas');
+    canvas.width = 1200;
+    canvas.height = 800;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Background
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, 1200, 800);
+
+    // Double Border
+    ctx.strokeStyle = isRejected ? '#e11d48' : '#10b981';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(20, 20, 1160, 760);
+    ctx.strokeStyle = '#262626';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(30, 30, 1140, 740);
+
+    // Header bar
+    ctx.fillStyle = isRejected ? 'rgba(225, 29, 72, 0.15)' : 'rgba(16, 185, 129, 0.15)';
+    ctx.fillRect(32, 32, 1136, 110);
+
+    // Large Watermark Kanji
+    ctx.font = 'bold 320px serif';
+    ctx.fillStyle = isRejected ? 'rgba(225, 29, 72, 0.05)' : 'rgba(16, 185, 129, 0.05)';
+    ctx.textAlign = 'center';
+    ctx.fillText(isRejected ? '死' : '通', 600, 520);
+
+    // Header Text
+    ctx.fillStyle = isRejected ? '#fb7185' : '#34d399';
+    ctx.font = 'bold 18px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('NATIONAL POLICE AGENCY TASK FORCE // BIOFEEDBACK DIVISION', 60, 75);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 36px serif';
+    ctx.fillText('REJECT NOTE: OFFICIAL FORENSIC WARRANT', 60, 115);
+
+    // Timestamp & Inquisitor
+    ctx.fillStyle = '#a3a3a3';
+    ctx.font = '16px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(`DATE: ${new Date().toLocaleDateString()}`, 1140, 75);
+    ctx.fillText(`CHIEF INQUISITOR: L LAWLIET`, 1140, 105);
+
+    // Candidate Details Box
+    ctx.fillStyle = '#141414';
+    ctx.fillRect(60, 170, 1080, 160);
+    ctx.strokeStyle = '#333333';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(60, 170, 1080, 160);
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#a3a3a3';
+    ctx.font = '14px monospace';
+    ctx.fillText('CANDIDATE NAME:', 90, 210);
+    ctx.fillText('AUTONOMIC BLUFF SUSPICION:', 480, 210);
+    ctx.fillText('FINAL EXECUTION SLA:', 880, 210);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 28px monospace';
+    ctx.fillText(summary.candidateName.toUpperCase(), 90, 255);
+
+    ctx.fillStyle = isRejected ? '#f43f5e' : '#10b981';
+    ctx.font = 'bold 32px monospace';
+    ctx.fillText(`${summary.totalSuspicionPercent}%`, 480, 255);
+
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 28px monospace';
+    ctx.fillText('40 SECONDS', 880, 255);
+
+    // Presage Telemetry Breakdown Section
+    ctx.fillStyle = '#a3a3a3';
+    ctx.font = 'bold 16px monospace';
+    ctx.fillText('PRESAGE SMARTSPECTRA™ OPTICAL rPPG TELEMETRY AUDIT:', 60, 375);
+
+    const evidence = summary.evidenceLog.slice(0, 3);
+    let startY = 410;
+    evidence.forEach((ev, idx) => {
+      ctx.fillStyle = '#171717';
+      ctx.fillRect(60, startY, 1080, 75);
+      ctx.strokeStyle = '#262626';
+      ctx.strokeRect(60, startY, 1080, 75);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 16px monospace';
+      ctx.fillText(`#${idx + 1} CLAIM: ${ev.claimTitle}`, 80, startY + 30);
+
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '13px monospace';
+      ctx.fillText(`Peak: ${ev.peakBPM} BPM | Delta: +${ev.deltaBPM} BPM | HRV: ${ev.hrvMs ?? 65} ms | Gaze Shifts: ${ev.gazeDeviations}`, 80, startY + 55);
+
+      ctx.fillStyle = ev.deltaBPM >= 10 ? '#f43f5e' : '#34d399';
+      ctx.textAlign = 'right';
+      ctx.font = 'bold 14px monospace';
+      ctx.fillText(`+${ev.suspicionAdded}% SUSPICION`, 1110, startY + 45);
+      ctx.textAlign = 'left';
+
+      startY += 90;
+    });
+
+    // Stamp: INSCRIBED IN DEATH NOTE / PROBATION PASS
+    ctx.save();
+    ctx.translate(920, 680);
+    ctx.rotate(-0.12);
+    ctx.strokeStyle = isRejected ? '#e11d48' : '#10b981';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(-180, -35, 360, 70);
+    ctx.fillStyle = isRejected ? '#e11d48' : '#10b981';
+    ctx.font = '900 24px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(isRejected ? 'REJECTED // INSCRIBED' : 'CLEARED // PROBATION', 0, 10);
+    ctx.restore();
+
+    // Footer note
+    ctx.fillStyle = '#737373';
+    ctx.font = '12px monospace';
+    ctx.fillText('Audited via Presage Technologies SmartSpectra SDK // Verified Client-Side Optical Polygraph', 60, 740);
+
+    // Download PNG
+    const url = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `rejectnote-warrant-${summary.candidateName.replace(/\s+/g, '_').toLowerCase()}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setHasDownloadedWarrant(true);
+  };
+
+  const handleShareToTwitter = () => {
+    soundFX.playClick();
+    const tweetText = encodeURIComponent(
+      `L Lawliet just audited my resume on #RejectNote using Presage SmartSpectra optical polygraph biometrics!\n\n` +
+      `💀 Verdict: ${isRejected ? 'GUILTY // NAME INSCRIBED IN REJECT NOTE' : 'PROBATIONARY PASS'}\n` +
+      `📊 Autonomic Suspicion: ${summary.totalSuspicionPercent}%\n` +
+      `⏱️ Execution SLA: 40 Seconds\n\n` +
+      `Can your vitals survive L's cross-examination? Built for the @ThePracticalDev #PresageSDK Challenge! ⚖️\n` +
+      `https://github.com/Supersaiyan101/Reject_Note`
+    );
+    window.open(`https://twitter.com/intent/tweet?text=${tweetText}`, '_blank', 'noopener,noreferrer');
+  };
 
   const handleExportTelemetry = () => {
     soundFX.playClick();
@@ -207,28 +353,55 @@ export const VerdictStage: React.FC<VerdictStageProps> = ({ summary, onRestart }
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10 pt-2">
+        <div className="flex flex-wrap items-center justify-center gap-3 relative z-10 pt-2">
+          {/* 1. Download Rejection Warrant Poster */}
+          <button
+            onClick={handleDownloadWarrant}
+            className={`px-5 py-3 rounded-xl font-mono text-xs sm:text-sm font-bold flex items-center gap-2 cursor-pointer transition-all border ${
+              hasDownloadedWarrant
+                ? 'bg-amber-950/80 text-amber-300 border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.3)]'
+                : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border-neutral-700 hover:border-amber-500/60'
+            }`}
+            title="Download high-resolution forensic warrant poster (PNG)"
+          >
+            {hasDownloadedWarrant ? <Check className="w-4 h-4 text-emerald-400" /> : <FileImage className="w-4 h-4 text-amber-400" />}
+            <span>{hasDownloadedWarrant ? 'WARRANT SAVED (.PNG)' : 'SAVE WARRANT (.PNG)'}</span>
+          </button>
+
+          {/* 2. Export Presage Telemetry JSON */}
           <button
             onClick={handleExportTelemetry}
-            className={`px-6 py-3 rounded-xl font-mono text-sm font-bold flex items-center gap-2 cursor-pointer transition-all border ${
+            className={`px-5 py-3 rounded-xl font-mono text-xs sm:text-sm font-bold flex items-center gap-2 cursor-pointer transition-all border ${
               hasExported
                 ? 'bg-emerald-950 text-emerald-300 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.3)]'
                 : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border-neutral-700 hover:border-neutral-500'
             }`}
+            title="Export raw Presage SmartSpectra optical biometric JSON log"
           >
             {hasExported ? <Check className="w-4 h-4 text-emerald-400" /> : <Download className="w-4 h-4 text-cyan-400" />}
             <span className="flex items-center gap-1.5">
               <FileJson className="w-3.5 h-3.5 text-rose-400" />
-              <span>{hasExported ? 'TELEMETRY EXPORTED (.JSON)' : 'EXPORT PRESAGE AUDIT (.JSON)'}</span>
+              <span>{hasExported ? 'TELEMETRY EXPORTED' : 'EXPORT JSON'}</span>
             </span>
           </button>
 
+          {/* 3. Share to X / Twitter */}
+          <button
+            onClick={handleShareToTwitter}
+            className="px-5 py-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-cyan-500/50 hover:border-cyan-400 text-cyan-300 font-mono text-xs sm:text-sm font-bold flex items-center gap-2 cursor-pointer transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+            title="Share your polygraph sentence on X / Twitter"
+          >
+            <Share2 className="w-4 h-4 text-cyan-400" />
+            <span>SHARE TO X</span>
+          </button>
+
+          {/* 4. Audit Another Candidate */}
           <button
             onClick={onRestart}
-            className="px-8 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-mono text-sm font-bold flex items-center gap-2 cursor-pointer transition-all shadow-[0_0_25px_rgba(225,29,72,0.4)]"
+            className="px-6 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-mono text-xs sm:text-sm font-bold flex items-center gap-2 cursor-pointer transition-all shadow-[0_0_25px_rgba(225,29,72,0.4)]"
           >
             <RotateCcw className="w-4 h-4" />
-            <span>AUDIT ANOTHER CANDIDATE</span>
+            <span>AUDIT ANOTHER CV</span>
           </button>
         </div>
       </div>
