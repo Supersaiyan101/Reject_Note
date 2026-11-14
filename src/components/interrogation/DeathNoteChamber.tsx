@@ -63,7 +63,6 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
   const [isMicRecording, setIsMicRecording] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
   const [voiceWarning, setVoiceWarning] = useState<string | null>(null);
-  const [showAlibiAssist, setShowAlibiAssist] = useState(false);
 
   // Biometrics harvest during testimony
   const [liveVitals, setLiveVitals] = useState<LiveVitals>({
@@ -125,7 +124,6 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
   useEffect(() => {
     setPhase('QUESTION');
     setTestimonyText('');
-    setShowAlibiAssist(false);
     peakBPMRef.current = baseline.restingBPM;
     bpmReadingsRef.current = [];
     setGazeDrifts(0);
@@ -618,26 +616,8 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
                 </span>
               </div>
 
-              {/* Mode Switcher & Tactical Alibi Assistant */}
+              {/* Mode Switcher */}
               <div className="flex items-center gap-2">
-                {currentQuestion.suggestedDefense && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      soundFX.playClick();
-                      setShowAlibiAssist((prev) => !prev);
-                    }}
-                    className={`px-2.5 py-1 rounded-lg font-mono text-xs flex items-center gap-1.5 transition-colors cursor-pointer ${
-                      showAlibiAssist
-                        ? 'bg-amber-950/80 text-amber-300 border border-amber-600 shadow-[0_0_10px_rgba(245,158,11,0.3)]'
-                        : 'bg-neutral-900 text-neutral-400 hover:text-neutral-200 border border-neutral-800'
-                    }`}
-                    title="Toggle Tactical Alibi Assistant"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                    <span>{showAlibiAssist ? 'Hide Alibi' : 'Alibi Assist'}</span>
-                  </button>
-                )}
 
                 <button
                   onClick={() => setInputMode('VOICE')}
@@ -664,42 +644,6 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
                 </button>
               </div>
             </div>
-
-            {/* TACTICAL ALIBI ASSIST (OFF BY DEFAULT - ZERO SCREEN CLUTTER DURING VIDEO) */}
-            {showAlibiAssist && currentQuestion.suggestedDefense && (
-              <div className="p-3.5 rounded-xl bg-gradient-to-r from-neutral-900 via-neutral-950 to-black border border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.15)] space-y-2 animate-fade-in">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                    <span className="font-['Orbitron'] text-xs font-bold text-amber-300 tracking-wider">
-                      {dossier.isPreset ? "INTERNAL MONOLOGUE // DEFENSE ALIBI" : "TACTICAL ALIBI ASSIST"}
-                    </span>
-                  </div>
-                  {currentQuestion.actingCue && (
-                    <span className="text-[11px] font-mono text-amber-300/80 italic flex items-center gap-1">
-                      <span>Tone:</span> {currentQuestion.actingCue}
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-2.5 rounded-lg bg-black/80 border border-neutral-800">
-                  <p className="font-mono text-xs text-neutral-200 italic leading-relaxed select-all">
-                    &ldquo;{currentQuestion.suggestedDefense}&rdquo;
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      soundFX.playClick();
-                      setTestimonyText(currentQuestion.suggestedDefense || '');
-                    }}
-                    className="px-3 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-mono text-xs font-bold shrink-0 transition-all cursor-pointer shadow-[0_0_12px_rgba(225,29,72,0.4)] flex items-center gap-1.5"
-                  >
-                    <Zap className="w-3.5 h-3.5 text-amber-300" />
-                    <span>Auto-Fill</span>
-                  </button>
-                </div>
-              </div>
-            )}
 
             {/* Input Surface */}
             {inputMode === 'VOICE' ? (

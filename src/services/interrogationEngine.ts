@@ -228,28 +228,29 @@ export function synthesizeLDeduction(
   const hasAbsurdClaim = lowerTestimony.includes('0ms') || lowerTestimony.includes('100%') || lowerTestimony.includes('never failed') || lowerTestimony.includes('zero bugs');
 
   // 2. Multi-Sensor Autonomic Scoring
-  let bluffProb = 42.0;
+  let bluffProb = 45.0;
 
   if (deltaBPM >= 8) bluffProb += 24.5;
-  else if (deltaBPM >= 4) bluffProb += 10.0;
-  else if (deltaBPM <= 2) bluffProb -= 14.0;
+  else if (deltaBPM >= 4) bluffProb += 12.0;
+  else if (deltaBPM <= 2) bluffProb -= 12.0;
 
   if (hrv < 38) bluffProb += 14.0;
   else if (hrv > 60) bluffProb -= 10.0;
 
-  if (gazeDeviations >= 2) bluffProb += 10.5;
-  if (blinks >= 22) bluffProb += 6.5;
+  if (gazeDeviations >= 2) bluffProb += 11.5;
+  if (blinks >= 22) bluffProb += 7.5;
 
-  if (wordCount < 5) bluffProb += 22.0;
+  if (wordCount === 0) bluffProb = 98.9;
+  else if (wordCount < 4) bluffProb += 22.0;
   else if (hasTechnicalSubstance) bluffProb -= 14.0;
   else if (detectedBuzzwords.length >= 2) bluffProb += 12.0;
 
-  bluffProb = Math.min(97.2, Math.max(12.4, Math.round(bluffProb * 10) / 10));
+  bluffProb = Math.min(99.2, Math.max(12.4, Math.round(bluffProb * 10) / 10));
 
   let suspicionDelta = 14;
-  if (bluffProb >= 80) suspicionDelta = 25;
-  else if (bluffProb >= 65) suspicionDelta = 20;
-  else if (bluffProb >= 45) suspicionDelta = 14;
+  if (bluffProb >= 85) suspicionDelta = 26;
+  else if (bluffProb >= 70) suspicionDelta = 20;
+  else if (bluffProb >= 50) suspicionDelta = 15;
   else suspicionDelta = 8;
 
   // 3. Cycle Distinctive Physical Mannerisms Across Questions
@@ -263,78 +264,107 @@ export function synthesizeLDeduction(
   ];
   const lGesture = mannerisms[qIndex % mannerisms.length];
 
-  // 4. Construct Bespoke, Hilarious, Savage L Forensic Monologue
   let deductionText = '';
 
-  // BRANCH A: Light Yagami Preset Special Cases
+  // =========================================================================
+  // PRIORITY 1: CANDIDATE SUBMITTED EMPTY DIALOGUE / REMAINED COMPLETELY SILENT (0 words)
+  // =========================================================================
+  if (wordCount === 0) {
+    if (biometrics.isPreset) {
+      deductionText = `${lGesture} (stares in profound, chilling silence from the edge of his chair)... Absolute silence, Light-kun? Not a single word to defend "${question.claimTitle}"? When an innocent honor student is falsely accused of capital crimes, the natural human psychological reflex is immediate, indignant verbal protest. Yet you sat there in dead silence, submitting a completely blank response while Presage sensors logged your carotid pulse at ${peakBPM} BPM (+${deltaBPM} BPM above baseline) and sympathetic tone flared to ${tone}%. You remained silent because your genius intellect calculated that any alibi you invent on the spot will be shredded by my telemetry. In an interrogation room under 64 cameras, Light-kun... silence is not innocence. Silence is Kira's signature. Bluff probability: 98.9%.`;
+      return { deductionText, suspicionDelta: 28, bluffProbability: 98.9 };
+    } else {
+      deductionText = `${lGesture} (spins a dessert spoon against porcelain, dark circles fixed on you)... A completely blank submission? Not a single syllable to defend "${question.claimTitle}", ${candidateHonorific}? When an engineer who allegedly built a production system sits in total silence under optical cross-examination, there is an 97.4% probability they have never touched the codebase. Presage sensors captured an autonomic tone of ${tone}% and ${gazeDeviations} averted gazes during your silence. You didn't submit an engineering defense—you submitted a silent confession. Bluff probability: 97.4%.`;
+      return { deductionText, suspicionDelta: 28, bluffProbability: 97.4 };
+    }
+  }
+
+  // =========================================================================
+  // PRIORITY 2: MONOSYLLABIC / TERSE DEFLECTION (1 to 3 words, e.g. "no", "idk", "whatever")
+  // =========================================================================
+  if (wordCount < 4) {
+    if (biometrics.isPreset) {
+      deductionText = `${lGesture} (bites right thumbnail, eyes narrowing)... Exactly ${wordCount} word${wordCount === 1 ? '' : 's'}, Light-kun? "${testimony.trim()}"? A To-Oh University valedictorian defending his life with monosyllabic grunts? An innocent man provides context, dates, and evidence. A guilty mastermind trapped under 64 surveillance cameras provides the bare minimum, terrified that a single extra word will slip into a forensic admission. Observe your pulse: ${peakBPM} BPM (+${deltaBPM} BPM surge) and HRV down to ${hrv}ms. Your brevity is screaming what your voice refuses to say. Bluff probability: 95.4%.`;
+      return { deductionText, suspicionDelta: 24, bluffProbability: 95.4 };
+    } else {
+      deductionText = `${lGesture} (tilts head at a 45-degree angle, pointing his index finger at your pulse trace)... Barely ${wordCount} word${wordCount === 1 ? '' : 's'} to defend "${question.claimTitle}", ${candidateHonorific}? "${testimony.trim()}" is not an architectural defense. When an engineer who supposedly authored this system retreats into monosyllabic deflection, the probability they are bluffing is virtually 93.6%. Presage rPPG clocked a +${deltaBPM} BPM carotid surge right as your gaze darted away ${gazeDeviations} times. Silence and evasion under polygraph are equally fatal. Bluff probability: 93.6%.`;
+      return { deductionText, suspicionDelta: 24, bluffProbability: 93.6 };
+    }
+  }
+
+  // =========================================================================
+  // PRIORITY 3: LIGHT YAGAMI PRESET (Substantive Testimony, wordCount >= 4)
+  // =========================================================================
   if (biometrics.isPreset) {
     if (qIndex === 0) {
       // Potato Chip LCD Rig
-      if (deltaBPM <= 2) {
-        deductionText = `${lGesture} Light-kun... you defend eating barbecue potato chips while watching an edge-computed LCD with terrifying composure. Presage Ch.01 logged a flat ${peakBPM} BPM (+${deltaBPM} BPM delta). Most mortals would choke on a potato chip under 64 surveillance cameras. To remain this calm is either miraculous innocence... or the chilling discipline of Kira himself. Bluff probability: ${bluffProb}%.`;
+      const hasSnackWords = ['potato', 'chip', 'snack', 'eat', 'exam', 'study', 'grease', 'bag'].some((w) => lowerTestimony.includes(w));
+      if (hasSnackWords) {
+        if (deltaBPM <= 3) {
+          deductionText = `${lGesture} (stacks a third sugar cube with surgical stillness)... "I'll take a potato chip... and eat it." Light-kun, you delivered that defense with terrifying, unruffled composure. Presage Ch.01 logged an unflinching ${peakBPM} BPM (+${deltaBPM} BPM delta). Most mortals would choke on a snack under 64 surveillance cameras. To remain this calm while eating snacks under suspicion of mass murder is either miraculous innocence... or the chilling psychological discipline of Kira himself. Bluff probability: ${bluffProb}%.`;
+        } else {
+          deductionText = `${lGesture} (leans forward, dark circles piercing)... You claim you were merely eating a potato chip while studying for university entrance exams. But look at the CCTV telemetry, Light-kun. The moment you insisted you were innocent, Presage rPPG logged a +${deltaBPM} BPM carotid surge to ${peakBPM} BPM, and your gaze shifted ${gazeDeviations} times. Even Japan's top student cannot hide micro-vascular vasodilation. You weren't eating a snack—you were executing criminals on a hidden LCD. Bluff probability: ${bluffProb}%.`;
+        }
       } else {
-        deductionText = `${lGesture} (leans forward)... Look at the CCTV telemetry, Light-kun. Your pulse accelerated by +${deltaBPM} BPM to ${peakBPM} BPM right when you shouted about eating potato chips without staining the mini LCD. Even a top student cannot hide micro-vascular vasodilation from Presage sensors. Bluff probability: ${bluffProb}%.`;
+        deductionText = `${lGesture} (calmly slides a strawberry into his mouth)... Light-kun, I specifically cross-examined you regarding the covert potato-chip LCD rig, yet you gave a tangential lecture on "${rawWords.slice(0, 3).join(' ')}". A classic diversionary tactic. Notice how during this diversion, Presage Ch.01 clocked your pulse climbing +${deltaBPM} BPM to ${peakBPM} BPM. When an honor student avoids a simple question about snacks, my suspicion rises by 15%. Bluff probability: ${bluffProb}%.`;
       }
     } else if (qIndex === 1) {
       // 40-sec SLA
-      deductionText = `${lGesture} A distributed queue SLA guaranteeing ticket resolution in precisely forty seconds... the exact clinical delay of a Kira cardiac arrest. Your heart rate spiked +${deltaBPM} BPM and Presage Ch.02 clocked your HRV collapsing to ${hrv}ms. You didn't design an incident pipeline, Light-kun—you designed an alibi. Bluff probability: ${bluffProb}%.`;
+      const hasSLAWords = ['40', 'forty', 'second', 'queue', 'sla', 'incident', 'cardiac', 'heart', 'backend', 'engineer'].some((w) => lowerTestimony.includes(w));
+      if (hasSLAWords) {
+        deductionText = `${lGesture} (twirls a dessert spoon against his porcelain saucer)... A distributed incident queue guaranteeing ticket resolution in precisely forty seconds. You argue any competent backend engineer could build such an SLA. But tell me, Light-kun: why did your heart rate climb by +${deltaBPM} BPM to ${peakBPM} BPM and your HRV collapse to ${hrv}ms the moment I linked forty seconds to fatal cardiac arrest? You didn't architect an engineering pipeline, Light-kun—you architected an alibi for death. Bluff probability: ${bluffProb}%.`;
+      } else {
+        deductionText = `${lGesture} (bites thumbnail)... You speak ${wordCount} words, yet you carefully circumvented the 40-second delay. Presage Ch.02 clocked your autonomic tone spiking to ${tone}%. Forty seconds is the exact clinical delay of a Kira execution. An innocent engineer would show me system metrics; you showed me cardiovascular distress. Bluff probability: ${bluffProb}%.`;
+      }
     } else if (qIndex === 2) {
       // Lind L. Tailor Kanto Broadcast Trap
-      deductionText = `${lGesture} (bites thumb)... When Lind L. Tailor taunted Kira on live television, Kira executed him in a fit of injured pride, proving he resided in Kanto. And right now, as we revisit that broadcast, your blink rate surged to ${blinks}/min and you averted your gaze ${gazeDeviations} times. Your autonomic nervous system is reliving that exact mistake. Bluff probability: ${bluffProb}%.`;
+      const hasBroadcastWords = ['broadcast', 'tailor', 'tv', 'kanto', 'bait', 'trap', 'inmate', 'decoy', 'speculation'].some((w) => lowerTestimony.includes(w));
+      if (hasBroadcastWords) {
+        deductionText = `${lGesture} (bites thumb, eyes narrowing)... You claim my television broadcast was an illegal bait trap using a condemned death-row decoy. You are entirely correct: it was a trap. And Kira walked directly into it. What fascinates me is that while you denounce my broadcast as 'baseless speculation', Presage Ch.03 clocked your blink rate surging to ${blinks}/min and your ocular alignment drifting ${gazeDeviations} times. Your autonomic nervous system is reliving that exact humiliation on live television. Bluff probability: ${bluffProb}%.`;
+      } else {
+        deductionText = `${lGesture} (tilts head at a 45-degree angle, pointing at your spectrogram)... You avoid discussing Lind L. Tailor altogether, Light-kun. During that broadcast, Kira murdered a decoy process in seconds of provocation. As we revisit that day, your carotid pulse climbed +${deltaBPM} BPM to ${peakBPM} BPM. Your body remembers the trap even if your tongue refuses to admit it. Bluff probability: ${bluffProb}%.`;
+      }
     } else {
       // God of the New World Architecture
-      deductionText = `${lGesture} (stares through dark circles)... 'A safer world through technology'... yet your sympathetic tone flared to ${tone}% and your carotid pulse hit ${peakBPM} BPM. You do not want to optimize distributed systems, Light-kun. You want to be the God of the New World. Telemetry does not bow before gods. Bluff probability: ${bluffProb}%.`;
+      const hasGodWords = ['god', 'world', 'justice', 'safer', 'safe', 'crime', 'technology', 'student'].some((w) => lowerTestimony.includes(w));
+      if (hasGodWords) {
+        deductionText = `${lGesture} (stares through dark circles in profound silence)... 'A safer world through technology'... such noble, deceptive rhetoric, Light-kun. Yet observe your carotid spectrogram: sympathetic arousal flared to ${tone}%, your carotid pulse hit ${peakBPM} BPM, and your vagal tone collapsed to ${hrv}ms. That is the exact physiological signature of megalomaniacal euphoria. You do not wish to write software for humanity, Light-kun. You want to be God of the New World. Telemetry does not bow before gods. Bluff probability: ${bluffProb}%.`;
+      } else {
+        deductionText = `${lGesture} (crouches tightly, knees pressed to chest)... Even when pressed on your grand architecture, you offer evasive rhetoric. Presage optical telemetry confirms a +${deltaBPM} BPM carotid surge and ${gazeDeviations} gaze evasions. You cannot outsmart optical biometrics, Light-kun. Every heartbeat brings you closer to the gallows. Bluff probability: ${bluffProb}%.`;
+      }
     }
     return { deductionText, suspicionDelta, bluffProbability: bluffProb };
   }
 
-  // BRANCH B: Candidate Refused to Elaborate / Terse Deflection (< 5 words)
-  if (wordCount < 5) {
-    deductionText = `${lGesture} Barely ${wordCount} words to defend "${question.claimTitle}"? ${candidateHonorific}... when an engineer who supposedly engineered this system retreats into monosyllabic deflection, there is an 93.4% probability they merely merged someone else's pull request while taking credit in the retrospective. Presage sensors captured an autonomic tone of ${tone}%. Silence is the loudest confession in this room. Bluff probability: ${bluffProb}%.`;
-  }
-  // BRANCH C: Candidate Used the Auto-Filled Defiant Elevator Pitch
-  else if (isAutoFill) {
-    deductionText = `${lGesture} You claim to have 'guaranteed strict p99 benchmarks without regression from the ground up', yet you failed to quote a single profiling tool or memory boundary. Spouting rehearsed elevator pitches while your carotid pulse accelerates by +${deltaBPM} BPM is the classic forensic signature of an imposter reciting Medium articles. Bluff probability: ${bluffProb}%.`;
-  }
-  // BRANCH D: Candidate Claimed Superhuman / Impossible Feats (0ms, 100% bug-free)
-  else if (hasAbsurdClaim) {
-    deductionText = `${lGesture} (calmly eats a pastry)... Zero latency and 100% bug-free operation? ${candidateHonorific}, not even Google, NASA, or the High Court operates without failure modes. Claiming computational perfection in front of optical biometric sensors is sheer comedic hubris. Your pulse surged +${deltaBPM} BPM the moment you said it. Bluff probability: ${bluffProb}%.`;
-  }
-  // BRANCH E: Candidate Overloaded Corporate Buzzwords
-  else if (detectedBuzzwords.length >= 2) {
+  // =========================================================================
+  // PRIORITY 4: CUSTOM CANDIDATES (Substantive Testimony, wordCount >= 4)
+  // =========================================================================
+  if (isAutoFill) {
+    deductionText = `${lGesture} (calmly eats a pastry)... You claim to have 'guaranteed strict p99 benchmarks without regression from the ground up', yet you failed to quote a single profiling tool or memory boundary. Spouting rehearsed elevator pitches while your carotid pulse accelerates by +${deltaBPM} BPM is the classic forensic signature of an imposter reciting Medium articles. Bluff probability: ${bluffProb}%.`;
+  } else if (hasAbsurdClaim) {
+    deductionText = `${lGesture} (stacks sugar cubes)... Zero latency and 100% bug-free operation? ${candidateHonorific}, not even Google, NASA, or the High Court operates without failure modes. Claiming computational perfection in front of optical biometric sensors is sheer comedic hubris. Your pulse surged +${deltaBPM} BPM the moment you said it. Bluff probability: ${bluffProb}%.`;
+  } else if (detectedBuzzwords.length >= 2) {
     const bwStr = detectedBuzzwords.slice(0, 2).map((w) => `"${w}"`).join(' and ');
     deductionText = `${lGesture} You string together corporate buzzwords like ${bwStr} the way amateur magicians deploy smoke bombs. When an engineer actually writes the code, they speak in algorithms, race conditions, and unit tests—not LinkedIn marketing copy. Presage optical telemetry clocked ${gazeDeviations} ocular shifts and an HRV of ${hrv}ms. Bluff probability: ${bluffProb}%.`;
-  }
-  // BRANCH F: Specific Domain Roasts (Frontend / React)
-  else if (isFrontend) {
+  } else if (isFrontend) {
     if (deltaBPM <= 3 && hasTechnicalSubstance) {
       deductionText = `${lGesture} Remarkable. You defended DOM reconciliation and client state management with an unruffled pulse (+${deltaBPM} BPM, ${hrv}ms HRV). Either you truly understand browser rendering pipelines... or you are an extraordinarily cold-blooded candidate who rehearsed in front of a mirror. Bluff probability: ${bluffProb}%.`;
     } else {
       deductionText = `${lGesture} Wrapping a third-party UI component and blindly passing props down twelve layers is not 'frontend architecture', ${candidateHonorific}. When I probed on re-render performance, Presage Ch.01 logged a +${deltaBPM} BPM carotid surge right as your gaze drifted away ${gazeDeviations} times. You built a tutorial app and called it an enterprise client. Probability of resume bluffing: ${bluffProb}%.`;
     }
-  }
-  // BRANCH G: Specific Domain Roasts (Backend / Microservices)
-  else if (isBackend) {
+  } else if (isBackend) {
     if (deltaBPM >= 6) {
       deductionText = `${lGesture} Ah, 'microservices'... the universal industry excuse to take a simple 50-line monolith and introduce fifteen distributed points of network failure. Your heart rate climbed by +${deltaBPM} BPM to ${peakBPM} BPM the moment I mentioned circuit breakers. You didn't architect a resilient backend, ${candidateHonorific}—you built a network latency generator. Bluff probability: ${bluffProb}%.`;
     } else {
       deductionText = `${lGesture} (twirls spoon)... You speak of scalable APIs, yet Presage Ch.02 caught your HRV tightening to ${hrv}ms under cross-examination. An engineer who actually benchmarked event-loop starvation does not exhibit sympathetic distress when asked about connection pools. Bluff probability: ${bluffProb}%.`;
     }
-  }
-  // BRANCH H: Specific Domain Roasts (Database / SQL / Redis)
-  else if (isDatabase) {
+  } else if (isDatabase) {
     deductionText = `${lGesture} Slapping a Redis cache in front of an unindexed SQL query does not make you a database engineer, ${candidateHonorific}. It merely delays database deadlock until Black Friday traffic spikes. Presage sensors captured ${blinks} blinks/min and a +${deltaBPM} BPM pulse jump. You've never run an EXPLAIN query in production. Bluff probability: ${bluffProb}%.`;
-  }
-  // BRANCH I: Specific Domain Roasts (DevOps / Docker / Kubernetes)
-  else if (isDevOps) {
+  } else if (isDevOps) {
     deductionText = `${lGesture} Copying YAML manifests from StackOverflow and pushing to a cloud cluster does not constitute 'cloud orchestration', ${candidateHonorific}. When I mentioned an unhandled SIGTERM at 3:00 AM, your pulse climbed +${deltaBPM} BPM to ${peakBPM} BPM. You don't have a disaster recovery plan—you have an emergency prayer. Bluff probability: ${bluffProb}%.`;
-  }
-  // BRANCH J: Highly Technical and Calm (Deep Respect / Cold Suspicion)
-  else if (hasTechnicalSubstance && deltaBPM <= 3) {
+  } else if (hasTechnicalSubstance && deltaBPM <= 3) {
     deductionText = `${lGesture} (observes CCTV with quiet fascination)... Remarkable. You defended "${question.claimTitle}" while your pulse sat at an unflinching ${peakBPM} BPM (+${deltaBPM} BPM delta, ${hrv}ms HRV). Most engineers stammer or fidget when cross-examined on production failures. For you to maintain such cold physiological stillness suggests either undeniable technical competence... or you are an extraordinarily polished sociopath. Initial bluff probability: ${bluffProb}%.`;
-  }
-  // BRANCH K: General Roast with Live Biometrics
-  else {
+  } else {
     deductionText = `${lGesture} You delivered ${wordCount} words on "${question.claimTitle}", ${candidateHonorific}. Yet observe your carotid trace: your pulse climbed +${deltaBPM} BPM, sympathetic tone flared to ${tone}%, and you averted your gaze ${gazeDeviations} times. While your voice attempted confidence, your micro-circulation reveals undeniable apprehension. Calculated probability of resume puffery: ${bluffProb}%.`;
   }
 
