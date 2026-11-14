@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Skull, Eye } from 'lucide-react';
+import { Sparkles, Eye } from 'lucide-react';
 
 export const Hero: React.FC = () => {
   return (
@@ -57,18 +57,6 @@ export const Hero: React.FC = () => {
           <span>
             &ldquo;Everything is proceeding according to plan. <span className="text-rose-400 font-bold not-italic">Just not yours...</span>&rdquo;
           </span>
-        </div>
-
-        {/* Stage Progress Pill */}
-        <div className="flex items-center gap-3 mt-8 text-xs font-mono text-neutral-500">
-          <span className="flex items-center gap-1.5 text-rose-400 font-semibold px-2.5 py-1 rounded-md bg-rose-950/40 border border-rose-900/50">
-            <Skull className="w-3.5 h-3.5 text-rose-400" />
-            STAGE 1: APPLICATION PROFILE
-          </span>
-          <span className="text-neutral-700">→</span>
-          <span className="text-neutral-500">STAGE 2: INQUISITOR SELECT</span>
-          <span className="text-neutral-700">→</span>
-          <span className="text-neutral-500">STAGE 3: THE TRIAL</span>
         </div>
       </div>
     </div>

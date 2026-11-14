@@ -65,6 +65,28 @@ RejectNote is built from the ground up as an extensible anime character roasting
    • Instant one click viral Share to X
 ```
 
+### Stage 1: Candidate Intake & Profile Audit
+Candidates begin by either uploading their real world PDF resume or launching the official anime demo preset featuring Light Yagami. RejectNote parses key claims, flags suspicious metrics, and prepares the dossier for cross examination.
+
+![Candidate Intake](public/screenshots/stage1_intake.jpg)
+
+![Candidate Profile](public/screenshots/stage1_profile.jpg)
+
+### Stage 2: Inquisitor Selection
+Candidates enter the roster room to confirm their assigned interrogator. In Season 1, L Lawliet takes the interrogation bench with zero mercy and max optical sensitivity.
+
+![Inquisitor Selection](public/screenshots/stage2_roster.jpg)
+
+### Stage 3: Presage Optical Baseline Calibration
+Before questioning begins, the candidate sits in front of the camera for resting calibration. Using the optical reticle, SmartSpectra locks onto the face, tracks ambient lux, and establishes resting pulse and respiration baselines.
+
+![Optical Calibration](public/screenshots/stage3_calibration.jpg)
+
+### Stage 4: The Interrogation Chamber
+The candidate faces L under live biometric surveillance. The dual trace HUD plots real time arterial photoplethysmography and respiration waveforms while L calculates guilt probabilities and tears apart fraudulent tech claims.
+
+![Interrogation Chamber](public/screenshots/stage4_interrogation.jpg)
+
 ***
 
 ## 🔬 Keeping It Honest: The Optical rPPG Science
