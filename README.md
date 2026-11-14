@@ -3,6 +3,7 @@
 
 [![DEV Presage Challenge](https://img.shields.io/badge/DEV_Challenge-Presage_SmartSpectra_SDK-rose?style=for-the-badge&logo=dev.to)](https://dev.to/devteam/join-the-presage-smartspectra-sdk-challenge-3000-in-prizes-across-10-winners-1370)
 [![Target Track](https://img.shields.io/badge/Track-Most_Creative_or_Delightful_Use-amber?style=for-the-badge)](https://dev.to/challenges/presage)
+[![Watch Demo Video](https://img.shields.io/badge/Demo_Video-YouTube-red?style=for-the-badge&logo=youtube)](https://youtu.be/7mf08mP4sQg)
 [![React 19](https://img.shields.io/badge/React-19.x-blue?style=for-the-badge&logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-6.x-purple?style=for-the-badge&logo=vite)](https://vitejs.dev/)
