@@ -12,6 +12,7 @@ const SCAN_MESSAGES = [
   'GOLDEN KI SURGING IN CANDIDATE RESUME...',
   'CROSS REFERENCING NPA TASK FORCE DATABASE...',
   'POWER SIGNATURE SHATTERING HARDWARE LIMITS...',
+  'AND THIS... IS TO GO EVEN FURTHER BEYOND...',
   'WARNING: BUZZWORD COUNT HAS EXCEEDED 9,000!!!',
   'SUPER SAIYAN TECH AUDIT COMPLETE FOR L...',
 ];
@@ -24,19 +25,19 @@ export const ClaimScanner: React.FC<ClaimScannerProps> = ({
   const [powerReading, setPowerReading] = useState(1050);
 
   useEffect(() => {
-    // Trigger Super Saiyan Ki Charge audio aura
-    soundFX.playSuperSaiyanCharge(4.2);
+    // Play authentic Goku Super Saiyan transformation audio
+    soundFX.playSuperSaiyanCharge();
 
-    // Increment power level counter smoothly across 4.2 seconds
+    // Increment power level counter smoothly across 10 seconds
     const powerInterval = setInterval(() => {
       soundFX.playScouterBeep();
       setPowerReading((prev) => {
         if (prev >= 9001) return 9001;
-        return prev + Math.floor(Math.random() * 450) + 260;
+        return prev + Math.floor(Math.random() * 60) + 65;
       });
-    }, 140);
+    }, 100);
 
-    // Step through messages (every 580ms across 4.2s)
+    // Step through messages (every 1200ms across 10 seconds)
     const stepInterval = setInterval(() => {
       setCurrentStep((prev) => {
         if (prev < SCAN_MESSAGES.length - 1) {
@@ -44,19 +45,22 @@ export const ClaimScanner: React.FC<ClaimScannerProps> = ({
         }
         return prev;
       });
-    }, 580);
+    }, 1200);
 
+    // Exact 10-second timer
     const finishTimeout = setTimeout(() => {
       clearInterval(powerInterval);
       clearInterval(stepInterval);
+      soundFX.stopSuperSaiyanCharge();
       soundFX.playDramaticSting();
       onScanComplete();
-    }, 4200);
+    }, 10000);
 
     return () => {
       clearInterval(powerInterval);
       clearInterval(stepInterval);
       clearTimeout(finishTimeout);
+      soundFX.stopSuperSaiyanCharge();
     };
   }, [onScanComplete]);
 

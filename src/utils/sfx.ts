@@ -153,15 +153,51 @@ class AnimeSoundEngine {
     osc.stop(this.ctx.currentTime + 0.03);
   }
 
+  private gokuAudio: HTMLAudioElement | null = null;
+
   // Dragon Ball Super Saiyan Ki Charge & Aura
-  public playSuperSaiyanCharge(duration: number = 4.2) {
+  public playSuperSaiyanCharge() {
+    if (this.isMuted) return;
+    this.stopSuperSaiyanCharge();
+
+    try {
+      const audio = new Audio('/goku-super-saiyan.mp3');
+      audio.volume = 0.95;
+      audio.currentTime = 0;
+      this.gokuAudio = audio;
+
+      const promise = audio.play();
+      if (promise !== undefined) {
+        promise.catch((err) => {
+          console.warn('Goku audio play blocked or error, falling back to synth aura:', err);
+          this.playSuperSaiyanSynth(10);
+        });
+      }
+    } catch {
+      this.playSuperSaiyanSynth(10);
+    }
+  }
+
+  public stopSuperSaiyanCharge() {
+    if (this.gokuAudio) {
+      try {
+        this.gokuAudio.pause();
+        this.gokuAudio.currentTime = 0;
+      } catch {
+        // ignore
+      }
+      this.gokuAudio = null;
+    }
+  }
+
+  // Fallback synthesizer for Super Saiyan energy
+  public playSuperSaiyanSynth(duration: number = 10) {
     if (this.isMuted) return;
     this.initContext();
     if (!this.ctx) return;
 
     const now = this.ctx.currentTime;
 
-    // 1. Deep Sub-bass Rumble (Ki ground shake)
     const subOsc = this.ctx.createOscillator();
     const subGain = this.ctx.createGain();
     const subFilter = this.ctx.createBiquadFilter();
@@ -184,58 +220,6 @@ class AnimeSoundEngine {
 
     subOsc.start(now);
     subOsc.stop(now + duration);
-
-    // 2. Rising Golden Aura Shimmer (Detuned dual saw oscillators with LFO flutter)
-    const auraOsc1 = this.ctx.createOscillator();
-    const auraOsc2 = this.ctx.createOscillator();
-    const auraGain = this.ctx.createGain();
-    const auraFilter = this.ctx.createBiquadFilter();
-
-    auraOsc1.type = 'sawtooth';
-    auraOsc2.type = 'sawtooth';
-    auraOsc1.frequency.setValueAtTime(110, now);
-    auraOsc2.frequency.setValueAtTime(113, now); // 3Hz natural chorusing/detune
-
-    auraOsc1.frequency.exponentialRampToValueAtTime(440, now + duration);
-    auraOsc2.frequency.exponentialRampToValueAtTime(445, now + duration);
-
-    auraFilter.type = 'bandpass';
-    auraFilter.frequency.setValueAtTime(220, now);
-    auraFilter.frequency.linearRampToValueAtTime(880, now + duration);
-    auraFilter.Q.setValueAtTime(3.0, now);
-
-    auraGain.gain.setValueAtTime(0.005, now);
-    auraGain.gain.linearRampToValueAtTime(0.14, now + duration * 0.85);
-    auraGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-
-    auraOsc1.connect(auraFilter);
-    auraOsc2.connect(auraFilter);
-    auraFilter.connect(auraGain);
-    auraGain.connect(this.ctx.destination);
-
-    auraOsc1.start(now);
-    auraOsc2.start(now);
-    auraOsc1.stop(now + duration);
-    auraOsc2.stop(now + duration);
-
-    // 3. Electric Lightning Sparks (Super Saiyan crackles)
-    const sparkInterval = 0.35;
-    for (let t = 0.5; t < duration - 0.4; t += sparkInterval) {
-      const sparkOsc = this.ctx.createOscillator();
-      const sparkGain = this.ctx.createGain();
-      sparkOsc.type = 'square';
-      sparkOsc.frequency.setValueAtTime(1200 + Math.random() * 800, now + t);
-      sparkOsc.frequency.exponentialRampToValueAtTime(300, now + t + 0.06);
-
-      sparkGain.gain.setValueAtTime(0.06, now + t);
-      sparkGain.gain.exponentialRampToValueAtTime(0.001, now + t + 0.06);
-
-      sparkOsc.connect(sparkGain);
-      sparkGain.connect(this.ctx.destination);
-
-      sparkOsc.start(now + t);
-      sparkOsc.stop(now + t + 0.07);
-    }
   }
 
   // Naruto Mangekyou Sharingan Activation on Baseline Lock
