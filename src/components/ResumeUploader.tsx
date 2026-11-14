@@ -116,7 +116,7 @@ export const ResumeUploader: React.FC<ResumeUploaderProps> = ({
                   Valedictorian, To-Oh University
                 </p>
                 <p className="text-xs text-rose-400/90 font-mono mt-0.5">
-                  &ldquo;Software Engineering Intern | NPA Task Force&rdquo;
+                  &ldquo;Honor Student &amp; Software Intern | NPA Task Force&rdquo;
                 </p>
               </div>
             </div>
@@ -124,15 +124,15 @@ export const ResumeUploader: React.FC<ResumeUploaderProps> = ({
             <div className="space-y-2 mb-6 text-xs text-neutral-300 font-mono bg-neutral-950/70 p-3 rounded-lg border border-neutral-800">
               <div className="flex items-start gap-2">
                 <span className="text-rose-500 font-bold">▶</span>
-                <span>Claim: Covert Potato-Chip LCD Surveillance Rig (0ms latency).</span>
+                <span>Claim: Covert Potato-Chip LCD Rig (0ms latency, zero grease).</span>
               </div>
               <div className="flex items-start gap-2">
                 <span className="text-rose-500 font-bold">▶</span>
-                <span>Claim: 40-Second SLA on incident termination.</span>
+                <span>Claim: 40-Second Real-Time Heart Attack Incident SLA.</span>
               </div>
               <div className="flex items-start gap-2">
                 <span className="text-rose-500 font-bold">▶</span>
-                <span>Scouter Reading: <strong className="text-amber-400">9001 Buzzwords</strong> detected.</span>
+                <span>Claim: Lind L. Tailor Live TV Broadcast Interception.</span>
               </div>
             </div>
           </div>

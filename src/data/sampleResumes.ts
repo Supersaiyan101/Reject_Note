@@ -2,9 +2,9 @@ import type { CandidateDossier } from '../types';
 
 export const LIGHT_YAGAMI_DOSSIER: CandidateDossier = {
   name: 'Light Yagami',
-  title: 'Software Engineering Intern | National Police Agency Task Force',
+  title: 'Honor Student & Software Intern | NPA Task Force',
   education: 'To-Oh University // Top Entrance Score: 100% (Valedictorian)',
-  summary: 'Valedictorian at To-Oh University with research experience at the National Police Agency Task Force. Specializing in high-performance C++ systems, edge hardware engineering, and zero-latency distributed automation.',
+  summary: 'Top student in Japan and valedictorian at To-Oh University. Specializing in covert edge hardware, real-time distributed queues, and high-stakes criminal investigations alongside the National Police Agency Task Force.',
   buzzwordCount: 9001,
   powerLevel: 'OVER 9,000!',
   isPreset: true,
@@ -12,60 +12,62 @@ export const LIGHT_YAGAMI_DOSSIER: CandidateDossier = {
     {
       id: 'landmine-1',
       category: 'HARDWARE_ANOMALY',
-      title: 'Covert Potato-Chip LCD Workstation',
-      claimText: 'Engineered and deployed an edge-computed miniature LCD monitor hidden inside a bag of barbecue potato chips; maintained steady heart rate while taking a potato chip... AND EATING IT.',
+      title: 'Covert Potato-Chip LCD Rig',
+      claimText: 'Concealed a battery-powered miniature LCD monitor inside a sealed barbecue potato chip bag; monitored live criminal news and executed operations under 64 police cameras with zero grease detected on the screen.',
       suspicionPercent: 99.7,
-      lInterrogationAngle: 'Light-kun... you claim this rig had 0ms latency and left zero grease on the lens. But why did your pulse spike by 24 BPM when I mentioned potato chips?',
+      lInterrogationAngle: 'Light-kun... why barbecue potato chips, and why did your carotid pulse surge by +18 BPM the moment I mentioned potato chips?',
       badge: 'POTATO CHIP PROTOCOL',
     },
     {
       id: 'landmine-2',
       category: 'MEGALOMANIA',
-      title: '40-Second Autonomous Incident SLA',
-      claimText: 'Architected a real-time event-driven distributed pipeline guaranteeing complete ticket resolution within precisely 40 seconds (failure mode: unexpected cardiac arrest).',
+      title: '40-Second Real-Time Incident SLA',
+      claimText: 'Architected a real-time event queue guaranteeing complete ticket resolution within precisely 40 seconds (failure mode: unexpected fatal cardiac arrest).',
       suspicionPercent: 99.9,
-      lInterrogationAngle: 'A 40-second SLA that results in fatal heart attacks? Light-kun, there is an 87.4% probability you are describing the Kira killings.',
+      lInterrogationAngle: 'A 40-second SLA resulting in fatal cardiac arrest? Light-kun, there is an 89.4% probability you are describing the Kira killings.',
       badge: '40-SEC KIRA SLA',
     },
     {
       id: 'landmine-3',
-      category: 'TIMELINE_PARADOX',
-      title: 'Bimanual Multi-Threaded C++ Multitasking',
-      claimText: 'Junior Kanto Tennis Champion; claims to write lock-free memory-safe C++ with his left hand while solving differential equations with his right.',
-      suspicionPercent: 96.8,
-      lInterrogationAngle: 'No human writes memory-safe C++ with one hand while eating chips with the other. The probability of complete bluff is virtually 100%.',
-      badge: 'C++ GOD COMPLEX',
+      category: 'BROADCAST_INTERCEPTION',
+      title: 'Lind L. Tailor Broadcast Interception',
+      claimText: 'Intercepted live Kanto regional television broadcast; eliminated decoy process Lind L. Tailor within seconds of challenge, inadvertently proving Kira resides in Kanto, Japan.',
+      suspicionPercent: 98.8,
+      lInterrogationAngle: 'Lind L. Tailor was a death-row decoy broadcast exclusively in Kanto. The moment he taunted Kira, he died in 40 seconds. And now, your eye gaze shifted 4 times.',
+      badge: 'KANTO BROADCAST TRAP',
     },
     {
       id: 'landmine-4',
-      category: 'BUZZWORD_OVERFLOW',
-      title: 'Quantum Cloud Synergy Deployment',
-      claimText: 'Revolutionized microservices using Kubernetes, Rust, WebAssembly, and Divine Consensus algorithms to eliminate 100% of human error.',
-      suspicionPercent: 94.2,
-      lInterrogationAngle: 'Divine consensus? Light-kun, that is not an industry protocol. That is a god complex.',
-      badge: 'DIVINE CONSENSUS',
+      category: 'DIVINE_CONSENSUS',
+      title: 'God of the New World Architecture',
+      claimText: 'Engineered a zero-downtime distributed consensus protocol designed to eradicate 100% of global crime and establish Light Yagami as the supreme deity of the New World.',
+      suspicionPercent: 99.5,
+      lInterrogationAngle: 'Divine consensus is not a software protocol. You do not want to be a lead engineer, Light-kun. You want to be God of the New World.',
+      badge: 'GOD COMPLEX AUDIT',
     },
   ],
   rawText: `LIGHT YAGAMI
 To-Oh University, Valedictorian
-Software Engineering Intern | National Police Agency Task Force
+Honor Student & Software Intern | National Police Agency Task Force
 
 SUMMARY:
-Valedictorian at To-Oh University with research experience at the National Police Agency Task Force. Specializing in high-performance C++ systems, edge hardware engineering, and zero-latency distributed automation.
+Top student in Japan and valedictorian at To-Oh University. Specializing in covert edge hardware, real-time distributed queues, and high-stakes criminal investigations alongside the National Police Agency Task Force.
 
 EXPERIENCE:
 National Police Agency Task Force | Lead Cyber Investigator Intern
-- Collaborated closely with an annoying British detective who will not stop staring at my vitals and eating strawberry cake.
+- Collaborated closely with an eccentric British detective who will not stop staring at my vitals and eating strawberry cake.
 - Solved 100% of cyber cold cases with zero false positives.
-- Maintained a completely calm 68 BPM resting heart rate under 64 camera angles.
+- Maintained a completely calm 68 BPM resting heart rate while monitored by 64 camera angles.
 
-PROJECTS:
-1. Covert Potato-Chip LCD Workstation
-   Engineered and deployed an edge-computed miniature LCD monitor hidden inside a bag of barbecue potato chips; maintained steady heart rate while taking a potato chip... AND EATING IT.
-2. 40-Second Autonomous Incident SLA
-   Architected a real-time event-driven distributed pipeline guaranteeing complete ticket resolution within precisely 40 seconds (failure mode: unexpected cardiac arrest).
-3. Bimanual Multi-Threaded C++ Multitasking
-   Junior Kanto Tennis Champion; claims to write lock-free memory-safe C++ with his left hand while solving differential equations with his right.`,
+PROJECTS & CLAIMS:
+1. Covert Potato-Chip LCD Rig
+   Concealed a battery-powered miniature LCD monitor inside a sealed barbecue potato chip bag; monitored live criminal news and executed operations under 64 police cameras with zero grease detected on the screen.
+2. 40-Second Real-Time Incident SLA
+   Architected a real-time event queue guaranteeing complete ticket resolution within precisely 40 seconds (failure mode: unexpected fatal cardiac arrest).
+3. Lind L. Tailor Broadcast Interception
+   Intercepted live Kanto regional television broadcast; eliminated decoy process Lind L. Tailor within seconds of challenge, inadvertently proving Kira resides in Kanto, Japan.
+4. God of the New World Architecture
+   Engineered a zero-downtime distributed consensus protocol designed to eradicate 100% of global crime and establish Light Yagami as the supreme deity of the New World.`,
 };
 
 // Intelligent parser for user-uploaded custom resumes

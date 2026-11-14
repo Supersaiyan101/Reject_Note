@@ -88,6 +88,8 @@ export interface InterrogationQuestion {
   lSubtext: string;
   badge: string;
   expectedKeywords?: string[];
+  actingCue?: string;
+  suggestedDefense?: string;
 }
 
 export interface BiometricEvidence {

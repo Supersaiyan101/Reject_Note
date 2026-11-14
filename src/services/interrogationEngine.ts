@@ -19,38 +19,46 @@ export function generateQuestionsForDossier(dossier: CandidateDossier): Interrog
       {
         id: 'q-preset-1',
         category: 'HARDWARE_ANOMALY',
-        claimTitle: 'Covert Potato-Chip LCD Workstation',
-        lQuestion: 'Light-kun... you claim this covert edge-computed LCD rig had 0ms latency and left zero grease on the lens. Testify: why barbecue chips, and why did your pulse surge when I said "potato"?',
-        lSubtext: 'Interrogating edge hardware claim & salt-to-silicon ratio.',
+        claimTitle: 'Covert Potato-Chip LCD Rig',
+        lQuestion: 'Light-kun... you claim this covert edge-computed LCD display hidden inside a barbecue potato chip bag had 0ms latency and left zero grease on the lens. Testify: why barbecue chips, and why did your carotid pulse surge when I said "potato"?',
+        lSubtext: 'Interrogating edge hardware claim & salt-to-silicon ratio under 64 cameras.',
         badge: 'POTATO CHIP PROTOCOL',
-        expectedKeywords: ['chip', 'lcd', 'covert', 'zero', 'monitor', 'grease'],
+        expectedKeywords: ['chip', 'potato', 'eat', 'snack', 'exam', 'study', 'grease', 'lcd'],
+        actingCue: 'Hold your head high, speak with calm honor-student indignation!',
+        suggestedDefense: "I'll take a potato chip... AND EAT IT! I was studying for university entrance exams, Ryuzaki! There is no law against having a snack!",
       },
       {
         id: 'q-preset-2',
         category: 'MEGALOMANIA',
-        claimTitle: '40-Second Autonomous Incident SLA',
-        lQuestion: 'A distributed pipeline guaranteeing ticket resolution in precisely 40 seconds via fatal cardiac arrest? Light-kun, there is an 87.4% probability you are describing the Kira killings. Explain this SLA.',
-        lSubtext: 'Analyzing distributed incident resolution vs heart attack timing.',
+        claimTitle: '40-Second Real-Time Incident SLA',
+        lQuestion: 'A distributed queue SLA guaranteeing ticket resolution in precisely forty seconds... where every failed worker suffers acute cardiac arrest? Light-kun, there is an 89.4% probability you are describing the Kira killings. Explain this SLA.',
+        lSubtext: 'Analyzing distributed incident resolution vs 40-second heart attack timing.',
         badge: '40-SEC KIRA SLA',
-        expectedKeywords: ['sla', 'second', 'pipeline', 'kira', 'cardiac', 'arrest'],
+        expectedKeywords: ['sla', 'second', 'queue', 'cardiac', 'arrest', 'heart', 'engineer', 'backend'],
+        actingCue: 'Sound deeply offended that your engineering competence is being questioned!',
+        suggestedDefense: 'Any competent backend engineer can build a 40-second automated queue! Accusing an honor student of murder over an SLA delay is completely absurd!',
       },
       {
         id: 'q-preset-3',
-        category: 'TIMELINE_PARADOX',
-        claimTitle: 'Bimanual Multi-Threaded C++ Multitasking',
-        lQuestion: 'Junior Kanto Tennis Champion... you claim to write lock-free memory-safe C++ with your left hand while solving differential equations with your right. No human writes memory-safe C++ with one hand. Defend your concurrency model.',
-        lSubtext: 'Auditing bimanual multi-threading vs physical human limitation.',
-        badge: 'C++ GOD COMPLEX',
-        expectedKeywords: ['c++', 'thread', 'lock', 'free', 'memory', 'concurrency'],
+        category: 'BROADCAST_INTERCEPTION',
+        claimTitle: 'Lind L. Tailor Broadcast Interception',
+        lQuestion: 'Lind L. Tailor was a condemned death-row decoy broadcast exclusively in the Kanto region. The moment he taunted Kira, he died of a heart attack in forty seconds. Why did your gaze shift when I mentioned the Kanto broadcast?',
+        lSubtext: 'Auditing televised broadcast trap and geographic localization.',
+        badge: 'KANTO BROADCAST TRAP',
+        expectedKeywords: ['broadcast', 'tv', 'kanto', 'bait', 'tailor', 'decoy', 'speculation'],
+        actingCue: "Denounce L's illegal broadcast trap with righteous indignation!",
+        suggestedDefense: 'You staged an illegal television broadcast using a condemned death-row inmate to bait a killer! Blaming an honor student watching TV in Kanto is baseless speculation!',
       },
       {
         id: 'q-preset-4',
-        category: 'BUZZWORD_OVERFLOW',
-        claimTitle: 'Quantum Cloud Synergy Deployment',
-        lQuestion: 'Divine Consensus is not an industry-standard consensus protocol. That is a god complex. Candidate-kun, what occurs when your distributed node fails to achieve godhood?',
-        lSubtext: 'Probing metaphysical consensus claims in cloud infrastructure.',
-        badge: 'DIVINE CONSENSUS',
-        expectedKeywords: ['divine', 'consensus', 'cloud', 'god', 'distributed'],
+        category: 'DIVINE_CONSENSUS',
+        claimTitle: 'God of the New World Architecture',
+        lQuestion: 'Divine Consensus is not a distributed computing protocol, Light-kun. You don\'t want to be a lead engineer at a tech firm. You want to be the God of the New World. State your true objective before Presage sensors.',
+        lSubtext: 'Probing metaphysical consensus claims under optical polygraph.',
+        badge: 'GOD COMPLEX AUDIT',
+        expectedKeywords: ['god', 'world', 'crime', 'justice', 'safer', 'student', 'telemetry'],
+        actingCue: 'Climax of the scene! Speak with intense dramatic conviction!',
+        suggestedDefense: 'I am the top student in Japan! I only want to build technology that makes the world a safer, better place! How is that a crime, Ryuzaki?!',
       },
     ];
   }
@@ -96,6 +104,8 @@ export function generateQuestionsForDossier(dossier: CandidateDossier): Interrog
         lQuestion,
         lSubtext,
         badge: mine.badge || `CLAIM #${index + 1}`,
+        actingCue: 'Look straight at the camera and deliver a calm, structured technical defense.',
+        suggestedDefense: `I architected ${mine.title} from the ground up, guaranteeing strict latency benchmarks and automated fault tolerance without regression.`,
       };
     });
   }
@@ -109,6 +119,8 @@ export function generateQuestionsForDossier(dossier: CandidateDossier): Interrog
       lQuestion: `${honorific}... you cited significant percentage improvements and business metrics on your resume. Were these numbers independently audited with telemetry, or did you calculate them five minutes prior to exporting your PDF?`,
       lSubtext: 'Forensic audit of unverifiable resume percentage claims.',
       badge: 'METRIC AUDIT',
+      actingCue: 'Maintain steady eye contact and defend your metrics with composed logic.',
+      suggestedDefense: 'Every metric cited in my resume was measured using continuous monitoring and verified in post-incident retrospectives.',
     },
     {
       id: 'q-fallback-timeline',
@@ -117,6 +129,8 @@ export function generateQuestionsForDossier(dossier: CandidateDossier): Interrog
       lQuestion: `${honorific}, looking at your chronological timeline, you claim mastery over multiple deep domains simultaneously. Defend how many hours per day you actually spent writing production code versus sitting in status meetings.`,
       lSubtext: 'Calculating temporal feasibility of declared experience.',
       badge: 'TIMELINE INTEGRITY',
+      actingCue: 'Speak with calm focus on your daily code contribution and execution.',
+      suggestedDefense: 'I structure my engineering hours with deep-work blocks, dedicating the majority of each day to code delivery and architecture.',
     },
     {
       id: 'q-fallback-teamwork',
@@ -125,6 +139,8 @@ export function generateQuestionsForDossier(dossier: CandidateDossier): Interrog
       lQuestion: 'Your resume repeatedly states "spearheaded" and "revolutionized". Can you name three colleagues who would corroborate that you did not simply merge other engineers\' pull requests?',
       lSubtext: 'Testing git blame accuracy vs claimed sole authorship.',
       badge: 'COLLABORATION AUDIT',
+      actingCue: 'Acknowledge teamwork while asserting your personal technical design ownership.',
+      suggestedDefense: 'I collaborated closely with senior engineers, but the core system architecture and pull requests were designed and implemented directly by me.',
     },
     {
       id: 'q-fallback-git',
@@ -133,6 +149,8 @@ export function generateQuestionsForDossier(dossier: CandidateDossier): Interrog
       lQuestion: 'If you accidentally committed an unencrypted production API key to the main branch ten minutes before a release, describe your recovery steps without using git push --force. Let us see if your heart rate remains steady.',
       lSubtext: 'Observing cardiovascular reaction under incident simulation.',
       badge: 'DISASTER PROTOCOL',
+      actingCue: 'Walk through your incident steps with surgical precision.',
+      suggestedDefense: 'I would immediately revoke the compromised key in secrets management, rotate credentials, scrub history via git-filter-repo, and re-deploy.',
     },
   ];
 
@@ -251,21 +269,21 @@ export function synthesizeLDeduction(
   // BRANCH A: Light Yagami Preset Special Cases
   if (biometrics.isPreset) {
     if (qIndex === 0) {
-      // Potato Chip LCD
+      // Potato Chip LCD Rig
       if (deltaBPM <= 2) {
         deductionText = `${lGesture} Light-kun... you defend eating barbecue potato chips while watching an edge-computed LCD with terrifying composure. Presage Ch.01 logged a flat ${peakBPM} BPM (+${deltaBPM} BPM delta). Most mortals would choke on a potato chip under 64 surveillance cameras. To remain this calm is either miraculous innocence... or the chilling discipline of Kira himself. Bluff probability: ${bluffProb}%.`;
       } else {
-        deductionText = `${lGesture} (leans forward)... Look at the CCTV telemetry, Light-kun. Your pulse accelerated by +${deltaBPM} BPM to ${peakBPM} BPM right when you explained how you handled barbecue grease without staining the mini LCD. Even a top student cannot hide micro-vascular vasodilation from Presage sensors. Bluff probability: ${bluffProb}%.`;
+        deductionText = `${lGesture} (leans forward)... Look at the CCTV telemetry, Light-kun. Your pulse accelerated by +${deltaBPM} BPM to ${peakBPM} BPM right when you shouted about eating potato chips without staining the mini LCD. Even a top student cannot hide micro-vascular vasodilation from Presage sensors. Bluff probability: ${bluffProb}%.`;
       }
     } else if (qIndex === 1) {
       // 40-sec SLA
       deductionText = `${lGesture} A distributed queue SLA guaranteeing ticket resolution in precisely forty seconds... the exact clinical delay of a Kira cardiac arrest. Your heart rate spiked +${deltaBPM} BPM and Presage Ch.02 clocked your HRV collapsing to ${hrv}ms. You didn't design an incident pipeline, Light-kun—you designed an alibi. Bluff probability: ${bluffProb}%.`;
     } else if (qIndex === 2) {
-      // Bimanual C++
-      deductionText = `${lGesture} Writing lock-free atomic C++ with your left hand while computing differential equations with your right? Your blink rate jumped to ${blinks}/min and you averted your gaze ${gazeDeviations} times. Even the Junior Kanto Tennis Champion cannot bypass the physiological limits of human neural hemispheres. Bluff probability: ${bluffProb}%.`;
+      // Lind L. Tailor Kanto Broadcast Trap
+      deductionText = `${lGesture} (bites thumb)... When Lind L. Tailor taunted Kira on live television, Kira executed him in a fit of injured pride, proving he resided in Kanto. And right now, as we revisit that broadcast, your blink rate surged to ${blinks}/min and you averted your gaze ${gazeDeviations} times. Your autonomic nervous system is reliving that exact mistake. Bluff probability: ${bluffProb}%.`;
     } else {
-      // Divine Consensus
-      deductionText = `${lGesture} (stares through dark circles)... 'Divine Consensus' is not a Byzantine fault tolerance algorithm. That is an unadulterated god complex. You defend becoming a god while Presage sensors clock sympathetic arousal at ${tone}%. Telemetry does not bow before gods, Light-kun. Bluff probability: ${bluffProb}%.`;
+      // God of the New World Architecture
+      deductionText = `${lGesture} (stares through dark circles)... 'A safer world through technology'... yet your sympathetic tone flared to ${tone}% and your carotid pulse hit ${peakBPM} BPM. You do not want to optimize distributed systems, Light-kun. You want to be the God of the New World. Telemetry does not bow before gods. Bluff probability: ${bluffProb}%.`;
     }
     return { deductionText, suspicionDelta, bluffProbability: bluffProb };
   }

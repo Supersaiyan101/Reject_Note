@@ -608,6 +608,42 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
         {/* PHASE 2: CANDIDATE'S ACTIVE TESTIMONY (UNTIMED / ZERO RUSH) */}
         {phase === 'TESTIMONY' && (
           <div className="space-y-4 animate-fade-in">
+            {/* SCRIPTED ACTING CUE & SUGGESTED DEFENSE LINE FOR VIDEO */}
+            {currentQuestion.suggestedDefense && (
+              <div className="p-4 rounded-xl bg-gradient-to-r from-rose-950/60 via-red-950/40 to-neutral-950 border border-rose-500/50 shadow-[0_0_20px_rgba(225,29,72,0.2)] space-y-2.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    <span className="font-['Orbitron'] text-xs font-bold text-rose-300 tracking-wider">
+                      {dossier.isPreset ? "LIGHT YAGAMI'S SCRIPTED LINE (FOR YOUR VIDEO)" : "SUGGESTED DEFENSE LINE"}
+                    </span>
+                  </div>
+                  {currentQuestion.actingCue && (
+                    <span className="text-[11px] font-mono text-amber-300 italic flex items-center gap-1">
+                      <span>🎬 Acting Cue:</span> {currentQuestion.actingCue}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg bg-black/70 border border-rose-900/50">
+                  <p className="font-mono text-xs sm:text-sm text-neutral-100 italic leading-relaxed select-all">
+                    &ldquo;{currentQuestion.suggestedDefense}&rdquo;
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundFX.playClick();
+                      setTestimonyText(currentQuestion.suggestedDefense || '');
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-mono text-xs font-bold shrink-0 transition-all cursor-pointer shadow-[0_0_12px_rgba(225,29,72,0.5)] flex items-center gap-1.5"
+                  >
+                    <Zap className="w-3.5 h-3.5 text-amber-300" />
+                    <span>Auto-Fill Line</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
@@ -710,11 +746,11 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      setTestimonyText(`I architected this project from the ground up, guaranteeing strict p99 latency benchmarks and automated fault tolerance without regression.`);
+                      setTestimonyText(currentQuestion.suggestedDefense || `I architected this project from the ground up, guaranteeing strict p99 latency benchmarks and automated fault tolerance without regression.`);
                     }}
                     className="text-neutral-400 hover:text-rose-400 underline transition-colors cursor-pointer"
                   >
-                    Auto-Fill Defiant Statement
+                    Auto-Fill Statement
                   </button>
                 </div>
               </div>
@@ -727,6 +763,18 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
                   rows={3}
                   className="w-full p-3 rounded-xl bg-neutral-900 border border-neutral-800 text-white font-mono text-sm focus:outline-hidden focus:border-rose-500 transition-colors"
                 />
+                <div className="flex items-center justify-between text-[11px] font-mono text-neutral-500">
+                  <span>Need quick testimony?</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTestimonyText(currentQuestion.suggestedDefense || `I architected this project from the ground up, guaranteeing strict p99 latency benchmarks and automated fault tolerance without regression.`);
+                    }}
+                    className="text-neutral-400 hover:text-rose-400 underline transition-colors cursor-pointer"
+                  >
+                    Auto-Fill Statement
+                  </button>
+                </div>
               </div>
             )}
 
