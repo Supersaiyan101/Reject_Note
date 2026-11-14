@@ -161,7 +161,7 @@ class AnimeSoundEngine {
     this.stopSuperSaiyanCharge();
 
     try {
-      const audio = new Audio('/goku-super-saiyan.mp3');
+      const audio = new Audio('/gokuyelling.mp3');
       audio.volume = 0.95;
       audio.currentTime = 0;
       this.gokuAudio = audio;

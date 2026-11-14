@@ -102,6 +102,22 @@ export const ClaimScanner: React.FC<ClaimScannerProps> = ({
             {SCAN_MESSAGES[currentStep]}
           </p>
 
+          {/* Goku Screaming GIF */}
+          <div className="relative my-3 flex items-center justify-center">
+            <div className={`relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border-2 transition-all duration-500 shadow-lg ${
+              powerReading >= 9001
+                ? 'border-amber-400 shadow-[0_0_35px_rgba(251,191,36,0.8)] scale-105'
+                : 'border-rose-500/60 shadow-[0_0_20px_rgba(225,29,72,0.5)]'
+            }`}>
+              <img
+                src="/goku-loading.gif"
+                alt="Goku Super Saiyan Screaming"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+            </div>
+          </div>
+
           {/* Progress Bar */}
           <div className="w-full max-w-md bg-neutral-900 h-2.5 rounded-full mt-6 overflow-hidden border border-neutral-800">
             <div
