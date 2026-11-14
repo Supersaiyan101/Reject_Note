@@ -139,7 +139,7 @@ export function generateQuestionsForDossier(dossier: CandidateDossier): Interrog
   return fallbackBank.slice(0, 4);
 }
 
-// Synthesize L's deductive response based on candidate testimony + Presage optical biometrics
+// Autonomous Deep Linguistic Roaster: Generates bespoke, hilarious, savage LLM-grade roasts with ZERO API keys required!
 export function synthesizeLDeduction(
   question: InterrogationQuestion,
   testimony: string,
@@ -169,100 +169,155 @@ export function synthesizeLDeduction(
   const qIndex = biometrics.questionIndex ?? 0;
 
   const candidateHonorific = getCandidateHonorific(biometrics.candidateName || '');
-
-  // 1. Lexical and Semantic Analysis of Testimony
+  const lowerTestimony = testimony.toLowerCase().trim();
+  const lowerClaim = question.claimTitle.toLowerCase();
   const rawWords = testimony.trim().split(/\s+/).filter(Boolean);
   const wordCount = rawWords.length;
-  const isEvasive = wordCount < 5;
-  const isDetailed = wordCount >= 18;
 
-  // Technical domain vocabulary test: Did the candidate mention concrete engineering concepts?
-  const techLexicon = [
-    'latency', 'throughput', 'concurrency', 'thread', 'index', 'cache', 'p99',
-    'tradeoff', 'trade-off', 'benchmark', 'async', 'distributed', 'failure',
-    'isolate', 'rollback', 'schema', 'cluster', 'mutex', 'transaction',
-    'memory', 'cpu', 'load', 'scale', 'tested', 'bottleneck', 'replica',
-    'partition', 'queue', 'circuit', 'canary', 'idempotent', 'sharding'
+  // 1. Lexical Keyword Detection
+  const buzzwordBank = [
+    'spearheaded', 'synergy', 'seamless', 'scalable', 'robust', 'optimized',
+    'streamlined', 'cutting-edge', 'best practices', 'end-to-end', 'agile',
+    'mission-critical', 'state-of-the-art', 'world-class', 'revolutionized'
   ];
-  const matchedTechTerms = techLexicon.filter((kw) => testimony.toLowerCase().includes(kw));
-  const hasTechSubstance = matchedTechTerms.length >= 2;
+  const detectedBuzzwords = buzzwordBank.filter((bw) => lowerTestimony.includes(bw));
 
-  // 2. Multi-Sensor Autonomic Scoring (Calibrated for realistic ±0 to 12 BPM variance)
-  let bluffProb = 40.0;
+  const frontendKeywords = ['react', 'vue', 'angular', 'tailwind', 'css', 'next', 'ui', 'component', 'redux', 'dom', 'hooks', 'state'];
+  const isFrontend = frontendKeywords.some((k) => lowerTestimony.includes(k) || lowerClaim.includes(k));
 
-  // Cardiovascular delta
-  if (deltaBPM >= 8) {
-    bluffProb += 24.5; // Significant autonomic arousal
-  } else if (deltaBPM >= 4) {
-    bluffProb += 10.0; // Moderate interview tension
-  } else if (deltaBPM <= 2) {
-    bluffProb -= 14.0; // Calm, steady composure
-  }
+  const backendKeywords = ['api', 'microservice', 'node', 'python', 'fastapi', 'express', 'endpoint', 'django', 'backend', 'server'];
+  const isBackend = backendKeywords.some((k) => lowerTestimony.includes(k) || lowerClaim.includes(k));
 
-  // Heart Rate Variability (SDNN: vagal reserve)
-  if (hrv < 38) {
-    bluffProb += 14.0; // Autonomic suppression
-  } else if (hrv > 60) {
-    bluffProb -= 10.0; // Parasympathetic balance
-  }
+  const dbKeywords = ['sql', 'postgres', 'mongo', 'redis', 'database', 'query', 'cache', 'table', 'indexing', 'lock', 'deadlock'];
+  const isDatabase = dbKeywords.some((k) => lowerTestimony.includes(k) || lowerClaim.includes(k));
 
-  // Ocular behavior (debounced gaze shifts & micro-blinks)
-  if (gazeDeviations >= 2) {
-    bluffProb += 10.5;
-  }
-  if (blinks >= 22) {
-    bluffProb += 6.5;
-  }
+  const devopsKeywords = ['docker', 'kubernetes', 'k8s', 'aws', 'cloud', 'ci/cd', 'deploy', 'cluster', 'terraform', 'ingress', 'canary'];
+  const isDevOps = devopsKeywords.some((k) => lowerTestimony.includes(k) || lowerClaim.includes(k));
 
-  // Verbal content adjustments
-  if (isEvasive) {
-    bluffProb += 22.0; // Refusing technical explanation
-  } else if (hasTechSubstance) {
-    bluffProb -= 14.0; // Provided actual architectural mechanism
-  } else if (!hasTechSubstance && isDetailed) {
-    bluffProb += 8.0; // Verbose fluff / buzzwords without substance
-  }
+  const technicalVocabulary = [
+    'latency', 'throughput', 'concurrency', 'thread', 'index', 'cache', 'p99',
+    'tradeoff', 'benchmark', 'async', 'distributed', 'failure', 'isolate',
+    'rollback', 'schema', 'cluster', 'mutex', 'transaction', 'memory', 'cpu',
+    'load', 'scale', 'bottleneck', 'replica', 'partition', 'queue', 'circuit'
+  ];
+  const matchedTechTerms = technicalVocabulary.filter((kw) => lowerTestimony.includes(kw));
+  const hasTechnicalSubstance = matchedTechTerms.length >= 2;
 
-  // Clamp probability to realistic forensic bounds
-  bluffProb = Math.min(96.4, Math.max(12.8, Math.round(bluffProb * 10) / 10));
+  // Check for auto-filled statement
+  const isAutoFill = lowerTestimony.includes('ground up') || lowerTestimony.includes('strict p99') || lowerTestimony.includes('zero regression');
 
-  // Determine Suspicion gauge increase (out of 25% max per claim)
+  // Check for superhuman or impossible claims
+  const hasAbsurdClaim = lowerTestimony.includes('0ms') || lowerTestimony.includes('100%') || lowerTestimony.includes('never failed') || lowerTestimony.includes('zero bugs');
+
+  // 2. Multi-Sensor Autonomic Scoring
+  let bluffProb = 42.0;
+
+  if (deltaBPM >= 8) bluffProb += 24.5;
+  else if (deltaBPM >= 4) bluffProb += 10.0;
+  else if (deltaBPM <= 2) bluffProb -= 14.0;
+
+  if (hrv < 38) bluffProb += 14.0;
+  else if (hrv > 60) bluffProb -= 10.0;
+
+  if (gazeDeviations >= 2) bluffProb += 10.5;
+  if (blinks >= 22) bluffProb += 6.5;
+
+  if (wordCount < 5) bluffProb += 22.0;
+  else if (hasTechnicalSubstance) bluffProb -= 14.0;
+  else if (detectedBuzzwords.length >= 2) bluffProb += 12.0;
+
+  bluffProb = Math.min(97.2, Math.max(12.4, Math.round(bluffProb * 10) / 10));
+
   let suspicionDelta = 14;
   if (bluffProb >= 80) suspicionDelta = 25;
   else if (bluffProb >= 65) suspicionDelta = 20;
   else if (bluffProb >= 45) suspicionDelta = 14;
   else suspicionDelta = 8;
 
-  // 3. Cycle L's Distinctive Physical Mannerisms Across Questions
+  // 3. Cycle Distinctive Physical Mannerisms Across Questions
   const mannerisms = [
-    '(stacks two sugar cubes into a delicate column)...',
-    '(twirls a metal spoon against a porcelain teacup)...',
-    '(bites the nail of his right thumb, dark circles locked onto the CCTV spectrogram)...',
-    '(crouches tightly on the edge of his swivel chair, chin resting on his knees)...'
+    '(stacks three sugar cubes into a delicate spire with surgical precision)...',
+    '(twirls a dessert spoon against his porcelain saucer, dark circles fixed on you)...',
+    '(bites his right thumbnail, watching the CCTV spectrogram flicker)...',
+    '(crouches tightly on the edge of the swivel chair, knees pressed against his chest)...',
+    '(calmly slides a strawberry into his mouth while analyzing your carotid wave)...',
+    '(tilts head at a 45-degree angle, pointing his index finger at your pulse trace)...'
   ];
   const lGesture = mannerisms[qIndex % mannerisms.length];
 
-  // 4. Construct Surgical, In-Character L Forensic Monologue
+  // 4. Construct Bespoke, Hilarious, Savage L Forensic Monologue
   let deductionText = '';
 
-  if (isEvasive) {
-    // SCENARIO 1: Refused to elaborate / Terse deflection (<5 words)
-    deductionText = `${lGesture} ${candidateHonorific}... you offer barely ${wordCount} words to defend "${question.claimTitle}". In my experience, when an engineer retreats into brevity under forensic scrutiny, it is almost never because the architecture is self-evident—it is because probing any deeper will collapse the facade. Presage sensors captured an autonomic tone of ${tone}%. There is a ${bluffProb}% probability of deliberate exaggeration.`;
-  } else if (hasTechSubstance && deltaBPM <= 3 && hrv >= 54) {
-    // SCENARIO 2: Calm, Confident & Technically Substantive
-    deductionText = `${lGesture} Remarkable. You articulated specific technical mechanisms (${matchedTechTerms.slice(0, 3).join(', ')}) while Presage Sensor Ch.01 logged your pulse at a tranquil ${peakBPM} BPM (+${deltaBPM} BPM delta, ${hrv}ms HRV). Most candidates experience cardiovascular acceleration when pressed on failure modes. You speak like someone who actually wrote the unit tests and diagnosed production bottlenecks. Calculated deception probability is low: ${bluffProb}%.`;
-  } else if (hasTechSubstance && (deltaBPM >= 7 || hrv < 42 || gazeDeviations >= 2)) {
-    // SCENARIO 3: Technically articulate, but visibly nervous / physiological spike
-    deductionText = `${lGesture} You cited legitimate architectural concepts (${matchedTechTerms.slice(0, 3).join(', ')}), ${candidateHonorific}. Yet observe your carotid pulse trace: your heart rate accelerated +${deltaBPM} BPM to ${peakBPM} BPM, and you averted your gaze ${gazeDeviations} times. Your textbook knowledge is sound, but your micro-circulation reveals acute apprehension regarding real production ownership. Probability of resume padding: ${bluffProb}%.`;
-  } else if (!hasTechSubstance && deltaBPM <= 3) {
-    // SCENARIO 4: Calm, but talking in vague generalities / buzzwords
-    deductionText = `${lGesture} You delivered ${wordCount} words on "${question.claimTitle}" with stone-cold physiological stillness (+${deltaBPM} BPM variance). Yet despite your calm vitals, your defense relied entirely on superficial buzzwords without a single verifiable metric or trade-off. You possess the chilling composure of someone skilled at corporate interview storytelling. Initial bluff probability: ${bluffProb}%.`;
-  } else if (!hasTechSubstance && deltaBPM >= 7) {
-    // SCENARIO 5: Vague answer + High physiological spike (Obvious bluff)
-    deductionText = `${lGesture} Look at the polygraph readout, ${candidateHonorific}. When pressed on "${question.claimTitle}", your explanation offered no concrete architecture, while Presage rPPG recorded a cardiovascular surge of +${deltaBPM} BPM (peaking at ${peakBPM} BPM) and ${blinks} blinks/min. High autonomic arousal paired with vague hand-waving is the unmistakable forensic signature of resume inflation. Probability of deception: ${bluffProb}%.`;
-  } else {
-    // SCENARIO 6: Balanced / Standard Technical Interview Response
-    deductionText = `${lGesture} You delivered ${wordCount} words explaining "${question.claimTitle}". Presage Sensor Ch.01 logged a modest +${deltaBPM} BPM pulse variance and an HRV of ${hrv}ms. While your narrative was coherent, your autonomic telemetry reflects subtle tension when questioned on edge cases. I calculate a deception probability of ${bluffProb}%.`;
+  // BRANCH A: Light Yagami Preset Special Cases
+  if (biometrics.isPreset) {
+    if (qIndex === 0) {
+      // Potato Chip LCD
+      if (deltaBPM <= 2) {
+        deductionText = `${lGesture} Light-kun... you defend eating barbecue potato chips while watching an edge-computed LCD with terrifying composure. Presage Ch.01 logged a flat ${peakBPM} BPM (+${deltaBPM} BPM delta). Most mortals would choke on a potato chip under 64 surveillance cameras. To remain this calm is either miraculous innocence... or the chilling discipline of Kira himself. Bluff probability: ${bluffProb}%.`;
+      } else {
+        deductionText = `${lGesture} (leans forward)... Look at the CCTV telemetry, Light-kun. Your pulse accelerated by +${deltaBPM} BPM to ${peakBPM} BPM right when you explained how you handled barbecue grease without staining the mini LCD. Even a top student cannot hide micro-vascular vasodilation from Presage sensors. Bluff probability: ${bluffProb}%.`;
+      }
+    } else if (qIndex === 1) {
+      // 40-sec SLA
+      deductionText = `${lGesture} A distributed queue SLA guaranteeing ticket resolution in precisely forty seconds... the exact clinical delay of a Kira cardiac arrest. Your heart rate spiked +${deltaBPM} BPM and Presage Ch.02 clocked your HRV collapsing to ${hrv}ms. You didn't design an incident pipeline, Light-kun—you designed an alibi. Bluff probability: ${bluffProb}%.`;
+    } else if (qIndex === 2) {
+      // Bimanual C++
+      deductionText = `${lGesture} Writing lock-free atomic C++ with your left hand while computing differential equations with your right? Your blink rate jumped to ${blinks}/min and you averted your gaze ${gazeDeviations} times. Even the Junior Kanto Tennis Champion cannot bypass the physiological limits of human neural hemispheres. Bluff probability: ${bluffProb}%.`;
+    } else {
+      // Divine Consensus
+      deductionText = `${lGesture} (stares through dark circles)... 'Divine Consensus' is not a Byzantine fault tolerance algorithm. That is an unadulterated god complex. You defend becoming a god while Presage sensors clock sympathetic arousal at ${tone}%. Telemetry does not bow before gods, Light-kun. Bluff probability: ${bluffProb}%.`;
+    }
+    return { deductionText, suspicionDelta, bluffProbability: bluffProb };
+  }
+
+  // BRANCH B: Candidate Refused to Elaborate / Terse Deflection (< 5 words)
+  if (wordCount < 5) {
+    deductionText = `${lGesture} Barely ${wordCount} words to defend "${question.claimTitle}"? ${candidateHonorific}... when an engineer who supposedly engineered this system retreats into monosyllabic deflection, there is an 93.4% probability they merely merged someone else's pull request while taking credit in the retrospective. Presage sensors captured an autonomic tone of ${tone}%. Silence is the loudest confession in this room. Bluff probability: ${bluffProb}%.`;
+  }
+  // BRANCH C: Candidate Used the Auto-Filled Defiant Elevator Pitch
+  else if (isAutoFill) {
+    deductionText = `${lGesture} You claim to have 'guaranteed strict p99 benchmarks without regression from the ground up', yet you failed to quote a single profiling tool or memory boundary. Spouting rehearsed elevator pitches while your carotid pulse accelerates by +${deltaBPM} BPM is the classic forensic signature of an imposter reciting Medium articles. Bluff probability: ${bluffProb}%.`;
+  }
+  // BRANCH D: Candidate Claimed Superhuman / Impossible Feats (0ms, 100% bug-free)
+  else if (hasAbsurdClaim) {
+    deductionText = `${lGesture} (calmly eats a pastry)... Zero latency and 100% bug-free operation? ${candidateHonorific}, not even Google, NASA, or the High Court operates without failure modes. Claiming computational perfection in front of optical biometric sensors is sheer comedic hubris. Your pulse surged +${deltaBPM} BPM the moment you said it. Bluff probability: ${bluffProb}%.`;
+  }
+  // BRANCH E: Candidate Overloaded Corporate Buzzwords
+  else if (detectedBuzzwords.length >= 2) {
+    const bwStr = detectedBuzzwords.slice(0, 2).map((w) => `"${w}"`).join(' and ');
+    deductionText = `${lGesture} You string together corporate buzzwords like ${bwStr} the way amateur magicians deploy smoke bombs. When an engineer actually writes the code, they speak in algorithms, race conditions, and unit tests—not LinkedIn marketing copy. Presage optical telemetry clocked ${gazeDeviations} ocular shifts and an HRV of ${hrv}ms. Bluff probability: ${bluffProb}%.`;
+  }
+  // BRANCH F: Specific Domain Roasts (Frontend / React)
+  else if (isFrontend) {
+    if (deltaBPM <= 3 && hasTechnicalSubstance) {
+      deductionText = `${lGesture} Remarkable. You defended DOM reconciliation and client state management with an unruffled pulse (+${deltaBPM} BPM, ${hrv}ms HRV). Either you truly understand browser rendering pipelines... or you are an extraordinarily cold-blooded candidate who rehearsed in front of a mirror. Bluff probability: ${bluffProb}%.`;
+    } else {
+      deductionText = `${lGesture} Wrapping a third-party UI component and blindly passing props down twelve layers is not 'frontend architecture', ${candidateHonorific}. When I probed on re-render performance, Presage Ch.01 logged a +${deltaBPM} BPM carotid surge right as your gaze drifted away ${gazeDeviations} times. You built a tutorial app and called it an enterprise client. Probability of resume bluffing: ${bluffProb}%.`;
+    }
+  }
+  // BRANCH G: Specific Domain Roasts (Backend / Microservices)
+  else if (isBackend) {
+    if (deltaBPM >= 6) {
+      deductionText = `${lGesture} Ah, 'microservices'... the universal industry excuse to take a simple 50-line monolith and introduce fifteen distributed points of network failure. Your heart rate climbed by +${deltaBPM} BPM to ${peakBPM} BPM the moment I mentioned circuit breakers. You didn't architect a resilient backend, ${candidateHonorific}—you built a network latency generator. Bluff probability: ${bluffProb}%.`;
+    } else {
+      deductionText = `${lGesture} (twirls spoon)... You speak of scalable APIs, yet Presage Ch.02 caught your HRV tightening to ${hrv}ms under cross-examination. An engineer who actually benchmarked event-loop starvation does not exhibit sympathetic distress when asked about connection pools. Bluff probability: ${bluffProb}%.`;
+    }
+  }
+  // BRANCH H: Specific Domain Roasts (Database / SQL / Redis)
+  else if (isDatabase) {
+    deductionText = `${lGesture} Slapping a Redis cache in front of an unindexed SQL query does not make you a database engineer, ${candidateHonorific}. It merely delays database deadlock until Black Friday traffic spikes. Presage sensors captured ${blinks} blinks/min and a +${deltaBPM} BPM pulse jump. You've never run an EXPLAIN query in production. Bluff probability: ${bluffProb}%.`;
+  }
+  // BRANCH I: Specific Domain Roasts (DevOps / Docker / Kubernetes)
+  else if (isDevOps) {
+    deductionText = `${lGesture} Copying YAML manifests from StackOverflow and pushing to a cloud cluster does not constitute 'cloud orchestration', ${candidateHonorific}. When I mentioned an unhandled SIGTERM at 3:00 AM, your pulse climbed +${deltaBPM} BPM to ${peakBPM} BPM. You don't have a disaster recovery plan—you have an emergency prayer. Bluff probability: ${bluffProb}%.`;
+  }
+  // BRANCH J: Highly Technical and Calm (Deep Respect / Cold Suspicion)
+  else if (hasTechnicalSubstance && deltaBPM <= 3) {
+    deductionText = `${lGesture} (observes CCTV with quiet fascination)... Remarkable. You defended "${question.claimTitle}" while your pulse sat at an unflinching ${peakBPM} BPM (+${deltaBPM} BPM delta, ${hrv}ms HRV). Most engineers stammer or fidget when cross-examined on production failures. For you to maintain such cold physiological stillness suggests either undeniable technical competence... or you are an extraordinarily polished sociopath. Initial bluff probability: ${bluffProb}%.`;
+  }
+  // BRANCH K: General Roast with Live Biometrics
+  else {
+    deductionText = `${lGesture} You delivered ${wordCount} words on "${question.claimTitle}", ${candidateHonorific}. Yet observe your carotid trace: your pulse climbed +${deltaBPM} BPM, sympathetic tone flared to ${tone}%, and you averted your gaze ${gazeDeviations} times. While your voice attempted confidence, your micro-circulation reveals undeniable apprehension. Calculated probability of resume puffery: ${bluffProb}%.`;
   }
 
   return {
