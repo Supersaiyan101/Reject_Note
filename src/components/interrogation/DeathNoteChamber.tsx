@@ -10,6 +10,7 @@ import type {
 } from '../../types';
 import { generateQuestionsForDossier, synthesizeLDeduction } from '../../services/interrogationEngine';
 import { candidateVoiceEngine } from '../../services/voiceEngine';
+import { generateGeminiRoast, isGeminiEnabled } from '../../services/geminiService';
 import { OpticalViewfinder } from '../OpticalViewfinder';
 import { soundFX } from '../../utils/sfx';
 import { realAudio } from '../../utils/realAudio';
@@ -27,7 +28,8 @@ import {
   Eye,
   AlertTriangle,
   Clock,
-  Zap
+  Zap,
+  Sparkles
 } from 'lucide-react';
 
 interface DeathNoteChamberProps {
@@ -95,6 +97,7 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
     deductionText: string;
     suspicionDelta: number;
     bluffProbability: number;
+    source?: 'GEMINI_LLM' | 'HEURISTIC';
   } | null>(null);
 
   // Game state
@@ -274,6 +277,41 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
       `[00:01] Parsing candidate statement (${testimonyText.trim().split(/\s+/).length} words)...`,
       `[00:02] Presage rPPG: Peak pulse detected at ${peakBPM} BPM (+${deltaBPM} BPM surge).`,
     ]);
+
+    // Asynchronously call Gemini LLM for an unhinged, dynamic, bespoke roast
+    if (isGeminiEnabled()) {
+      setDeductionLogs((prev) => [
+        ...prev,
+        `[00:02] Querying Gemini Neural AI for real-time psychoanalysis...`,
+      ]);
+      generateGeminiRoast({
+        candidateName: dossier.name,
+        isPreset: dossier.isPreset,
+        questionIndex: questionIdx,
+        question: currentQuestion,
+        testimony: testimonyText,
+        biometrics: {
+          baselineBPM: baseline.restingBPM,
+          peakBPM,
+          deltaBPM,
+          avgBPM,
+          gazeDeviations: gazeDrifts,
+          durationSec,
+          hrvMs: liveVitals.hrvMs,
+          blinkRate: liveVitals.blinkRate,
+          sympatheticTone: liveVitals.sympatheticTone,
+        },
+      }).then((llmResult) => {
+        if (llmResult) {
+          setActiveDeduction(llmResult);
+          activeDeductionRef.current = llmResult;
+          setDeductionLogs((prev) => [
+            ...prev,
+            `[00:03] Gemini 2.0 Flash: Synthesized forensic roast with 100% precision.`,
+          ]);
+        }
+      });
+    }
   };
 
   // 6-Second L Deductive Countdown (decoupled from liveVitals frame rate)
@@ -765,9 +803,17 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
                 L&apos;S DEDUCTIVE VERDICT // DECEPTION PROBABILITY: {activeDeduction.bluffProbability}%
               </span>
 
-              <span className="px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-600 font-mono text-xs font-bold animate-pulse">
-                +{activeDeduction.suspicionDelta}% SUSPICION
-              </span>
+              <div className="flex items-center gap-2">
+                {activeDeduction.source === 'GEMINI_LLM' && (
+                  <span className="px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-500 font-mono text-[10px] font-bold flex items-center gap-1 shadow-[0_0_10px_rgba(168,85,247,0.4)]">
+                    <Sparkles className="w-3 h-3 text-purple-400 animate-pulse" />
+                    <span>GEMINI AI LIVE</span>
+                  </span>
+                )}
+                <span className="px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-600 font-mono text-xs font-bold animate-pulse">
+                  +{activeDeduction.suspicionDelta}% SUSPICION
+                </span>
+              </div>
             </div>
 
             <p className="font-mono text-base md:text-lg text-white leading-relaxed pl-3 border-l-2 border-rose-500">
