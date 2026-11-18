@@ -92,6 +92,13 @@ export interface InterrogationQuestion {
   suggestedDefense?: string;
 }
 
+export interface PeakStressMoment {
+  phrase: string;
+  peakBPM: number;
+  deltaBPM: number;
+  timestampMs: number;
+}
+
 export interface BiometricEvidence {
   questionId: string;
   claimTitle: string;
@@ -108,6 +115,7 @@ export interface BiometricEvidence {
   hrvMs?: number;
   blinkRate?: number;
   sympatheticTone?: number;
+  peakStressMoment?: PeakStressMoment;
 }
 
 export interface InterrogationSummary {

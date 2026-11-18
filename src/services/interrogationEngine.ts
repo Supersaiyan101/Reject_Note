@@ -1,4 +1,4 @@
-import type { CandidateDossier, InterrogationQuestion } from '../types';
+import type { CandidateDossier, InterrogationQuestion, PeakStressMoment } from '../types';
 
 export function getCandidateHonorific(fullName: string): string {
   const clean = (fullName || '').trim();
@@ -174,6 +174,7 @@ export function synthesizeLDeduction(
     hrvMs?: number;
     blinkRate?: number;
     sympatheticTone?: number;
+    peakStressMoment?: PeakStressMoment;
   }
 ): {
   deductionText: string;
@@ -263,6 +264,12 @@ export function synthesizeLDeduction(
     '(tilts head at a 45-degree angle, pointing his index finger at your pulse trace)...'
   ];
   const lGesture = mannerisms[qIndex % mannerisms.length];
+
+  const peakMoment = biometrics.peakStressMoment;
+  const hasPeakMoment = peakMoment && peakMoment.deltaBPM >= 5 && peakMoment.phrase.trim().length > 1;
+  const temporalTell = hasPeakMoment
+    ? ` Notice that your pulse spiked to ${peakMoment.peakBPM} BPM (+${peakMoment.deltaBPM} BPM above baseline) the exact instant you uttered "${peakMoment.phrase}".`
+    : '';
 
   let deductionText = '';
 
@@ -354,18 +361,18 @@ export function synthesizeLDeduction(
     }
   } else if (isBackend) {
     if (deltaBPM >= 6) {
-      deductionText = `${lGesture} Ah, 'microservices'... the universal industry excuse to take a simple 50-line monolith and introduce fifteen distributed points of network failure. Your heart rate climbed by +${deltaBPM} BPM to ${peakBPM} BPM the moment I mentioned circuit breakers. You didn't architect a resilient backend, ${candidateHonorific}—you built a network latency generator. Bluff probability: ${bluffProb}%.`;
+      deductionText = `${lGesture} Ah, 'microservices'... the universal industry excuse to take a simple 50-line monolith and introduce fifteen distributed points of network failure. Your heart rate climbed by +${deltaBPM} BPM to ${peakBPM} BPM the moment I mentioned circuit breakers.${temporalTell} You didn't architect a resilient backend, ${candidateHonorific}—you built a network latency generator. Bluff probability: ${bluffProb}%.`;
     } else {
-      deductionText = `${lGesture} (twirls spoon)... You speak of scalable APIs, yet Presage Ch.02 caught your HRV tightening to ${hrv}ms under cross-examination. An engineer who actually benchmarked event-loop starvation does not exhibit sympathetic distress when asked about connection pools. Bluff probability: ${bluffProb}%.`;
+      deductionText = `${lGesture} (twirls spoon)... You speak of scalable APIs, yet Presage Ch.02 caught your HRV tightening to ${hrv}ms under cross-examination.${temporalTell} An engineer who actually benchmarked event-loop starvation does not exhibit sympathetic distress when asked about connection pools. Bluff probability: ${bluffProb}%.`;
     }
   } else if (isDatabase) {
-    deductionText = `${lGesture} Slapping a Redis cache in front of an unindexed SQL query does not make you a database engineer, ${candidateHonorific}. It merely delays database deadlock until Black Friday traffic spikes. Presage sensors captured ${blinks} blinks/min and a +${deltaBPM} BPM pulse jump. You've never run an EXPLAIN query in production. Bluff probability: ${bluffProb}%.`;
+    deductionText = `${lGesture} Slapping a Redis cache in front of an unindexed SQL query does not make you a database engineer, ${candidateHonorific}. It merely delays database deadlock until Black Friday traffic spikes. Presage sensors captured ${blinks} blinks/min and a +${deltaBPM} BPM pulse jump.${temporalTell} You've never run an EXPLAIN query in production. Bluff probability: ${bluffProb}%.`;
   } else if (isDevOps) {
-    deductionText = `${lGesture} Copying YAML manifests from StackOverflow and pushing to a cloud cluster does not constitute 'cloud orchestration', ${candidateHonorific}. When I mentioned an unhandled SIGTERM at 3:00 AM, your pulse climbed +${deltaBPM} BPM to ${peakBPM} BPM. You don't have a disaster recovery plan—you have an emergency prayer. Bluff probability: ${bluffProb}%.`;
+    deductionText = `${lGesture} Copying YAML manifests from StackOverflow and pushing to a cloud cluster does not constitute 'cloud orchestration', ${candidateHonorific}. When I mentioned an unhandled SIGTERM at 3:00 AM, your pulse climbed +${deltaBPM} BPM to ${peakBPM} BPM.${temporalTell} You don't have a disaster recovery plan—you have an emergency prayer. Bluff probability: ${bluffProb}%.`;
   } else if (hasTechnicalSubstance && deltaBPM <= 3) {
     deductionText = `${lGesture} (observes CCTV with quiet fascination)... Remarkable. You defended "${question.claimTitle}" while your pulse sat at an unflinching ${peakBPM} BPM (+${deltaBPM} BPM delta, ${hrv}ms HRV). Most engineers stammer or fidget when cross-examined on production failures. For you to maintain such cold physiological stillness suggests either undeniable technical competence... or you are an extraordinarily polished sociopath. Initial bluff probability: ${bluffProb}%.`;
   } else {
-    deductionText = `${lGesture} You delivered ${wordCount} words on "${question.claimTitle}", ${candidateHonorific}. Yet observe your carotid trace: your pulse climbed +${deltaBPM} BPM, sympathetic tone flared to ${tone}%, and you averted your gaze ${gazeDeviations} times. While your voice attempted confidence, your micro-circulation reveals undeniable apprehension. Calculated probability of resume puffery: ${bluffProb}%.`;
+    deductionText = `${lGesture} You delivered ${wordCount} words on "${question.claimTitle}", ${candidateHonorific}. Yet observe your carotid trace: your pulse climbed +${deltaBPM} BPM, sympathetic tone flared to ${tone}%, and you averted your gaze ${gazeDeviations} times.${temporalTell} While your voice attempted confidence, your micro-circulation reveals undeniable apprehension. Calculated probability of resume puffery: ${bluffProb}%.`;
   }
 
   return {

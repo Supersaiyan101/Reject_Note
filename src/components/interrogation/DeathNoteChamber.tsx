@@ -6,7 +6,8 @@ import type {
   LiveVitals, 
   BiometricEvidence,
   InterrogationSummary,
-  CameraState
+  CameraState,
+  PeakStressMoment
 } from '../../types';
 import { generateQuestionsForDossier, synthesizeLDeduction } from '../../services/interrogationEngine';
 import { candidateVoiceEngine } from '../../services/voiceEngine';
@@ -86,6 +87,8 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
   // Track peak BPM and gaze deviations during active testimony
   const peakBPMRef = useRef(baseline.restingBPM);
   const bpmReadingsRef = useRef<number[]>([]);
+  const timedSamplesRef = useRef<{ phrase: string; bpm: number; deltaBPM: number; timestampMs: number }[]>([]);
+  const peakStressMomentRef = useRef<PeakStressMoment | undefined>(undefined);
   const [gazeDrifts, setGazeDrifts] = useState(0);
   const lastGazeDriftTimeRef = useRef(0);
   const testimonyStartTimeRef = useRef(0);
@@ -150,6 +153,19 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
       if ((vitals.faceStatus === 'NOT_CENTERED' || vitals.gazeAlignment === 'EVADING') && (now - lastGazeDriftTimeRef.current > 2000)) {
         lastGazeDriftTimeRef.current = now;
         setGazeDrifts((prev) => prev + 1);
+      }
+
+      // Time-correlated biometric phrase tracking
+      if (testimonyTextRef.current && testimonyTextRef.current.trim().length > 0) {
+        const words = testimonyTextRef.current.trim().split(/\s+/);
+        const phraseSlice = words.slice(-4).join(' ');
+        const delta = Math.max(0, vitals.currentBPM - baseline.restingBPM);
+        timedSamplesRef.current.push({
+          phrase: phraseSlice,
+          bpm: vitals.currentBPM,
+          deltaBPM: delta,
+          timestampMs: now - testimonyStartTimeRef.current,
+        });
       }
     }
   };
@@ -235,6 +251,7 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
       hrvMs: vitalsNow.hrvMs,
       blinkRate: vitalsNow.blinkRate,
       sympatheticTone: vitalsNow.sympatheticTone,
+      peakStressMoment: peakStressMomentRef.current,
     };
     setEvidenceLog((prev) => [...prev, evidenceItem]);
 
@@ -254,6 +271,21 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
     const peakBPM = Math.max(peakBPMRef.current, liveVitals.currentBPM);
     const deltaBPM = Math.max(0, peakBPM - baseline.restingBPM);
 
+    // Extract highest stress phrase from timed samples
+    let peakMoment: PeakStressMoment | undefined = undefined;
+    if (timedSamplesRef.current.length > 0) {
+      const sorted = [...timedSamplesRef.current].sort((a, b) => b.deltaBPM - a.deltaBPM);
+      if (sorted[0] && sorted[0].deltaBPM >= 4 && sorted[0].phrase.trim().length > 1) {
+        peakMoment = {
+          phrase: sorted[0].phrase,
+          peakBPM: sorted[0].bpm,
+          deltaBPM: sorted[0].deltaBPM,
+          timestampMs: sorted[0].timestampMs,
+        };
+      }
+    }
+    peakStressMomentRef.current = peakMoment;
+
     const deduction = synthesizeLDeduction(currentQuestion, testimonyText, {
       candidateName: dossier.name,
       isPreset: dossier.isPreset,
@@ -267,6 +299,7 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
       hrvMs: liveVitals.hrvMs,
       blinkRate: liveVitals.blinkRate,
       sympatheticTone: liveVitals.sympatheticTone,
+      peakStressMoment: peakMoment,
     });
 
     setActiveDeduction(deduction);
@@ -276,6 +309,7 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
     setDeductionLogs([
       `[00:01] Parsing candidate statement (${testimonyText.trim().split(/\s+/).length} words)...`,
       `[00:02] Presage rPPG: Peak pulse detected at ${peakBPM} BPM (+${deltaBPM} BPM surge).`,
+      ...(peakMoment ? [`[00:02] Temporal Tell: Heart rate surged while saying "${peakMoment.phrase}".`] : []),
     ]);
 
     // Asynchronously call Gemini LLM for an unhinged, dynamic, bespoke roast
@@ -591,6 +625,8 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
                   testimonyStartTimeRef.current = Date.now();
                   peakBPMRef.current = liveVitals.currentBPM;
                   bpmReadingsRef.current = [liveVitals.currentBPM];
+                  timedSamplesRef.current = [];
+                  peakStressMomentRef.current = undefined;
                   setGazeDrifts(0);
                   // Stop music so candidate speaks in high-stakes silence
                   realAudio.pauseLTheme();
