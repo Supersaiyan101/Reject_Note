@@ -175,6 +175,7 @@ export function synthesizeLDeduction(
     blinkRate?: number;
     sympatheticTone?: number;
     peakStressMoment?: PeakStressMoment;
+    previousTestimonies?: { questionTitle: string; testimony: string }[];
   }
 ): {
   deductionText: string;
@@ -212,6 +213,50 @@ export function synthesizeLDeduction(
 
   const devopsKeywords = ['docker', 'kubernetes', 'k8s', 'aws', 'cloud', 'ci/cd', 'deploy', 'cluster', 'terraform', 'ingress', 'canary'];
   const isDevOps = devopsKeywords.some((k) => lowerTestimony.includes(k) || lowerClaim.includes(k));
+
+  const aiKeywords = ['ai', 'llm', 'gpt', 'rag', 'embedding', 'langchain', 'fine-tune', 'prompt', 'transformer', 'pytorch', 'openai'];
+  const isAI = aiKeywords.some((k) => lowerTestimony.includes(k) || lowerClaim.includes(k));
+
+  const streamingKeywords = ['kafka', 'stream', 'event', 'pubsub', 'partition', 'consumer', 'broker', 'rabbitmq', 'queue'];
+  const isStreaming = streamingKeywords.some((k) => lowerTestimony.includes(k) || lowerClaim.includes(k));
+
+  const graphqlKeywords = ['graphql', 'apollo', 'mutation', 'resolver', 'schema', 'rest', 'endpoint'];
+  const isGraphQL = graphqlKeywords.some((k) => lowerTestimony.includes(k) || lowerClaim.includes(k));
+
+  const rustKeywords = ['rust', 'borrow', 'lifetime', 'unsafe', 'cargo', 'mutex', 'tokio', 'memory'];
+  const isRust = rustKeywords.some((k) => lowerTestimony.includes(k) || lowerClaim.includes(k));
+
+  const securityKeywords = ['jwt', 'token', 'auth', 'oauth', 'crypto', 'hash', 'bcrypt', 'encryption', 'ssl', 'tls'];
+  const isSecurity = securityKeywords.some((k) => lowerTestimony.includes(k) || lowerClaim.includes(k));
+
+  // Contradiction Detection against earlier testimonies
+  let detectedContradiction: { prevTitle: string; reason: string } | null = null;
+  if (biometrics.previousTestimonies && biometrics.previousTestimonies.length > 0) {
+    for (const prev of biometrics.previousTestimonies) {
+      const prevLower = prev.testimony.toLowerCase();
+      // Check 1: Solo vs Team Paradox
+      const prevClaimedSolo = prevLower.includes('sole') || prevLower.includes('solo') || prevLower.includes('alone') || prevLower.includes('by myself');
+      const nowClaimsTeam = lowerTestimony.includes('our team') || lowerTestimony.includes('entire team') || lowerTestimony.includes('collaborated with') || lowerTestimony.includes('coordinated with') || lowerTestimony.includes('cross functional');
+      if (prevClaimedSolo && nowClaimsTeam) {
+        detectedContradiction = {
+          prevTitle: prev.questionTitle,
+          reason: 'claimed solo authorship earlier, but now pivots to team execution',
+        };
+        break;
+      }
+
+      // Check 2: 100% test coverage vs no tests / untested
+      const prevClaimedPerfection = prevLower.includes('100%') || prevLower.includes('zero bug') || prevLower.includes('exhaustive test');
+      const nowAdmitsRushing = lowerTestimony.includes('skipped test') || lowerTestimony.includes('no time') || lowerTestimony.includes('fast mvp') || lowerTestimony.includes('directly in prod');
+      if (prevClaimedPerfection && nowAdmitsRushing) {
+        detectedContradiction = {
+          prevTitle: prev.questionTitle,
+          reason: 'claimed flawless test rigor earlier, but now confesses to cutting corners',
+        };
+        break;
+      }
+    }
+  }
 
   const technicalVocabulary = [
     'latency', 'throughput', 'concurrency', 'thread', 'index', 'cache', 'p99',
@@ -346,13 +391,30 @@ export function synthesizeLDeduction(
   // =========================================================================
   // PRIORITY 4: CUSTOM CANDIDATES (Substantive Testimony, wordCount >= 4)
   // =========================================================================
-  if (isAutoFill) {
+  if (detectedContradiction) {
+    deductionText = `${lGesture} (stops his dessert spoon in mid air, dark circles piercing straight through you)... A fatal contradiction, ${candidateHonorific}. In your defense of "${detectedContradiction.prevTitle}", you testified that you ${detectedContradiction.reason}. Yet here you stand under Presage polygraph, reversing your deposition. When an engineer contradicts their own prior statement, it proves beyond mathematical doubt that they are fabricating their experience in real time. Carotid pulse surge: +${deltaBPM} BPM.${temporalTell} Bluff probability: 97.8%.`;
+    return {
+      deductionText,
+      suspicionDelta: 28,
+      bluffProbability: 97.8,
+    };
+  } else if (isAutoFill) {
     deductionText = `${lGesture} (calmly eats a pastry)... You claim to have 'guaranteed strict p99 benchmarks without regression from the ground up', yet you failed to quote a single profiling tool or memory boundary. Spouting rehearsed elevator pitches while your carotid pulse accelerates by +${deltaBPM} BPM is the classic forensic signature of an imposter reciting Medium articles. Bluff probability: ${bluffProb}%.`;
   } else if (hasAbsurdClaim) {
-    deductionText = `${lGesture} (stacks sugar cubes)... Zero latency and 100% bug-free operation? ${candidateHonorific}, not even Google, NASA, or the High Court operates without failure modes. Claiming computational perfection in front of optical biometric sensors is sheer comedic hubris. Your pulse surged +${deltaBPM} BPM the moment you said it. Bluff probability: ${bluffProb}%.`;
+    deductionText = `${lGesture} (stacks sugar cubes)... Zero latency and 100% bug free operation? ${candidateHonorific}, not even Google, NASA, or the High Court operates without failure modes. Claiming computational perfection in front of optical biometric sensors is sheer comedic hubris. Your pulse surged +${deltaBPM} BPM the moment you said it. Bluff probability: ${bluffProb}%.`;
   } else if (detectedBuzzwords.length >= 2) {
     const bwStr = detectedBuzzwords.slice(0, 2).map((w) => `"${w}"`).join(' and ');
     deductionText = `${lGesture} You string together corporate buzzwords like ${bwStr} the way amateur magicians deploy smoke bombs. When an engineer actually writes the code, they speak in algorithms, race conditions, and unit tests—not LinkedIn marketing copy. Presage optical telemetry clocked ${gazeDeviations} ocular shifts and an HRV of ${hrv}ms. Bluff probability: ${bluffProb}%.`;
+  } else if (isAI) {
+    deductionText = `${lGesture} (calmly nibbles on a strawberry)... Calling a commercial completion endpoint and wrapping three prompt templates in a tutorial UI does not make you an artificial intelligence engineer, ${candidateHonorific}. When I probe on gradient descent, loss convergence, and token entropy, your pulse surged +${deltaBPM} BPM.${temporalTell} You are not training neural models; you are a glorified JSON proxy. Bluff probability: ${bluffProb}%.`;
+  } else if (isStreaming) {
+    deductionText = `${lGesture} Claiming enterprise event streaming with Kafka while your consumer group rebalancing lags by forty minutes during partitions is sheer fantasy, ${candidateHonorific}. Presage rPPG clocked a +${deltaBPM} BPM carotid surge and an HRV collapse to ${hrv}ms.${temporalTell} You did not engineer fault tolerant pubsub; you built a distributed message cemetery. Bluff probability: ${bluffProb}%.`;
+  } else if (isGraphQL) {
+    deductionText = `${lGesture} (stacks sugar cubes)... You praise GraphQL for eliminating over-fetching, yet you left your schema exposed to quadratic N+1 query cascades and circular depth bombs. Notice how your blink rate jumped to ${blinks}/min and pulse surged +${deltaBPM} BPM.${temporalTell} One complex nested query would crash your entire cluster. Bluff probability: ${bluffProb}%.`;
+  } else if (isRust) {
+    deductionText = `${lGesture} Ah, Rust... the language where developers spend forty hours battling borrow checker lifetime semantics only to wrap the production engine in an unsafe pointer dereference. Your pulse climbed +${deltaBPM} BPM to ${peakBPM} BPM.${temporalTell} Memory safety on paper does not cure architectural negligence. Bluff probability: ${bluffProb}%.`;
+  } else if (isSecurity) {
+    deductionText = `${lGesture} Storing unencrypted session tokens in client localStorage with zero rotation policies is not cryptographic security, ${candidateHonorific}. It is an open door for cross site script execution. Presage optical sensors captured ${gazeDeviations} ocular shifts and a +${deltaBPM} BPM cardiac surge.${temporalTell} Bluff probability: ${bluffProb}%.`;
   } else if (isFrontend) {
     if (deltaBPM <= 3 && hasTechnicalSubstance) {
       deductionText = `${lGesture} Remarkable. You defended DOM reconciliation and client state management with an unruffled pulse (+${deltaBPM} BPM, ${hrv}ms HRV). Either you truly understand browser rendering pipelines... or you are an extraordinarily cold-blooded candidate who rehearsed in front of a mirror. Bluff probability: ${bluffProb}%.`;

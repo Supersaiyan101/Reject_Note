@@ -300,6 +300,10 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
       blinkRate: liveVitals.blinkRate,
       sympatheticTone: liveVitals.sympatheticTone,
       peakStressMoment: peakMoment,
+      previousTestimonies: evidenceLog.map((item) => ({
+        questionTitle: item.claimTitle,
+        testimony: item.candidateTestimony,
+      })),
     });
 
     setActiveDeduction(deduction);
