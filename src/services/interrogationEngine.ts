@@ -181,6 +181,7 @@ export function synthesizeLDeduction(
   deductionText: string;
   suspicionDelta: number;
   bluffProbability: number;
+  followUpProbe?: string;
 } {
   const { deltaBPM, peakBPM, gazeDeviations } = biometrics;
   const hrv = biometrics.hrvMs ?? 65;
@@ -324,10 +325,10 @@ export function synthesizeLDeduction(
   if (wordCount === 0) {
     if (biometrics.isPreset) {
       deductionText = `${lGesture} (stares in profound, chilling silence from the edge of his chair)... Absolute silence, Light-kun? Not a single word to defend "${question.claimTitle}"? When an innocent honor student is falsely accused of capital crimes, the natural human psychological reflex is immediate, indignant verbal protest. Yet you sat there in dead silence, submitting a completely blank response while Presage sensors logged your carotid pulse at ${peakBPM} BPM (+${deltaBPM} BPM above baseline) and sympathetic tone flared to ${tone}%. You remained silent because your genius intellect calculated that any alibi you invent on the spot will be shredded by my telemetry. In an interrogation room under 64 cameras, Light-kun... silence is not innocence. Silence is Kira's signature. Bluff probability: 98.9%.`;
-      return { deductionText, suspicionDelta: 28, bluffProbability: 98.9 };
+      return { deductionText, suspicionDelta: 28, bluffProbability: 98.9, followUpProbe: 'Why did you remain completely silent under direct questioning, Light-kun?' };
     } else {
       deductionText = `${lGesture} (spins a dessert spoon against porcelain, dark circles fixed on you)... A completely blank submission? Not a single syllable to defend "${question.claimTitle}", ${candidateHonorific}? When an engineer who allegedly built a production system sits in total silence under optical cross-examination, there is an 97.4% probability they have never touched the codebase. Presage sensors captured an autonomic tone of ${tone}% and ${gazeDeviations} averted gazes during your silence. You didn't submit an engineering defense—you submitted a silent confession. Bluff probability: 97.4%.`;
-      return { deductionText, suspicionDelta: 28, bluffProbability: 97.4 };
+      return { deductionText, suspicionDelta: 28, bluffProbability: 97.4, followUpProbe: 'Why did you remain completely silent under direct cross-examination?' };
     }
   }
 
@@ -337,10 +338,10 @@ export function synthesizeLDeduction(
   if (wordCount < 4) {
     if (biometrics.isPreset) {
       deductionText = `${lGesture} (bites right thumbnail, eyes narrowing)... Exactly ${wordCount} word${wordCount === 1 ? '' : 's'}, Light-kun? "${testimony.trim()}"? A To-Oh University valedictorian defending his life with monosyllabic grunts? An innocent man provides context, dates, and evidence. A guilty mastermind trapped under 64 surveillance cameras provides the bare minimum, terrified that a single extra word will slip into a forensic admission. Observe your pulse: ${peakBPM} BPM (+${deltaBPM} BPM surge) and HRV down to ${hrv}ms. Your brevity is screaming what your voice refuses to say. Bluff probability: 95.4%.`;
-      return { deductionText, suspicionDelta: 24, bluffProbability: 95.4 };
+      return { deductionText, suspicionDelta: 24, bluffProbability: 95.4, followUpProbe: 'Provide a structured defense instead of monosyllabic grunts, Light-kun.' };
     } else {
       deductionText = `${lGesture} (tilts head at a 45-degree angle, pointing his index finger at your pulse trace)... Barely ${wordCount} word${wordCount === 1 ? '' : 's'} to defend "${question.claimTitle}", ${candidateHonorific}? "${testimony.trim()}" is not an architectural defense. When an engineer who supposedly authored this system retreats into monosyllabic deflection, the probability they are bluffing is virtually 93.6%. Presage rPPG clocked a +${deltaBPM} BPM carotid surge right as your gaze darted away ${gazeDeviations} times. Silence and evasion under polygraph are equally fatal. Bluff probability: 93.6%.`;
-      return { deductionText, suspicionDelta: 24, bluffProbability: 93.6 };
+      return { deductionText, suspicionDelta: 24, bluffProbability: 93.6, followUpProbe: 'Provide a complete architectural sentence instead of brief deflections.' };
     }
   }
 
@@ -385,7 +386,7 @@ export function synthesizeLDeduction(
         deductionText = `${lGesture} (crouches tightly, knees pressed to chest)... Even when pressed on your grand architecture, you offer evasive rhetoric. Presage optical telemetry confirms a +${deltaBPM} BPM carotid surge and ${gazeDeviations} gaze evasions. You cannot outsmart optical biometrics, Light-kun. Every heartbeat brings you closer to the gallows. Bluff probability: ${bluffProb}%.`;
       }
     }
-    return { deductionText, suspicionDelta, bluffProbability: bluffProb };
+    return { deductionText, suspicionDelta, bluffProbability: bluffProb, followUpProbe: 'State your true intentions before Presage sensors, Light-kun.' };
   }
 
   // =========================================================================
@@ -397,6 +398,7 @@ export function synthesizeLDeduction(
       deductionText,
       suspicionDelta: 28,
       bluffProbability: 97.8,
+      followUpProbe: 'Explain the irreconcilable discrepancy between this answer and your earlier deposition.',
     };
   } else if (isAutoFill) {
     deductionText = `${lGesture} (calmly eats a pastry)... You claim to have 'guaranteed strict p99 benchmarks without regression from the ground up', yet you failed to quote a single profiling tool or memory boundary. Spouting rehearsed elevator pitches while your carotid pulse accelerates by +${deltaBPM} BPM is the classic forensic signature of an imposter reciting Medium articles. Bluff probability: ${bluffProb}%.`;
@@ -437,9 +439,27 @@ export function synthesizeLDeduction(
     deductionText = `${lGesture} You delivered ${wordCount} words on "${question.claimTitle}", ${candidateHonorific}. Yet observe your carotid trace: your pulse climbed +${deltaBPM} BPM, sympathetic tone flared to ${tone}%, and you averted your gaze ${gazeDeviations} times.${temporalTell} While your voice attempted confidence, your micro-circulation reveals undeniable apprehension. Calculated probability of resume puffery: ${bluffProb}%.`;
   }
 
+  let followUpProbe = '';
+  if (isAI) {
+    followUpProbe = 'Explain your loss curve convergence and token sampling temperature during production inference.';
+  } else if (isStreaming) {
+    followUpProbe = 'What is your dead letter queue recovery strategy when poison pill messages trigger recurring consumer panic?';
+  } else if (isDatabase) {
+    followUpProbe = 'Demonstrate your transaction isolation level under concurrent write skew and deadlocks.';
+  } else if (isDevOps) {
+    followUpProbe = 'Describe your pod disruption budget and ingress rollback behavior under node drain.';
+  } else if (isFrontend) {
+    followUpProbe = 'How do you profile long task blocking on the browser main thread beyond 50 milliseconds?';
+  } else if (hasPeakMoment) {
+    followUpProbe = `Clarify why your cardiovascular telemetry surged when discussing "${peakMoment.phrase}".`;
+  } else {
+    followUpProbe = 'State the single most critical production failure mode you personally diagnosed in this architecture.';
+  }
+
   return {
     deductionText,
     suspicionDelta,
     bluffProbability: bluffProb,
+    followUpProbe,
   };
 }

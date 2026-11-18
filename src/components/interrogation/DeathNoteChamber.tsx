@@ -100,6 +100,7 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
     deductionText: string;
     suspicionDelta: number;
     bluffProbability: number;
+    followUpProbe?: string;
     source?: 'GEMINI_LLM' | 'HEURISTIC';
   } | null>(null);
 
@@ -877,6 +878,22 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
             <p className="font-mono text-base md:text-lg text-white leading-relaxed pl-3 border-l-2 border-rose-500">
               &ldquo;{activeDeduction.deductionText}&rdquo;
             </p>
+
+            {activeDeduction.followUpProbe && (
+              <div className="p-3.5 rounded-xl bg-neutral-900/90 border border-neutral-700/80 flex items-start gap-3 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+                <div className="w-7 h-7 rounded-lg bg-rose-950 border border-rose-600 flex items-center justify-center shrink-0 mt-0.5 text-rose-400">
+                  <Zap className="w-4 h-4 text-amber-400" />
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                    L&apos;S FORENSIC FOLLOW-UP PROBE
+                  </span>
+                  <p className="font-mono text-xs md:text-sm text-neutral-300 italic">
+                    &ldquo;{activeDeduction.followUpProbe}&rdquo;
+                  </p>
+                </div>
+              </div>
+            )}
 
             <div className="flex items-center justify-between pt-3 border-t border-neutral-800">
               <button

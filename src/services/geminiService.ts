@@ -25,6 +25,7 @@ export interface LLMDeductionResult {
   deductionText: string;
   suspicionDelta: number;
   bluffProbability: number;
+  followUpProbe?: string;
   source: 'GEMINI_LLM' | 'HEURISTIC';
 }
 
@@ -123,7 +124,8 @@ RETURN ONLY VALID JSON matching this exact schema:
 {
   "deductionText": "L's spoken monologue here",
   "suspicionDelta": 18, // Integer 8 to 25 based on how guilty/bluffing they seem
-  "bluffProbability": 78.4 // Float between 12.0 and 97.0
+  "bluffProbability": 78.4, // Float between 12.0 and 97.0
+  "followUpProbe": "A razor-sharp follow-up question probing their weakest claim"
 }
 `;
 
@@ -159,6 +161,7 @@ RETURN ONLY VALID JSON matching this exact schema:
           deductionText: parsed.deductionText.trim(),
           suspicionDelta: Math.max(8, Math.min(25, Math.round(parsed.suspicionDelta || 18))),
           bluffProbability: Math.max(12.0, Math.min(98.0, Math.round(parsed.bluffProbability * 10) / 10)),
+          followUpProbe: typeof parsed.followUpProbe === 'string' && parsed.followUpProbe.trim() ? parsed.followUpProbe.trim() : undefined,
           source: 'GEMINI_LLM',
         };
       }
