@@ -11,7 +11,7 @@ import type {
 } from '../../types';
 import { generateQuestionsForDossier, synthesizeLDeduction } from '../../services/interrogationEngine';
 import { candidateVoiceEngine } from '../../services/voiceEngine';
-import { generateGeminiRoast, isGeminiEnabled } from '../../services/geminiService';
+import { generateGeminiRoast, generateGeminiRebuttal, isGeminiEnabled } from '../../services/geminiService';
 import { OpticalViewfinder } from '../OpticalViewfinder';
 import { soundFX } from '../../utils/sfx';
 import { realAudio } from '../../utils/realAudio';
@@ -30,7 +30,8 @@ import {
   AlertTriangle,
   Clock,
   Zap,
-  Sparkles
+  Sparkles,
+  ShieldAlert
 } from 'lucide-react';
 
 interface DeathNoteChamberProps {
@@ -104,6 +105,12 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
     source?: 'GEMINI_LLM' | 'HEURISTIC';
   } | null>(null);
 
+  // Candidate pushback / objection state
+  const [showObjectionBar, setShowObjectionBar] = useState(false);
+  const [objectionText, setObjectionText] = useState('');
+  const [isRebuttalLoading, setIsRebuttalLoading] = useState(false);
+  const [rebuttalAnswer, setRebuttalAnswer] = useState<string | null>(null);
+
   // Game state
   const [suspicionPercent, setSuspicionPercent] = useState(12);
   const [evidenceLog, setEvidenceLog] = useState<BiometricEvidence[]>([]);
@@ -128,6 +135,10 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
   useEffect(() => {
     setPhase('QUESTION');
     setTestimonyText('');
+    setShowObjectionBar(false);
+    setObjectionText('');
+    setRebuttalAnswer(null);
+    setIsRebuttalLoading(false);
     peakBPMRef.current = baseline.restingBPM;
     bpmReadingsRef.current = [];
     setGazeDrifts(0);
@@ -259,6 +270,46 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
     realAudio.playLTheme();
     setIsThemePlaying(true);
   }, [currentQuestion, baseline.restingBPM]);
+
+  // Handle Candidate Objection / Pushback against L's deduction
+  const handleCandidateObjection = async (chosenText?: string) => {
+    const textToSubmit = (chosenText || objectionText).trim();
+    if (!textToSubmit || !activeDeduction) return;
+
+    soundFX.playDramaticSting();
+    setIsRebuttalLoading(true);
+
+    const deltaBPM = Math.max(0, liveVitals.currentBPM - baseline.restingBPM);
+    const currentBPM = liveVitals.currentBPM;
+    const honorific = dossier.name ? dossier.name.split(' ')[0] + '-san' : 'Candidate-kun';
+
+    let reply: string | null = null;
+    if (isGeminiEnabled()) {
+      reply = await generateGeminiRebuttal({
+        candidateName: dossier.name,
+        claimTitle: currentQuestion.claimTitle,
+        lOriginalDeduction: activeDeduction.deductionText,
+        candidateObjection: textToSubmit,
+        currentBPM,
+        deltaBPM,
+      });
+    }
+
+    if (!reply) {
+      const lower = textToSubmit.toLowerCase();
+      if (lower.includes('sensor') || lower.includes('calibrate') || lower.includes('camera') || lower.includes('hardware')) {
+        reply = `(twirls spoon against saucer)... Blaming the calibration of optical contactless sensors, ${honorific}? Presage rPPG measures physical light absorption from your facial capillaries, not opinions. While you protested, your pulse surged by another +${deltaBPM} BPM. An innocent engineer shows production code; a guilty one attacks the thermometer.`;
+      } else if (lower.includes('git') || lower.includes('commit') || lower.includes('metric') || lower.includes('proof')) {
+        reply = `(bites thumbnail calmly)... If git commit logs or telemetry existed, you would have cited commit hashes and branch merges during your initial deposition. Producing imaginary evidence only after being caught in an acute deception envelope is a textbook panic response.`;
+      } else {
+        reply = `(calmly eats a pastry)... An indignant objection delivered while your carotid pulse sits at ${currentBPM} BPM only confirms what optical sensors proved. Your objection is formally overruled and logged in your Rejection Note.`;
+      }
+    }
+
+    setRebuttalAnswer(reply);
+    setIsRebuttalLoading(false);
+    setSuspicionPercent((prev) => Math.min(100, prev + 5));
+  };
 
   // Candidate confirms testimony -> Starts 6-second L deduction
   const handleConfirmTestimony = () => {
@@ -892,6 +943,90 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
                     &ldquo;{activeDeduction.followUpProbe}&rdquo;
                   </p>
                 </div>
+              </div>
+            )}
+
+            {/* Candidate Pushback / Objection Station */}
+            {!rebuttalAnswer && !showObjectionBar && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowObjectionBar(true)}
+                  className="px-3 py-1.5 rounded-lg bg-amber-950/70 hover:bg-amber-900/90 border border-amber-600/60 text-amber-300 font-mono text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+                >
+                  <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+                  <span>OBJECT TO L&apos;S DEDUCTION &rarr;</span>
+                </button>
+              </div>
+            )}
+
+            {showObjectionBar && !rebuttalAnswer && (
+              <div className="p-3 rounded-xl bg-black/80 border border-amber-600/40 space-y-2.5 animate-fade-in">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-mono font-bold text-amber-400 flex items-center gap-1.5 uppercase">
+                    <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+                    FORMAL OBJECTION STATION // CHALLENGE L
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowObjectionBar(false)}
+                    className="text-[10px] font-mono text-neutral-400 hover:text-white underline cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    "Your optical sensors are miscalibrated, Ryuzaki!",
+                    "I have production metrics and pull requests to prove this!",
+                    "You are fabricating accusations without code review!"
+                  ].map((preset, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleCandidateObjection(preset)}
+                      disabled={isRebuttalLoading}
+                      className="text-[10px] font-mono px-2.5 py-1 rounded-md bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-neutral-300 hover:text-amber-300 cursor-pointer transition-colors"
+                    >
+                      &ldquo;{preset}&rdquo;
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={objectionText}
+                    onChange={(e) => setObjectionText(e.target.value)}
+                    placeholder="Type custom objection to L..."
+                    className="flex-1 px-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-200 text-xs font-mono focus:outline-none focus:border-amber-500"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleCandidateObjection();
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleCandidateObjection()}
+                    disabled={isRebuttalLoading || !objectionText.trim()}
+                    className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white font-mono text-xs font-bold cursor-pointer transition-all"
+                  >
+                    {isRebuttalLoading ? 'Analyzing...' : 'Submit Objection'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* L's Counter Argument Response */}
+            {rebuttalAnswer && (
+              <div className="p-3.5 rounded-xl bg-rose-950/40 border border-rose-600/70 space-y-1.5 animate-fade-in shadow-[0_0_20px_rgba(225,29,72,0.25)]">
+                <span className="text-[11px] font-mono font-bold text-rose-400 flex items-center gap-1.5 uppercase">
+                  <Flame className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
+                  L&apos;S FORENSIC COUNTER ARGUMENT // OBJECTION OVERRULED
+                </span>
+                <p className="font-mono text-xs md:text-sm text-white leading-relaxed italic">
+                  &ldquo;{rebuttalAnswer}&rdquo;
+                </p>
               </div>
             )}
 
