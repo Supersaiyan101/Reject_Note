@@ -328,6 +328,10 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
         questionIndex: questionIdx,
         question: currentQuestion,
         testimony: testimonyText,
+        previousTestimonies: evidenceLog.map((item) => ({
+          questionTitle: item.claimTitle,
+          testimony: item.candidateTestimony,
+        })),
         biometrics: {
           baselineBPM: baseline.restingBPM,
           peakBPM,
@@ -338,6 +342,7 @@ export const DeathNoteChamber: React.FC<DeathNoteChamberProps> = ({
           hrvMs: liveVitals.hrvMs,
           blinkRate: liveVitals.blinkRate,
           sympatheticTone: liveVitals.sympatheticTone,
+          peakStressMoment: peakMoment,
         },
       }).then((llmResult) => {
         if (llmResult) {

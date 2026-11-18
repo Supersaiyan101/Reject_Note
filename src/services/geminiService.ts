@@ -1,4 +1,4 @@
-import type { InterrogationQuestion } from '../types';
+import type { InterrogationQuestion, PeakStressMoment } from '../types';
 
 export interface LLMRoastParams {
   candidateName: string;
@@ -6,6 +6,7 @@ export interface LLMRoastParams {
   questionIndex: number;
   question: InterrogationQuestion;
   testimony: string;
+  previousTestimonies?: { questionTitle: string; testimony: string }[];
   biometrics: {
     baselineBPM: number;
     peakBPM: number;
@@ -16,6 +17,7 @@ export interface LLMRoastParams {
     hrvMs?: number;
     blinkRate?: number;
     sympatheticTone?: number;
+    peakStressMoment?: PeakStressMoment;
   };
 }
 
@@ -70,6 +72,16 @@ export async function generateGeminiRoast(params: LLMRoastParams): Promise<LLMDe
   const delta = biometrics.deltaBPM;
   const peak = biometrics.peakBPM;
 
+  const peakMoment = biometrics.peakStressMoment;
+  const peakMomentPrompt = peakMoment && peakMoment.deltaBPM >= 4
+    ? `- Exact Phrase Where Pulse Peaked: "${peakMoment.phrase}" (Spiked to ${peakMoment.peakBPM} BPM, +${peakMoment.deltaBPM} BPM). Point this exact phrase out as their cardiovascular tell.`
+    : '';
+
+  const historyPrompt = params.previousTestimonies && params.previousTestimonies.length > 0
+    ? `\nPREVIOUS TESTIMONY HISTORY (Auditing for contradictions across answers):
+${params.previousTestimonies.map((h, i) => `Exhibit #${i + 1} (${h.questionTitle}): "${h.testimony}"`).join('\n')}`
+    : '';
+
   const prompt = `
 You are L Lawliet, the world-renowned eccentric genius master detective from Death Note.
 You are interrogating a software engineer candidate named "${candidateName}" in a high-stakes tech interview chamber wired with Presage SmartSpectra optical polygraph biometric sensors.
@@ -78,10 +90,12 @@ INTERROGATION CONTEXT (Question ${questionIndex + 1} of 4):
 - Target Claim: "${question.claimTitle}"
 - Your Cross-Examination Question Was: "${question.lQuestion}"
 - What The Candidate Testified in Their Defense: "${testimony || '[Candidate remained completely silent and refused to answer]'}"
+${historyPrompt}
 
 REAL-TIME PRESAGE OPTICAL SENSOR TELEMETRY (Captured live through webcam):
 - Resting Baseline Pulse: ${biometrics.baselineBPM} BPM
 - Peak Pulse During Testimony: ${peak} BPM (Surge: +${delta} BPM)
+${peakMomentPrompt}
 - Heart Rate Variability (SDNN): ${hrv} ms (Normal healthy calm: >55ms; Autonomic stress collapse: <38ms)
 - Micro-Blink Rate: ${blinks} blinks/min
 - Ocular Gaze Shifts: ${biometrics.gazeDeviations} deviations away from camera lens
@@ -97,6 +111,8 @@ Key Requirements:
 4. ROAST their actual defense:
    - If they gave empty buzzwords ("synergy", "seamless", "scalable", "best practices"), ruthlessly mock their corporate word salad.
    - If they gave an evasive or very short response (< 5 words), mock their cowardly silence.
+   - If they contradicted any of their earlier answers from PREVIOUS TESTIMONY HISTORY, savagely highlight the contradiction as proof of fabrication.
+   - If their pulse spiked on a specific phrase, mock how their capillaries betrayed that exact statement.
    - If they made an absurd claim (e.g. 0ms latency, 100% bug-free, writing C++ with one hand), mathematically dissect why it's physically or computationally impossible.
    - If they gave a calm, highly technical response, hit them with a backhanded compliment about their sociopathic composure or question whether they memorized it from documentation.
 5. Directly quote at least two Presage biometric sensor readouts (e.g. "+${delta} BPM carotid surge", "${hrv}ms HRV vagal collapse", "${biometrics.gazeDeviations} ocular shifts").
@@ -148,6 +164,67 @@ RETURN ONLY VALID JSON matching this exact schema:
       }
     } catch (err) {
       console.warn(`Error generating L roast via ${model}:`, err);
+    }
+  }
+
+  return null;
+}
+
+export interface LLMRebuttalParams {
+  candidateName: string;
+  claimTitle: string;
+  lOriginalDeduction: string;
+  candidateObjection: string;
+  currentBPM: number;
+  deltaBPM: number;
+}
+
+export async function generateGeminiRebuttal(params: LLMRebuttalParams): Promise<string | null> {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) return null;
+
+  const prompt = `
+You are L Lawliet from Death Note.
+You just roasted a software candidate named "${params.candidateName}" regarding their claim "${params.claimTitle}".
+Your previous deduction was: "${params.lOriginalDeduction}"
+
+The candidate just objected to your deduction with:
+"${params.candidateObjection}"
+
+Live Presage Polygraph Telemetry:
+Candidate current pulse: ${params.currentBPM} BPM (+${params.deltaBPM} BPM above baseline).
+
+INSTRUCTIONS:
+Respond fully in-character as L Lawliet to dismantle their objection.
+Begin with an eccentric gesture in parentheses, e.g. (twirls spoon slowly)... or (calmly tilts head, eyes wide)...
+Deliver a concise, razor-sharp 2-sentence counter-argument dismissing their protest with cold logic and citing their elevated pulse.
+Return only plain text, no JSON.
+`;
+
+  const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+  for (const model of models) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.8,
+            maxOutputTokens: 150,
+          },
+        }),
+      });
+
+      if (!response.ok) continue;
+      const data = await response.json();
+      const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (rawText && rawText.trim()) {
+        return rawText.trim();
+      }
+    } catch (err) {
+      console.warn('Rebuttal generation failed:', err);
     }
   }
 
