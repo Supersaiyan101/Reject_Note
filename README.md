@@ -42,6 +42,32 @@ RejectNote is built from the ground up as an extensible anime character roasting
 
 ***
 
+## ⚡ Season 1.1 Intelligence Upgrade: Deep Forensic Polygraph
+
+RejectNote has evolved from a linear interview into a living, reactive psychological interrogation chamber. Season 1.1 introduces five deep forensic capabilities:
+
+* ⏱️ **Time Correlated Phrase Level Lie Detection**
+  Instead of measuring average pulse across an entire answer, Presage optical telemetry is now sampled continuously alongside spoken and typed words. The engine pinpoints the exact phrase where your pulse or respiration spiked above baseline, allowing L to quote the specific words that triggered your cardiovascular tell.
+
+* ⚖️ **Cross Question Contradiction Detection**
+  L maintains an active deposition memory across all interrogation stages. If a candidate claims sole authorship in Exhibit A, but later references a platform team executing the release in Exhibit C, L halts his tea spoon and calls out the fatal contradiction.
+
+* 🧠 **Expanded Domain Forensic Roaster**
+  L's autonomous deductions now feature specialized roasting branches for modern engineering domains:
+  * Artificial Intelligence: Dissecting commercial API wrappers posing as neural research
+  * Event Streaming and Kafka: Calling out unhandled poison pills and partition rebalance lag
+  * GraphQL: Exposing circular query bombs and N+1 resolver waterfalls
+  * Rust: Roasting borrow checker lifetime struggles wrapped in unsafe blocks
+  * Security: Flagging unencrypted session tokens stored in client storage
+
+* 🎯 **Dynamic Forensic Follow Up Probing**
+  Following each deduction, L issues an incisive follow up probe tailored specifically to the candidate's declared architecture, forcing them to address the exact point of system failure.
+
+* 🛡️ **Interactive Candidate Objection Station**
+  Candidates can now push back by clicking the Objection button during the verdict reveal. Whether you argue the sensors are miscalibrated or claim git logs prove your innocence, L analyzes your live vitals and delivers a razor sharp counter argument overruling your protest.
+
+***
+
 ## 📸 The 4 Stage Roasting Experience
 
 ```
